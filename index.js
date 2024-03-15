@@ -1,27 +1,18 @@
 const express = require("express");
 const app = express();
+const routerStudent=require("./routes/student");
+const routerCompany=require("./routes/company");
+const routerAdmin=require("./routes/admin");
 
 const path=require("path");
+app.set("view engine", "ejs");
 
-app.use("/admin",function(req,res){
-    res.sendFile(path.join(__dirname, "Views/Admin/admin.html"));
-})
+app.use(express.static("Pictures"));
+app.use(express.static("node_modules"));
 
-app.use("/company/:companyid",function(req,res){
-    res.sendFile(path.join(__dirname, "Views/Company/company.html"));
-})
-
-app.use("/student/:studentid",function(req,res){
-    res.sendFile(path.join(__dirname, "Views/Student/student.html"));
-})
-
-app.use("/singup",function(req,res){
-    res.sendFile(path.join(__dirname, "Views/singup.html"));
-})
-
-app.use("/",function(req,res){
-    res.sendFile(path.join(__dirname, "Views/singin.html"));
-})
+app.use(routerAdmin);
+app.use(routerCompany);
+app.use(routerStudent);
 
 
 app.listen(3000);

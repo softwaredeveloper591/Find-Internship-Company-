@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Giriş Formu</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #f2f2f2;
+    }
+
+    .login-container {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .login-container h2 {
+        margin-bottom: 20px;
+    }
+
+    .login-container input[type="text"],
+    .login-container input[type="password"],
+    .login-container input[type="submit"] {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-sizing: border-box;
+    }
+
+    .login-container input[type="submit"] {
+        background-color: #4caf50;
+        color: white;
+        cursor: pointer;
+    }
+
+    .login-container input[type="submit"]:hover {
+        background-color: #45a049;
+    }
+</style>
+</head>
+<body>
+
+<div class="login-container">
+    <h1>Sign Up</h1>
+    <form action="#">
+        <input type="text" id="student_number" name="student_number" placeholder="Student Number" required><br>
+        <input type="password" id="password" name="password" placeholder="Password" required><br>
+        <input type="submit" value="Sign Up">
+    </form>
+    <p>You already have an account <a href="/">Log in</a></p>
+</div>
+
+</body>
+</html>
