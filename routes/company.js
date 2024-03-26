@@ -7,4 +7,8 @@ router.use("/company/:companyid",function(req,res){
     res.render("Company/company");
 })
 
+router.use("/signup/company",function(req,res){
+    res.render( "Company/signup");
+})
+
 module.exports= router;

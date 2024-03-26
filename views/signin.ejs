@@ -34,19 +34,20 @@
 <body>
         <div class="kutu1" > </div>
         <div class="entry">
-            <form action="">
+            <form method="post">
                 <img src="/İyte Logo.png" alt="Picture couldn't be loaded">
                 <h3>Sing In</h3>
-                <input class="input" type="text" placeholder="Username">
+                <input class="input" type="text" name="username" required placeholder="Username">
                 <br>
-                <input class="input" type="password" placeholder="Password">
+                <input class="input" type="password" name="password" required placeholder="Password">
                 <p>User type:</p>
-                Admin<input type="radio" name="usertype">
-                Student<input type="radio" name="usertype">
-                Company<input type="radio" name="usertype">
+                Admin<input type="radio" name="usertype" value="admin">
+                Student<input type="radio" name="usertype" value="student">
+                Company<input type="radio" required name="usertype" value="company">
                 <br>
                 <button class="buton"> Enter</button>
-                <p>Hesabınız yok mu? <a href="/singup">Kayıt Ol</a></p>     
+                <p >Hesabınız yok mu? Kayıt Ol <a style="text-decoration: none ;" href="/signup/student">Student </a> <a style="text-decoration: none ;" href="/signup/company"> Company</a></p> 
+
         </div>
     
 
