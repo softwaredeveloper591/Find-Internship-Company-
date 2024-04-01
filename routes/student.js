@@ -1,9 +1,12 @@
 const express = require("express");
 const router= express.Router();
-const path=require("path");
+const bcrypt= require("bcrypt");
 
 
 const db= require("../data/db");
+const Student_model= require("../models/student-model");
+const Admin_model= require("../models/admin-model");
+const Company_model= require("../models/company-model");
 
 
 router.use("/student/:studentid",function(req,res){
@@ -21,18 +24,19 @@ router.get("/signup/student",function(req,res){
 })
 
 router.post("/signup/student",async function(req,res){
-        const studentNumber= req.body.student_number;
-        const username= req.body.username;
-        const email= req.body.email;
-        const password=req.body.password;
+    const { student_number, username, email, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password,10);
         try {
-            await db.execute("INSERT INTO student(id,username,password,email) VALUES (?,?,?,?)",
-            [studentNumber,username,email,password]);
-            res.redirect("/student/:studentid");
+            const newStudent = await Student_model.create({
+                id: student_number,
+                username: username,
+                email: email,
+                password: hashedPassword
+              });
 
         } catch (error) {
             console.log(error);
-            
+            res.status(500).send('An error occurred while creating the student.');   
         }
 })
 router.get("/",function(req,res){
@@ -40,37 +44,35 @@ router.get("/",function(req,res){
 })
 
 router.post("/", async function(req,res){
-    const usertype= req.body.usertype;
-    console.log(usertype);
-    const username= req.body.username;
-    const password=req.body.password;
+    const {usertype, username, password}=req.body;
 
     try {
-        let query = "";
-        let queryParams = [username, password]; // Add username and password to the query parameters
-
-        // Construct the query string based on the user type
+        let user = null;
+    
+        // Select the appropriate model based on the user type
         switch (usertype) {
-            case 'student':
-                query = "SELECT * FROM student WHERE username=? AND password=?";
-                break;
-            case 'admin':
-                query = "SELECT * FROM admin WHERE username=? AND password=?";
-                break;
-            case 'company':
-                query = "SELECT * FROM company WHERE username=? AND password=?";
-                break;
-            default:
-                throw new Error("Invalid user type");
+          case 'student':
+            user = await Student_model.findOne({ where: { username} });
+            break;
+          case 'admin':
+            user = await Admin_model.findOne({ where: { username} });
+            break;
+          case 'company':
+            user = await Company_model.findOne({ where: { username} });
+            break;
+          default:
+            throw new Error("Invalid user type");
         }
-        const [data,] = await db.execute(query, queryParams);
-        res.send(data);
-        // res.redirect("/student/:studentid");
-
-    } catch (error) {
+        if(!user) 
+          return res.status(500).send("wrong username or password");
+        res.send(user);
+        const checkPassword= await bcrypt.compare((password,user.password));
+        if(!user || !checkPassword)
+          return res.status(500).send("wrong username or password");
+      } catch (error) {
         console.log(error);
-        
-    }
+        res.status(500).send('An error occurred while processing your request.');
+      }
 
 })
 
