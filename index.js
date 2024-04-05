@@ -1,10 +1,7 @@
 const express = require("express");
 const app = express();
-const mysql = require("mysql2");
-
-const path=require("path");
 app.use(express.urlencoded({extended:false})); // to obtain the data coming from forms in a json structure.
-
+app.use(express.json());  //to be able to send data as a json format via postman
 app.set("view engine", "ejs");
 
 app.use(express.static("Pictures"));

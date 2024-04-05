@@ -8,6 +8,11 @@ const Company = sequelize.define('Company', {
       primaryKey: true,
       autoIncrement: true
     },
+    name: {
+      type: DataTypes.STRING(45),
+      allowNull: false,
+      unique: true
+    },
     username: {
       type: DataTypes.STRING(45),
       allowNull: false,
@@ -19,13 +24,17 @@ const Company = sequelize.define('Company', {
       unique: true
     },
     password: {
-      type: DataTypes.STRING(45),
+      type: DataTypes.STRING(100),
       allowNull: false,
       unique: true
     },
     statusByDIC: {
       type: DataTypes.STRING(45),
       allowNull: true
+    },
+    address:{
+      type: DataTypes.STRING(200),
+      allowNull: false,
     }
   }, {
     tableName: 'company', // MySQL tablosunun adı

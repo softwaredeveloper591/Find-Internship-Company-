@@ -1,6 +1,8 @@
 const express = require("express");
 const router= express.Router();
 const bcrypt= require("bcrypt");
+const jwt=require("jsonwebtoken");
+const auth = require("../middleware/auth");  //this auth turns yellow when I export it with a function name
 
 
 const db= require("../data/db");
@@ -9,14 +11,9 @@ const Admin_model= require("../models/admin-model");
 const Company_model= require("../models/company-model");
 
 
-router.use("/student/:studentid",function(req,res){
-    // db.execute("select * from company")
-    //     .then(result => {
-    //         res.send(result[0]);
-    //     })
-    //     .catch(err => console.log(err));
-    res.render("Student/student");
+router.get("/student/:studentid",auth,function(req,res){
 
+    res.render("Student/student");
 })
 
 router.get("/signup/student",function(req,res){
@@ -33,19 +30,21 @@ router.post("/signup/student",async function(req,res){
                 email: email,
                 password: hashedPassword
               });
-
+              const token= createTokenWithIdandUserType(newStudent.id,"student");
+              res.header("authorization",token.send(newStudent));
         } catch (error) {
             console.log(error);
             res.status(500).send('An error occurred while creating the student.');   
         }
 })
+
+
 router.get("/",function(req,res){
     res.render("signin");
 })
 
 router.post("/", async function(req,res){
     const {usertype, username, password}=req.body;
-
     try {
         let user = null;
     
@@ -63,17 +62,22 @@ router.post("/", async function(req,res){
           default:
             throw new Error("Invalid user type");
         }
-        if(!user) 
+        if(!user)
           return res.status(500).send("wrong username or password");
-        res.send(user);
-        const checkPassword= await bcrypt.compare((password,user.password));
-        if(!user || !checkPassword)
+        const checkPassword= await bcrypt.compare(password,user.password);
+        if(!checkPassword)
           return res.status(500).send("wrong username or password");
+        const token= createTokenWithIdandUserType(user.id,usertype);
+        res.header("authorization",token).send(user);
       } catch (error) {
         console.log(error);
         res.status(500).send('An error occurred while processing your request.');
       }
 
 })
+
+function createTokenWithIdandUserType(id,userType){       //we can add this function into the models so that every model has its own function.
+  return jwt.sign({id: id, userType:userType},'privateKey');
+}
 
 module.exports= router;
