@@ -3,6 +3,7 @@ const router= express.Router();
 const bcrypt= require("bcrypt");
 const jwt=require("jsonwebtoken");
 const auth = require("../middleware/auth");  //this auth turns yellow when I export it with a function name
+const checkUserRole= require("../middleware/checkUserRole");
 
 
 const db= require("../data/db");
@@ -10,13 +11,16 @@ const Student_model= require("../models/student-model");
 const Admin_model= require("../models/admin-model");
 const Company_model= require("../models/company-model");
 
-
-router.get("/student/:studentid",auth,function(req,res){
-
-    res.render("Student/student");
+router.get("/student",[auth,checkUserRole("student")],async function(req,res){
+    let student = await Student_model.findOne({ where: {id: req.user.id} });
+    let studentInfo=student.dataValues;
+    let userinfo={usertype:"student"};
+    console.log(student.dataValues,userinfo);
+    res.render("Student/student",{ username:studentInfo.username, usertype:"student", id:studentInfo.id});
 })
 
 router.get("/signup/student",function(req,res){
+    console.log(req.cookies.jwt);
     res.render( "Student/signup");
 })
 
@@ -24,14 +28,14 @@ router.post("/signup/student",async function(req,res){
     const { student_number, username, email, password } = req.body;
     const hashedPassword = await bcrypt.hash(password,10);
         try {
-            const newStudent = await Student_model.create({
+            const newStudent = await Student_model.create({    
                 id: student_number,
                 username: username,
                 email: email,
                 password: hashedPassword
               });
               const token= createTokenWithIdandUserType(newStudent.id,"student");
-              res.header("authorization",token.send(newStudent));
+              res.header("authorization",token).send(newStudent);
         } catch (error) {
             console.log(error);
             res.status(500).send('An error occurred while creating the student.');   
@@ -68,7 +72,9 @@ router.post("/", async function(req,res){
         if(!checkPassword)
           return res.status(500).send("wrong username or password");
         const token= createTokenWithIdandUserType(user.id,usertype);
-        res.header("authorization",token).send(user);
+        res.cookie('jwt', token);
+        res.redirect("/student")
+        //res.header("authorization",token).send(user);
       } catch (error) {
         console.log(error);
         res.status(500).send('An error occurred while processing your request.');

@@ -3,8 +3,10 @@ const router= express.Router();
 const path=require("path");
 const Company_model= require("../models/company-model");
 const bcrypt= require("bcrypt");
+const auth = require("../middleware/auth");  
+const checkUserRole= require("../middleware/checkUserRole")
 
-router.get("/company/:companyid",function(req,res){
+router.get("/company/:companyid",[auth,checkUserRole("company")],function(req,res){
     res.render("Company/company");
 })
 

@@ -2,7 +2,7 @@ const jwt=require("jsonwebtoken");
 
 module.exports = function(userType) {
     return function(req, res, next) {
-      const token = req.headers['authorization'];
+      const token = req.cookies.jwt;
   
       if (!token) {
         return res.status(401).send('yetkiniz yok');
@@ -14,7 +14,7 @@ module.exports = function(userType) {
         }
   
         // Check the userType attribute of the JWT payload
-        if (user.usertype != userType) {
+        if (user.userType != userType) {
           return res.status(403).send('my token but wrong user');
         }
   

@@ -3,7 +3,7 @@ const sequelize=require("../data/db");
 
 const Student= sequelize.define('Student', {
     id: {
-        type: DataTypes.STRING(45),
+        type: DataTypes.INTEGER,
         allowNull: false,
         primaryKey: true
       },
