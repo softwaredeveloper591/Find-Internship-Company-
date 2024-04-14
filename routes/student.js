@@ -10,19 +10,45 @@ const db= require("../data/db");
 const Student_model= require("../models/student-model");
 const Admin_model= require("../models/admin-model");
 const Company_model= require("../models/company-model");
+const Announcement = require("../models/announcement");
 
 router.get("/student",[auth,checkUserRole("student")],async function(req,res){
     let student = await Student_model.findOne({ where: {id: req.user.id} });
-    let studentInfo=student.dataValues;
-    let userinfo={usertype:"student"};
-    console.log(student.dataValues,userinfo);
-    res.render("Student/student",{ username:studentInfo.username, usertype:"student", id:studentInfo.id});
+    res.render("Student/student",{ usertype:"student", dataValues:student.dataValues});
 })
 
+router.get("/student/opportunities",[auth,checkUserRole("student")],async function(req,res){
+  let student = await Student_model.findOne({ where: {id: req.user.id} });
+  let announcements= await Announcement.findAll();  
+  let companies= Company_model.findAll();     
+  res.render("Student/opportunities",{ usertype:"student", dataValues:student.dataValues, announcements:announcements, companies});
+});
+
+router.get("/student/opportunities/:opportunityId",[auth,checkUserRole("student")],async function(req,res){
+  let student = await Student_model.findOne({ where: {id: req.user.id} });
+  let opportunityId=req.params.opportunityId.slice(1); //unfortunately I cannot get opportunityId properly here it comes with ":"
+  
+  console.log("id equlastsaldfs "+req.params.opportunityId);
+  let announcement= await Announcement.findOne({ where: {id: opportunityId} });  
+  console.log(announcement.dataValues);
+  let company= Company_model.findOne({ where: {id: announcement.dataValues.companyId} });      
+  res.render("Student/single-opportunity",{ usertype:"student", dataValues:student.dataValues, announcement:announcement, company});
+});
+
+
+router.put("/student/opportunities/:opportunityId",[auth,checkUserRole("student")],async function(req,res){
+  let opportunityId= req.params.opportunityId;
+  console.log(req.body.status);
+  let announcement= await Announcement.findOne({ where: {id: opportunityId} });  //------------------------------------------------------------------------
+  announcement.statusByDIC=req.body.status;
+  await announcement.save();
+  res.send(announcement);
+});
+
 router.get("/signup/student",function(req,res){
-    console.log(req.cookies.jwt);
     res.render( "Student/signup");
-})
+});
+
 
 router.post("/signup/student",async function(req,res){
     const { student_number, username, email, password } = req.body;
@@ -73,7 +99,7 @@ router.post("/", async function(req,res){
           return res.status(500).send("wrong username or password");
         const token= createTokenWithIdandUserType(user.id,usertype);
         res.cookie('jwt', token);
-        res.redirect("/student")
+        res.redirect("/"+usertype);
         //res.header("authorization",token).send(user);
       } catch (error) {
         console.log(error);
@@ -83,7 +109,7 @@ router.post("/", async function(req,res){
 })
 
 function createTokenWithIdandUserType(id,userType){       //we can add this function into the models so that every model has its own function.
-  return jwt.sign({id: id, userType:userType},'privateKey');
+  return jwt.sign({id: id, userType:userType},'privateKey');//----------------------------------------------------------------------
 }
 
 module.exports= router;
