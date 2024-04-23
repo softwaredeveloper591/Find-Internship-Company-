@@ -66,18 +66,18 @@
 <script>
 
 function updateData(id,isApproved) {
-            // Data to be sent in the request body (if any)
+        
             const requestBody = {
-                // Your data here
+                
                 status:isApproved
             };
 
-            fetch(`/student/opportunities/${id}`, {
+            fetch(`/admin/announcement/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(requestBody) // Convert object to JSON string
+                body: JSON.stringify(requestBody) 
             })
             .then(response => {
                 if (!response.ok) {
@@ -87,11 +87,11 @@ function updateData(id,isApproved) {
             })
             .then(data => {
                 console.log('Success:', data);
-                // Handle successful response here
+                
             })
             .catch(error => {
                 console.error('Error:', error);
-                // Handle errors here
+            
             });
             let resultAlertType= isApproved ? "alert-success" : "alert-danger";
             let buttondiv='buttonContainer'+id;

@@ -22,4 +22,13 @@ router.get("/admin/announcementRequests",[auth,checkUserRole("admin")],async fun
     res.render("Admin/admin",{ usertype:"admin", dataValues:admin.dataValues});
 });
 
+router.put("/admin/announcement/:opportunityId",[auth,checkUserRole("admin")],async function(req,res){
+  let opportunityId= req.params.opportunityId;
+  console.log(req.body.status);
+  let announcement= await Announcement.findOne({ where: {id: opportunityId} });  //------------------------------------------------------------------------
+  announcement.statusByDIC=req.body.status;
+  await announcement.save();
+  res.send(announcement);
+});
+
 module.exports= router;
