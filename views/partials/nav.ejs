@@ -5,6 +5,39 @@
             <li class="nav-item">
                 <a href="/blogs" class="nav-link">Blog Listesi</a>
             </li>
+
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    Dropdown link
+                </a>
+                <ul class="dropdown-menu">
+                    <li></li>
+                    <li><a class="dropdown-item" href="#">Action</a></li>
+                    <li><a class="dropdown-item" href="#">Another action</a></li>
+                    <li><a class="dropdown-item" href="#">Something else here</a></li>
+                </ul>
+            </li>
         </ul>
+        <div class="col-sm-1 col-sm-offset-11">
+            <div class="dropdown-center">
+
+                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    <%= dataValues.username %>
+                </button>
+                <ul class="dropdown-menu">
+                    <li class="dropdown-item disabled"><%= usertype %>     
+                            <% if (usertype=="student" ) { %>
+                                <%= dataValues.id %>
+                                    <% } %>
+                    </li>
+                    <hr>
+                    <li><a class="dropdown-item" href="/logout">Log Out</a></li>
+                    <li><a class="dropdown-item" href="#">Another action</a></li>
+                    <li><a class="dropdown-item" href="#">Something else here</a></li>
+                </ul>
+            </div>
+        </div>
     </div>
 </nav>
