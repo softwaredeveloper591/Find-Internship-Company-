@@ -1,0 +1,151 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+.top-right-logo {
+    right: 10px; 
+    top: 10px; 
+    background-color: darkred;
+    padding: 10px;
+ 
+}
+
+.top-right-logo img{
+    width: 50px; /* Adjust size as needed */
+    height: auto;
+    display: flex;
+    align-items: center;
+}
+
+header {
+    height: 100px;
+    background-color: darkred;
+    display: flex;
+    align-items: center;
+    padding: 20px;
+}
+
+.navbar {
+    display: flex;
+    align-items: end;
+    width: 100%;
+    align-items: center;
+}
+
+.navbar-content {
+    align-items: center;
+    display: flex;
+    height: 20%;
+    gap: 7px; /* Adds space between elements */
+}
+
+.search-bar {
+    padding: 5px;
+    font-size: 10px;
+}
+
+.text_navbar {
+    width: 50px;
+    margin-right: 20px; /* Adds margin for spacing around the text */
+}
+
+.top-left-logo{   /* İyte logo specifications*/
+    height: 100px;
+    background-color: #fff;
+    margin-left: 40px;
+    margin-right: 20px;
+    z-index: 1000; /* Ensures the logo stays above other content */
+}
+
+.logo {
+    background-color: #fff;
+    margin-left: -20px;
+    margin-top: -10px;
+    margin-bottom: -10px;
+    z-index: 1000; /* Ensures the logo stays above other content */
+}
+
+.search-bar input {
+    padding: 0px;
+}
+
+.search-bar button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 8px;
+}
+
+.sidebar { 
+    background-color: darkred;
+    margin-top: 0px;
+    width: 158px;
+    height: 100vh; /* Makes sidebar full height */
+    position: fixed;
+}
+
+.content {
+    margin-left: 160px; /* Adjusted to prevent overlap with the fixed sidebar */
+    padding: 20px;
+}
+
+.image-upload label, .details label {
+    margin-top: 10px;
+    display: block;
+}
+
+.image-upload .upload-frame {
+    border: 2px dashed #fff;  /* White dashed frame around the upload button */
+    display: inline-block;    /* Keeps the frame tight around the button */
+    padding: 5px;             /* Padding inside the frame */
+}
+
+.image-upload button, .publish {
+    align-content: end;
+    background-color: darkred;
+    color: white;
+    border: none;
+    padding: 10px;
+    margin-top: 5px;
+}
+
+.details textarea, .details input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+}
+
+.publish {
+    alignment: end;
+}
+
+.details {
+    text-align: left;        /* Aligns all content in `.details` to the left */
+}
+
+.active{
+    background-color: darkred;
+    color: white;
+    padding: 10px;
+    border: none;
+    width: 100%;
+    
+}
+
+.active:hover{
+    background-color: red;
+    transition: 0.4s;
+}
+
+
+
+textarea {
+    resize: none;
+}
+
+i{
+    padding-right: 10px;
+}
