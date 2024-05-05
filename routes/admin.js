@@ -4,7 +4,7 @@ const auth = require("../middleware/auth");
 const checkUserRole= require("../middleware/checkUserRole")
 const Admin_model= require("../models/admin-model");
 const Company_model= require("../models/company-model");
-const Announcement = require("../models/announcement");
+const Announcement = require("../models/announcement-model");
 
 
 

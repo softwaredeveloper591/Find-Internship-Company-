@@ -57,20 +57,25 @@
                                             </p>
                                             <br>
                                             <div class="row" id="buttonContainer<%=announcement.dataValues.id%>">
-                                                <label for="CV" class="col-sm-1 col-form-label">CV :</label>
-                                                <div class="col-sm-4">
-                                                    <input type="file" class="form-control" id="CV" name="CV">
-                                                </div>
-                                                <div class="row mb-3">
-                                                    <div class="col-sm-8">
-                                                      <button type="submit" class="btn btn-primary mt-3">Gönder</button>
+                                                <form action="" method="post" enctype="multipart/form-data">
+                                                    <label for="CV" class="col-sm-1 col-form-label">CV :</label>
+                                                    <div class="col-sm-4">
+                                                        <input type="file" class="form-control" id="CV" name="CV">
                                                     </div>
-                                                </div>
+                                                    <input type="hidden" name="studentID" value=" <%= dataValues.id %>">
+                                                    <input type="hidden" name="username" value=" <%= dataValues.username%>">
+                                                    <div class="row mb-3">
+                                                        <div class="col-sm-8">
+                                                            <button type="submit"
+                                                                class="btn btn-primary mt-3">Gönder</button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                                
 
 
                                             </div>
-                                            <div id="result<%=announcement.dataValues.id%>" class="alert"
-                                                style="display:none; "></div>
+                
                                         </div>
                                     </div>
                                 </div>
@@ -82,47 +87,6 @@
         </div>
 
 
-        <script>
-
-            function updateData(id, isApproved) {
-                // Data to be sent in the request body (if any)
-                const requestBody = {
-                    // Your data here
-                    status: isApproved
-                };
-
-                fetch(`/student/opportunities/${id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestBody) // Convert object to JSON string
-                })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log('Success:', data);
-                        // Handle successful response here
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        // Handle errors here
-                    });
-                let resultAlertType = isApproved ? "alert-success" : "alert-danger";
-                let buttondiv = 'buttonContainer' + id;
-                let resultName = 'result' + id;
-                document.getElementById(buttondiv).style.display = 'none';
-                var resultText = isApproved ? "Onaylandı" : "Reddedildi";
-                var resultDiv = document.getElementById(resultName);
-                resultDiv.innerHTML = resultText;
-                resultDiv.classList.add("d-block", resultAlertType);
-
-            }
-        </script>
 </body>
 
 
