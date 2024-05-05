@@ -6,8 +6,6 @@ const Admin_model= require("../models/admin-model");
 const Company_model= require("../models/company-model");
 const Announcement = require("../models/announcement-model");
 
-//just a comment
-
 
 router.get("/admin/announcementRequests",[auth,checkUserRole("admin")],async function(req,res){
     let admin = await Admin_model.findOne({ where: {id: req.user.id} });
