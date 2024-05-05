@@ -24,7 +24,7 @@ const Company = sequelize.define('Company', {
       unique: true
     },
     password: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING(250),
       allowNull: false,
       unique: true
     },

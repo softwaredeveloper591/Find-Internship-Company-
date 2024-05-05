@@ -62,48 +62,7 @@
             </div>
         </div>
 
-    
-<script>
 
-function updateData(id,isApproved) {
-            // Data to be sent in the request body (if any)
-            const requestBody = {
-                // Your data here
-                status:isApproved
-            };
-
-            fetch(`/student/opportunities/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestBody) // Convert object to JSON string
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Success:', data);
-                // Handle successful response here
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                // Handle errors here
-            });
-            let resultAlertType= isApproved ? "alert-success" : "alert-danger";
-            let buttondiv='buttonContainer'+id;
-            let resultName='result'+id;
-            document.getElementById(buttondiv).style.display = 'none';
-            var resultText = isApproved ? "Onaylandı" : "Reddedildi";
-            var resultDiv = document.getElementById(resultName);
-            resultDiv.innerHTML = resultText;
-            resultDiv.classList.add("d-block", resultAlertType);
-
-        }
-</script>
 </body>
 
 

@@ -2,58 +2,89 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <style>
-        .entry {
-            text-align: center;
-            border: 1px solid black;
-            width: 25%;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%,-50%);
-        }
-        .buton{
-            margin: 20px 10px
-        }
-
-        .input{
-            width: 70%;
-            margin-top: 10px;
-        }
-
-        .kutu1{
-            background-image: url(Pictures/İyte.jpg);
-        }
-        
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/İyte Logo.png">
+  <title>Automated Internship System Login</title>
+  <link rel="stylesheet" href="/styles.css">
 </head>
 
+
 <body>
-        <div class="kutu1" > </div>
-        <div class="entry">
-            <form method="post">
-                <img src="/İyte Logo.png" alt="Picture couldn't be loaded">
-                <h3>Sing In</h3>
-                <input class="input" type="text" name="username" required placeholder="Username">
-                <br>
-                <input class="input" type="password" name="password" required placeholder="Password">
-                <p>User type:</p>
-                Admin<input type="radio" name="usertype" value="admin">
-                Student<input type="radio" name="usertype" value="student">
-                Company<input type="radio" required name="usertype" value="company">
-                <br>
-                <button class="buton"> Enter</button>
-                <p >Hesabınız yok mu? Kayıt Ol <a style="text-decoration: none ;" href="/signup/student">Student </a> <a style="text-decoration: none ;" href="/signup/company"> Company</a></p> 
+    <div class="left">
+      <div class="image-container">
+        <img src="https://ceng.iyte.edu.tr/wp-content/uploads/sites/124/2017/02/100_3495.jpg" alt="IZTECH-CENG">
+        <div class="purple-overlay"></div>
+      </div>
+    </div>
 
+    <div class="right">
+      
+      <div class="top-right">
+        <div class="top-right-middle">
+          <a href="https://iyte.edu.tr/" target="_blank">
+            <img src="/İyte Logo.png"
+              height="200" width="200" alt="IYTE">
+          </a>
         </div>
-    
+        <div style="width: 85%; margin: 0 auto;">
+          <hr style="border: 1px solid black; border-color: black; opacity: 0.15;">
+        </div>
+      </div>
 
-
-    </form>
-
+      
+      <div class="bottom-right">
+        <form method="post">
+        <p name="page-name">Automated Internship System</p>
+        <h1 name="header">Login</h1>
+        <div class="container">
+            <input type="text" style="font-size: 14px;" placeholder="Email" id="email" name="email" required>
+            <input type="password" style="font-size: 14px;" placeholder="Password" id="password" name="password" required>
+			<div class="error"></div>
+            <label>
+                <input type="checkbox" id="remember" name="remember" value="lsRememberMe">
+                <span style="font-size: 16px;">Remember your username</span>
+            </label>
+            <button type="submit" value="Login" onclick="lsRememberMe()">Login</button>
+            <script src="/remember.js"></script>
+            <li><a href="/signup"><button type="button" value="SignUp">Sign up</button></a></li>
+        </div>
+      </form>
+      </div>
+    </div>
 </body>
-
 </html>
+
+
+<script>
+    const form = document.querySelector('form');
+    const error = document.querySelector('.error');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Reset errors
+        error.textContent = '';
+
+        // Get values
+        const email = form.email.value;
+        const password = form.password.value;
+
+        try {
+            const res = await fetch('/', { 
+                method: 'POST', 
+                body: JSON.stringify({ email, password }),
+                headers: {'Content-Type': 'application/json'}
+            });
+            const data = await res.json();
+            if (data.errors) {
+                error.textContent = data.errors.error;
+            }
+            if (data.user) {
+                location.assign('/'+data.user); 
+            }
+        } catch (err) {
+            error.textContent = 'Failed to communicate with the server';
+        }
+    });
+</script>

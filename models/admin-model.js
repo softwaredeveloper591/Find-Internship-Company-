@@ -18,11 +18,13 @@ const Admin = sequelize.define('Admin', {
     },
     email: {
       type: DataTypes.STRING(45),
-      allowNull: false
+      allowNull: false,
+      unique: true
     },
     password: {
-      type: DataTypes.STRING(45),
-      allowNull: false
+      type: DataTypes.STRING(250),
+      allowNull: false,
+      unique: true
     }
   }, {
     tableName: 'admin', 

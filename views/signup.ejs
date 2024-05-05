@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Automated Internship System</title>
+  <link rel="icon" href="https://bhib.iyte.edu.tr/wp-content/uploads/sites/115/2018/09/iyte_logo-tur.png">
+  <link href="/styles.css" rel="stylesheet">
+</head>
+
+<body>
+  
+    <div class="left">
+      <div class="image-container">
+        <img src="https://ceng.iyte.edu.tr/wp-content/uploads/sites/124/2017/02/100_3495.jpg" alt="Original Image">
+        <div class="purple-overlay"></div>
+      </div>
+    </div>
+
+    
+    <div class="right">
+
+      <div class="top-right">
+        <div class="top-right-middle">
+            <a href="https://iyte.edu.tr/" target="_blank">
+                <img src="/İyte Logo.png" height="200" width="200" alt="IYTE">
+            </a>
+        </div>
+        <div style="width: 85%; margin: 0  auto">
+          <hr style="border: 1px solid black; border-color: black; opacity: 0.15;">
+        </div>
+      </div>
+
+      <div class="bottom-right">
+        <div class="slide-controls">
+          <input type="radio" name="slide" id="register-Student" checked>
+          <input type="radio" name="slide" id="register-Company">
+          <label for="register-Student" class="slide registerStudent">Sign up Student</label>
+          <label for="register-Company" class="slide registerCompany">Sign up Company</label>
+          <div class="slider-tab"></div>
+        </div>
+        
+        <div class="title-text">
+          <div class="title registerStudent">
+              <p name="page-name" class="page-name">Automated Internship System</p>
+              <h1 name="header" class="header" style="font-size: 24px;">Sign Up Student</h1>
+          </div>
+
+          <div class="title registerCompany">
+              <p name="page-name" class="page-name">Automated Internship System</p>
+              <h1 name="header" class="header" style="font-size: 28px;">Sign Up Company</h1>
+          </div>
+        </div>
+
+        <div class="form-inner">
+          <form action="/signup/student" method="post" class="registerStudent">
+            <div class="bottom-right-inner">
+              <div class="container">
+				<div class="duplicate error"></div>
+                <input type="email" style="font-size: 14px;" placeholder="Email" id="student-email" name="student-email" required>
+				<div class="email error"></div>
+                <input type="text" style="font-size: 14px;" placeholder="User Name" id="student-username" name="student-username" required>
+                <input type="password" style="font-size: 14px;" placeholder="Password" id="student-password" name="student-password" required>
+				<div class="password error"></div>
+                <input type="password" style="font-size: 14px;" placeholder="Confirm password" id="student-passwordConfirm" name="student-passwordConfirm" required>
+				<div class="confirm error"></div>
+                <button type="submit" value="Sign Up">Sign up</button> 
+                <center><li><a href='/'>You already have an account? Log in.</a></li></center>
+              </div>
+            </div>
+          </form>
+
+          <form action="/signup/company" method="post" class="registerCompany">
+            <div class="bottom-right-inner">
+              <div class="container">
+				<div class="duplicate error"></div>
+                <input type="text" style="font-size: 14px;" placeholder="Company Name" id="company-name" name="company-name" required>
+                <input type="text" style="font-size: 14px;" placeholder="User Name" id="company-username" name="company-username" required>
+                <input type="email" style="font-size: 14px;" placeholder="Company Email" id="company-email" name="company-email" required>
+				<div class="email error"></div>
+                <input type="text" style="font-size: 14px;" placeholder="Address" id="company-address" name="company-address" required>
+                <input type="password" style="font-size: 14px;" placeholder="Password" id="company-password" name="company-password" required>
+				<div class="password error"></div>
+                <input type="password" style="font-size: 14px;" placeholder="Confirm password" id="company-confirmPassword" name="company-confirmPassword" required>
+				<div class="confirm error"></div>
+                <button type="submit" value="Sign Up">Sign up</button>
+                <center><li><a href='/'>You already have an account? Log in.</a></li></center>
+              </div>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div> 
+<script src="/slider.js"></script>
+
+</body>
+</html>
+
+<script>
+    const studentForm = document.querySelector('form.registerStudent');
+    const companyForm = document.querySelector('form.registerCompany');
+
+    studentForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+		const duplicateError = document.querySelector('.duplicate.error');
+    	const confirmError = document.querySelector('.confirm.error');
+    	const emailError = document.querySelector('.email.error');
+    	const passwordError = document.querySelector('.password.error');
+
+        // Reset errors
+        duplicateError.textContent = '';
+        confirmError.textContent = '';
+        emailError.textContent = '';
+        passwordError.textContent = '';
+
+        // Get student form values
+        const email = studentForm.querySelector('#student-email').value;
+        const username = studentForm.querySelector('#student-username').value;
+        const password = studentForm.querySelector('#student-password').value;
+        const confirmPassword = studentForm.querySelector('#student-passwordConfirm').value;
+
+        try {
+            const res = await fetch('/signup/student', { 
+                method: 'POST', 
+                body: JSON.stringify({ email, username, password, confirmPassword }),
+                headers: {'Content-Type': 'application/json'}
+            });
+            const data = await res.json();
+            if (data.errors) {
+                duplicateError.textContent = data.errors.duplicate;
+                confirmError.textContent = data.errors.confirmPassword;
+                emailError.textContent = data.errors.email;
+                passwordError.textContent = data.errors.password;
+            }
+            if (data.student) {
+                location.assign('/student'); 
+            }
+        } catch (err) {
+            emailError.textContent = 'Failed to communicate with the server';
+        }
+    });
+
+    companyForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+		const duplicateError = document.querySelector('form.registerCompany .duplicate.error');
+		const confirmError = document.querySelector('form.registerCompany .confirm.error');
+		const emailError = document.querySelector('form.registerCompany .email.error');
+		const passwordError = document.querySelector('form.registerCompany .password.error');
+
+        // Reset errors
+        duplicateError.textContent = '';
+        confirmError.textContent = '';
+        emailError.textContent = '';
+        passwordError.textContent = '';
+
+        // Get company form values
+        const name = companyForm.querySelector('#company-name').value;
+        const username = companyForm.querySelector('#company-username').value;
+        const email = companyForm.querySelector('#company-email').value;
+        const address = companyForm.querySelector('#company-address').value;
+        const password = companyForm.querySelector('#company-password').value;
+        const confirmPassword = companyForm.querySelector('#company-confirmPassword').value;
+
+        try {
+            const res = await fetch('/signup/company', { 
+                method: 'POST', 
+                body: JSON.stringify({ name, username, email, address, password, confirmPassword }),
+                headers: {'Content-Type': 'application/json'}
+            });
+            const data = await res.json();
+            if (data.errors) {
+                duplicateError.textContent = data.errors.duplicate;
+                confirmError.textContent = data.errors.confirmPassword;
+                emailError.textContent = data.errors.email;
+                passwordError.textContent = data.errors.password;
+            }
+            if (data.company) {
+                location.assign('/company'); 
+            }
+        } catch (err) {
+            emailError.textContent = 'Failed to communicate with the server';
+        }
+    });
+</script>  
