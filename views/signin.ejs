@@ -13,7 +13,7 @@
 <body>
     <div class="left">
       <div class="image-container">
-        <img src="https://ceng.iyte.edu.tr/wp-content/uploads/sites/124/2017/02/100_3495.jpg" alt="IZTECH-CENG">
+        <img src="/iyte_ceng.jpg" alt="IZTECH-CENG">
         <div class="purple-overlay"></div>
       </div>
     </div>
@@ -34,7 +34,7 @@
 
       
       <div class="bottom-right">
-        <form method="post">
+        <form method="post" id="signin" class="signin">
           <p name="page-name">Automated Internship System</p>
           <h1 name="header">Login</h1>
           <div class="container">
@@ -46,13 +46,36 @@
                   <span style="font-size: 16px;">Remember your username</span>
               </label>
               <button type="submit" value="Login" onclick="lsRememberMe()">Login</button>
-              <script src="/remember.js"></script>
-              <li><a href="/signup"><button type="button" value="SignUp">Sign up</button></a></li>
           </div>
         </form>
+
+        <form action="/forgotPassword" method ="post" id="forgotPassword" class="forgotPassword">
+          <div class="forgot-password"  id="forgot-password">
+            <input type="email" style="font-size: 14px;" placeholder="Email" id="email" name="email" required>
+            <div class="no user error"></div>
+            <button type="submit">Send Reset Link</button>
+          </div>
+        </form>
+        <center><a href="#" onclick="toggleForgotPassword()">Forgot Password?</a></center>
+        <br>
+        <center><a href='/signup'>Don't have an account? Sign up.</a></center>
       </div>
     </div>
+<script src="/remember.js"></script>
 <script src="/signin_errors.js"></script>
 
 </body>
 </html>
+
+<script>
+function toggleForgotPassword() {
+    var forgotPassword = document.getElementById("forgot-password");
+    forgotPassword.classList.toggle("active");
+    
+    const forgotPasswordForm = document.querySelector('form.forgotPassword');
+    const error = forgotPasswordForm.querySelector('.no.user.error');
+    error.textContent = '';
+    error.style.display = 'none';
+    forgotPasswordForm.reset();
+}
+</script>

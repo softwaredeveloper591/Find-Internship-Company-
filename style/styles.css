@@ -308,3 +308,22 @@ input[type="radio"][name="slide"]{
   margin-left: 50px;
   color: red;
 }
+
+.no.user.error {
+  display: none;
+  width: 100%;
+  height: 20px;
+  margin-left: 50px;
+  color: red;
+}
+
+.forgot-password {
+  height: 150px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease-in-out; /* Transition for slide effect */
+}
+
+.forgot-password.active {
+  max-height: 150px; /* Set to a large value to allow for sliding */
+}

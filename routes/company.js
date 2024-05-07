@@ -53,7 +53,7 @@ const handleErrors = (err) => {
 
 router.get("/company/announcement",[auth,checkUserRole("company")], async function(req,res){
     let company = await Company_model.findOne({ where: {id: req.user.id} });
-    res.render("Company/announcement",{ usertype:"company", dataValues:company.dataValues});
+    res.render("Company/companyShareOpportunity",{ usertype:"company", dataValues:company.dataValues});
 });
 
 router.post("/company/announcement",[auth,checkUserRole("company")], async function(req,res){
