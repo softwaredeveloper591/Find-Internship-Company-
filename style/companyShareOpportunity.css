@@ -1,0 +1,274 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+.top-right-logo {
+    right: 10px; 
+    top: 10px; 
+    background-color: darkred;
+    padding: 10px;
+ 
+}
+
+.top-right-logo img{
+    width: 50px; /* Adjust size as needed */
+    height: auto;
+    display: flex;
+    align-items: center;
+}
+
+header {
+    height: 100px;
+    background-color: darkred;
+    display: flex;
+    align-items: center;
+    padding: 20px;
+}
+
+.navbar {
+    display: flex;
+    align-items: end;
+    width: 100%;
+    align-items: center;
+}
+
+.navbar-content {
+    align-items: center;
+    display: flex;
+    height: 20%;
+    gap: 7px; /* Adds space between elements */
+}
+
+.search-bar {
+    padding: 5px;
+    font-size: 10px;
+}
+
+.text_navbar {
+    font-weight: bold;
+    color: #ffffff;
+    width: 50px;
+    margin-right: 20px; /* Adds margin for spacing around the text */
+}
+
+.top-left-logo{   /* İyte logo specifications*/
+    height: 100px;
+    background-color: darkred;
+    margin-left: 10px;
+    margin-right: 30px;
+    align-items: center;
+    z-index: 1000; /* Ensures the logo stays above other content */
+}
+
+.logo {
+    background-color: darkred;
+    margin-left: -20px;
+    margin-top: -10px;
+    margin-bottom: -10px;
+    z-index: 1000; /* Ensures the logo stays above other content */
+}
+
+
+.search-bar button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 8px;
+}
+
+.sidebar {
+    height: 85.5vh; 
+    width: 0; /* Başlangıçta 0 olarak ayarla */
+    position: absolute;
+    z-index: 1;
+    top: 100px;
+    left: 0;
+    background-color: darkred;
+    overflow-x: hidden; /* Yatay kaydırmayı önle */
+    transition: width 0.5s; /* Pürüzsüz geçiş */
+    padding-top: 60px;
+    color: white;
+}
+
+.sidebar button{
+    display: block;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    border: none;
+    background: none;
+    width: 100%;
+}
+
+.order{
+    text-decoration: none;
+    color: white;   
+}
+.order:hover{
+    color: white;
+}
+
+
+.sidebar button.active {
+    background-color: darkred;
+   
+}
+
+.sidebar button:hover {
+    background-color: red;
+}
+
+
+.content {
+    display: inline-block;
+    margin-left: 180px;
+}
+
+.details label{
+    display: block;
+}
+
+.upload-frame label{
+    margin-top: 10px;
+    padding: 20px; /* Adds space inside the border */
+    border: 2px dashed #000; /* Sets a dashed border */
+    display: inline-block; /* Allows the padding and border to enclose the text */
+}
+
+.details .publish{
+    align-items: end;
+    background-color: darkred;
+    color: white;
+    border: none;
+    padding: 10px;
+    margin-top: 10px;
+    margin-left: 89%;
+}
+
+.details textarea, .details input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+}
+
+
+.details{
+    width: 100vh;
+    background-color: rgb(241, 232, 232);
+    padding: 10px;
+    border-radius: 0rem;
+    box-shadow: 30px 20px 5px rgba(76, 73, 73, 0.1);
+}
+
+.ground{
+    width: 100vh;
+    height: 270px;
+    background-color: rgb(241, 232, 232);
+    padding: 10px;
+    margin-top: -10px;
+    border-top:  0.5rem;
+    box-shadow: 30px 20px 5px rgba(76, 73, 73, 0.1);
+}
+
+.active{
+    display: block;
+    background-color: darkred;
+    color: white;
+    padding: 10px;
+    border: none;
+    width: 100%;
+    
+}
+
+.active:hover{
+    background-color: red;
+    transition: 0.4s;
+}
+
+textarea {
+    resize: none;
+}
+
+i{
+    padding-right: 10px;
+}
+
+.dp-menu{
+    margin-left: -10px;
+    margin-right: 30px;
+    background-color: darkred;
+    display: inline-block;
+    border: none;
+}
+
+.uniform{
+    margin-left: 10%;
+}
+
+
+.image-upload-container {
+    display: inline-flex;
+    align-items: center;
+    width: 250px;
+    height: 220px;
+    margin-top: 10px; 
+    margin-bottom: 10px; 
+}
+
+.file-upload-img {
+    display: none; 
+    width: 250px;
+    height: 220px;
+    margin-right: 20px; 
+    z-index: 1000;
+}
+
+
+.image-upload-container input[type="file"] {
+    font-size: 14px;
+    opacity: 0; 
+    margin-left: 200px;
+    width: 100px;
+    height: 100px;
+    position: absolute; 
+    cursor: pointer; 
+}
+
+.image-upload-container span {
+    display: inline;
+    background: darkred;
+    margin-left: 250px;
+    position: absolute;
+    color: #fff;
+    border: black; 
+    border-radius: 30%;
+    padding: 13px;
+    cursor: pointer;
+}
+
+.remove-button {
+    display: inline-flex;
+    background-color: darkred; 
+    color: white;
+    padding: 13px; 
+    margin-top: 94px;
+    margin-left: 60px;
+    border: black; 
+    border-radius: 30%;
+    position: absolute;
+    height: 50px;
+    width: 50px;
+}
+
+.dashed-rectangle {
+    text-align: center;
+    align-content: center;
+    width: 200px; 
+    height: 200px; 
+    border: 3px dashed black; 
+    margin-left: 20px;
+    position: absolute;
+}
