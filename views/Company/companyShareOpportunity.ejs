@@ -48,21 +48,24 @@
             <div class="navbar-content">
                 <input type="text" class="search-bar" placeholder="Search">
                 <button><i class="fa-solid fa-magnifying-glass"></i></button>
-                <button class="btn btn-secondary " type="button" data-bs-toggle="dropdown"
-                    aria-expanded="false">
-                    <%= dataValues.username %>
-                </button>
-                <ul class="dropdown-menu">
-                    <li class="dropdown-item disabled"><%= usertype %>     
-                            <% if (usertype=="student" ) { %>
-                                <%= dataValues.id %>
-                                    <% } %>
-                    </li>
-                    <hr>
-                    <li><a class="dropdown-item" href="/logout">Log Out</a></li>
-                    <li><a class="dropdown-item" href="#">Another action</a></li>
-                    <li><a class="dropdown-item" href="#">Something else here</a></li>
-                </ul>
+                <div class="dropdown-center">
+
+                    <button class="btn btn-secondary" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        <%= dataValues.username %>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li class="dropdown-item disabled"><%= usertype %>     
+                                <% if (usertype=="student" ) { %>
+                                    <%= dataValues.id %>
+                                        <% } %>
+                        </li>
+                        <hr>
+                        <li><a class="dropdown-item" href="/logout">Log Out</a></li>
+                        <li><a class="dropdown-item" href="#">Another action</a></li>
+                        <li><a class="dropdown-item" href="#">Something else here</a></li>
+                    </ul>
+                </div>
 
 
                 <p class="text_navbar">Company Name</p>                         <!-- Update the name attribute with actual company name from db -->
