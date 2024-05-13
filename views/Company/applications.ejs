@@ -12,24 +12,19 @@
         crossorigin="anonymous"></script>
 
 </head>
-
+<%- include('../partials/nav') %>
 <body>
-
-    <%- include('../partials/nav') %>
+    <div id="sidebar" class="sidebar">
+        <!-- <button><a href="/company" class="order"><i class="fa-solid fa-house"></i>Home</a></button> -->
+        <a href="/company/announcement" class="order"><button >Announce an Opportunity</button> </a>
+        <a href="/company/applications" class="order"><button style="background-color:rgb(217, 4, 4);">Applications</button></a>
+        
+    </div>
+    
 
         <div class="container mt-3">
             <div class="row">
-                <div class="col-md-3 ">
-                    <div class="list-group">
-                        <a href="" class="list-group-item list-group-item-action bg-danger ">Web Geliştirme</a>
-                        <a href="/company/announcement" class="list-group-item list-group-item-action">Make an
-                            announcement</a>
-                        <a href="/company/applications" class="list-group-item list-group-item-action"
-                            active>Applications</a>
-                        <a href="" class="list-group-item list-group-item-action">Programlama</a>
-                    </div>
-                </div>
-                <div class="col-md-9">
+                <div class="col-md-9 offset-md-1">
                     <h1 class="h3 mb-3 ms-5">Applications</h1>
                     <div class="row">
                         <% applications.forEach(application=> { %>

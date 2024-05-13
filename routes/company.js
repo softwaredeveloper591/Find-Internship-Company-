@@ -98,7 +98,7 @@ router.get("/company/announcements/download/:applicationId/:fileType",[auth,chec
 
 router.get("/company",[auth,checkUserRole("company")],async function(req,res){
     let company = await Company_model.findOne({ where: {id: req.user.id} });
-    res.render("Company/company",{ usertype:"company", dataValues:company.dataValues, action: req.query.action});
+    res.render("Company/applications",{ usertype:"company", dataValues:company.dataValues, action: req.query.action});
 });
 
 router.post("/signup/company",async function(req,res){

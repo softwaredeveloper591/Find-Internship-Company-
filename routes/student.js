@@ -57,8 +57,10 @@ const handleErrors = (err) => {
 
 
 router.get("/student",[auth,checkUserRole("student")],async function(req,res){
-    let student = await Student_model.findOne({ where: {id: req.user.id} });
-    res.render("Student/student",{ usertype:"student", dataValues:student.dataValues});
+  let student = await Student_model.findOne({ where: {id: req.user.id} });
+  let announcements= await Announcement.findAll();  
+  let companies= Company_model.findAll();   
+  res.render("Student/opportunities",{ usertype:"student", dataValues:student.dataValues,announcements:announcements, companies});
 })
 
 router.get("/student/opportunities",[auth,checkUserRole("student")],async function(req,res){

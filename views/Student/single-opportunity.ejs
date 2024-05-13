@@ -12,23 +12,20 @@
         crossorigin="anonymous"></script>
 
 </head>
+<%- include('../partials/nav') %>
 
 <body>
 
-    <%- include('../partials/nav') %>
+    <div id="sidebar" class="sidebar">
+        <!-- <button><a href="/company" class="order"><i class="fa-solid fa-house"></i>Home</a></button> -->
+        <button ><a href="/student/opportunities" class="order">Student Opportunities</a></button> 
+        
+    </div>
+
 
         <div class="container mt-3">
             <div class="row">
-                <div class="col-md-3 ">
-                    <div class="list-group">
-                        <a href="" class="list-group-item list-group-item-action">Web Geliştirme</a>
-                        <a href="/student/opportunities"
-                            class="list-group-item list-group-item-action">Opportunities</a>
-                        <a href="" class="list-group-item list-group-item-action">Veri Analizi</a>
-                        <a href="" class="list-group-item list-group-item-action">Programlama</a>
-                    </div>
-                </div>
-                <div class="col-md-9">
+                <div class="col-md-9 offset-1">
                     <h1 class="h3 mb-3">Internship Opportunities</h1>
 
 

@@ -16,65 +16,16 @@
         crossorigin="anonymous"></script>
 </head>
 
+<%- include('../partials/nav') %>
+
 <body>
-    <header>
-        <div>
-            <div class="dp-menu">
-                <button style="background-color: darkred; border: none;" onclick="toggleSidebar()">
-                    <i class="fa-solid fa-bars p-2"></i>
-                </button>
-                <div id="sidebar" class="sidebar">
-                    <button ><a href="/company" class="order"><i class="fa-solid fa-house"></i>Home</a></button>               <!-- Add link to refer home page link -->
-                    <button style="background-color: red;"><a href="/company/announcement" class="order">Share Opportunity</a></button>   <!-- Add link to refer share opport page page link -->
-                    <button ><a href="/company/applications" class="order">Applications</a></button>                                        <!-- Add link to refer applications page link -->
-                    <button ><a href="link" class="order">Internships</a></button>                                          <!-- Add link to refer internships page page link -->
-                </div>
-            </div>
-            <script type="text/javascript">
-                function toggleSidebar() {
-                    var sidebar = document.getElementById('sidebar');
-                    if (sidebar.style.width === '180px') {
-                        sidebar.style.width = '0'; // Yan çubuğu kapat
-                    } else {
-                        sidebar.style.width = '180px'; // Yan çubuğu aç
-                    }
-                }
-            </script>
-        </div>
-        <div class="logo">
-            <img src="/İyte Logo.png" class="top-left-logo">                     <!-- Update the src for Iztech logo -->
-        </div>
-        <div class="navbar justify-content-end">
-            <div class="navbar-content">
-                <input type="text" class="search-bar" placeholder="Search">
-                <button><i class="fa-solid fa-magnifying-glass"></i></button>
-                <div class="dropdown-center">
-
-                    <button class="btn btn-secondary" type="button" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        <%= dataValues.username %>
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li class="dropdown-item disabled"><%= usertype %>     
-                                <% if (usertype=="student" ) { %>
-                                    <%= dataValues.id %>
-                                        <% } %>
-                        </li>
-                        <hr>
-                        <li><a class="dropdown-item" href="/logout">Log Out</a></li>
-                        <li><a class="dropdown-item" href="#">Another action</a></li>
-                        <li><a class="dropdown-item" href="#">Something else here</a></li>
-                    </ul>
-                </div>
-
-
-                <p class="text_navbar">Company Name</p>                         <!-- Update the name attribute with actual company name from db -->
-                <div class="top-right-logo">
-                    <img src="aselsan_logo.png" alt="logo">                     <!-- Update the src attribute with actual logo from db -->
-                </div>
-            </div>
-        </div>
-    </header>
+    <div id="sidebar" class="sidebar">
+        <!-- <button><a href="/company" class="order"><i class="fa-solid fa-house"></i>Home</a></button> -->
+   
+        <a href="/company/announcement" class="order"><button style="background-color:rgb(217, 4, 4);">Announce an Opportunity</button> </a>
+        <a href="/company/applications" class="order"><button>Applications</button></a>
+    </div>
+    
 
     <div class="uniform">
         <div class="content mt-4">

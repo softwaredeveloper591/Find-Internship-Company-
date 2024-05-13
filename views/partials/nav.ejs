@@ -1,4 +1,67 @@
-<nav class="navbar navbar-dark bg-danger navbar-expand-lg">
+<link rel="stylesheet" href="/companyShareOpportunity.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+<header>
+    <div>
+        <div class="dp-menu">
+            <button style="background-color: darkred; border: none;" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars p-2"></i>
+            </button>
+        </div>
+        <script type="text/javascript">
+            function toggleSidebar() {
+                var sidebar = document.getElementById('sidebar');
+                if (sidebar.style.width == '0px') {
+                    sidebar.style.width = '180px'; 
+                } else {
+                    sidebar.style.width = '0px'; 
+                }
+            }
+        </script>
+    </div>
+    <div class="logo">
+        <img src="/İyte Logo.png" class="top-left-logo"> <!-- Update the src for Iztech logo -->
+    </div>
+    <div class="navbar justify-content-end">
+        <div class="navbar-content">
+            <div class="nav-2">
+                <form class="search-form">
+                    <input type="text" placeholder="Search..." class="search-input">
+                    <button type="submit" class="search-button"><i class="fa-solid fa-magnifying-glass p-1"></i></button>
+                </form>
+            </div>
+            <div class="dropdown-center me-5">
+
+                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <%= dataValues.username %>
+                </button>
+                <ul class="dropdown-menu ">
+                    <li class="dropdown-item disabled">
+                        <%= usertype %>
+                            <% if (usertype=="student" ) { %>
+                                <%= dataValues.id %>
+                                    <% } %>
+                    </li>
+                    <hr>
+                    <li><a class="dropdown-item" href="/logout">Log Out</a></li>
+                </ul>
+            </div>
+
+
+            <!-- <p class="text_navbar">Company Name</p>                         Update the name attribute with actual company name from db -->
+            <!-- <div class="top-right-logo">
+                <img src="aselsan_logo.png" alt="logo">                     
+            </div> -->
+        </div>
+    </div>
+</header>
+
+
+
+
+
+<!-- <nav class="navbar navbar-dark bg-danger navbar-expand-lg">
     <div class="container">
         <a href="/" class="navbar-brand">Blogapp</a>
         <ul class="navbar-nav me-auto">
@@ -40,4 +103,4 @@
             </div>
         </div>
     </div>
-</nav>
+</nav> -->
