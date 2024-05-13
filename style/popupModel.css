@@ -1,0 +1,38 @@
+/* Modal styles */
+.uniform .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    
+}
+
+.uniform .modal-content {
+    color: white;
+    background-color: darkred;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 20%;
+    border-radius: 8px;
+    box-shadow: 20px 10px 5px rgba(76, 73, 73, 0.5);
+}
+
+.uniform .modal-content .close {
+    color: #aaa;
+    float: left;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.uniform .close:hover,
+.close:focus {
+    color: white;
+    text-decoration: none;
+    cursor: pointer;
+}
+/*------------*/

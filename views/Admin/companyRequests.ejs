@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Company Requests</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+	<script src="/admin_functions.js"></script>	
+</head>
+
+<body>
+    <%- include('../partials/nav') %>
+    <div class="container mt-3">
+		<div class="row">
+			<div class="col-md-3 ">
+				<div class="list-group">
+					<a href="/admin/announcementRequests" class="list-group-item list-group-item-action">Announcement Requests</a>
+					<a href="/admin/companyRequests" class="list-group-item list-group-item-action bg-danger">Company Requests</a>
+				</div>
+			</div>
+			<div class="col-md-9">
+				<h1 class="h3 mb-3">Pending Company Registration Requests</h1>
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Address</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (typeof companies !== 'undefined' && companies.length > 0) { %>
+                    <% companies.forEach(company => { %>
+                        <tr>
+                            <td><%= company.name %></td>
+                            <td><%= company.username %></td>
+                            <td><%= company.email %></td>
+                            <td><%= company.address %></td>
+                            <td>
+                                <button class="btn btn-success" onclick="updateCompanyRequest('<%= company.id %>', true)">Approve</button>
+                                <button class="btn btn-danger" onclick="updateCompanyRequest('<%= company.id %>', false)">Reject</button>
+                            </td>
+                        </tr>
+                    <% }); %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="5" class="text-center">No pending registration requests found.</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+			</div>
+		</div>   
+    </div>
+
+</body>
+
+</html>

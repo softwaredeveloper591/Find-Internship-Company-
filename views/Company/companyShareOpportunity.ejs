@@ -24,42 +24,37 @@
                     <i class="fa-solid fa-bars p-2"></i>
                 </button>
                 <div id="sidebar" class="sidebar">
-                    <button ><a href="/company" class="order"><i class="fa-solid fa-house"></i>Home</a></button>               <!-- Add link to refer home page link -->
-                    <button style="background-color: red;"><a href="/company/announcement" class="order">Share Opportunity</a></button>   <!-- Add link to refer share opport page page link -->
-                    <button ><a href="/company/applications" class="order">Applications</a></button>                                        <!-- Add link to refer applications page link -->
-                    <button ><a href="link" class="order">Internships</a></button>                                          <!-- Add link to refer internships page page link -->
+                    <button><a href="/company" class="order"><i class="fa-solid fa-house"></i>Home</a></button>
+                    <button style="background-color: red;"><a href="/company/announcement" class="order">Share Opportunity</a></button>
+                    <button><a href="/company/applications" class="order">Applications</a></button>
+                    <button><a href="link" class="order">Internships</a></button>
                 </div>
             </div>
-            <script type="text/javascript">
+            <script>
                 function toggleSidebar() {
                     var sidebar = document.getElementById('sidebar');
                     if (sidebar.style.width === '180px') {
-                        sidebar.style.width = '0'; // Yan çubuğu kapat
+                        sidebar.style.width = '0'; // Close sidebar
                     } else {
-                        sidebar.style.width = '180px'; // Yan çubuğu aç
+                        sidebar.style.width = '180px'; // Open sidebar
                     }
                 }
             </script>
         </div>
         <div class="logo">
-            <img src="/İyte Logo.png" class="top-left-logo">                     <!-- Update the src for Iztech logo -->
+            <img src="/İyte Logo.png" class="top-left-logo"> <!-- Adjust the logo path as needed -->
         </div>
         <div class="navbar justify-content-end">
             <div class="navbar-content">
                 <input type="text" class="search-bar" placeholder="Search">
                 <button><i class="fa-solid fa-magnifying-glass"></i></button>
                 <div class="dropdown-center">
-
                     <button class="btn btn-secondary" type="button" data-bs-toggle="dropdown"
                         aria-expanded="false">
                         <%= dataValues.username %>
                     </button>
                     <ul class="dropdown-menu">
-                        <li class="dropdown-item disabled"><%= usertype %>     
-                                <% if (usertype=="student" ) { %>
-                                    <%= dataValues.id %>
-                                        <% } %>
-                        </li>
+                        <li class="dropdown-item disabled"><%= usertype %></li>
                         <hr>
                         <li><a class="dropdown-item" href="/logout">Log Out</a></li>
                         <li><a class="dropdown-item" href="#">Another action</a></li>
@@ -67,10 +62,9 @@
                     </ul>
                 </div>
 
-
-                <p class="text_navbar">Company Name</p>                         <!-- Update the name attribute with actual company name from db -->
+                <p class="text_navbar"><%= dataValues.name %></p> <!-- Replace with actual company name -->
                 <div class="top-right-logo">
-                    <img src="aselsan_logo.png" alt="logo">                     <!-- Update the src attribute with actual logo from db -->
+                    <img src="aselsan_logo.png" alt="logo"> <!-- Replace with actual logo -->
                 </div>
             </div>
         </div>
@@ -78,49 +72,75 @@
 
     <div class="uniform">
         <div class="content mt-4">
-            <div class="uniform">
-                <div class="ground">
-                    <div class="image-upload-container">
-                        <div class="dashed-rectangle">Upload image (Optional)</div>
-                        <img id="uploadPreview" alt="Image Preview" class="file-upload-img" />
-                        <span><i class="fa-solid fa-image p-1"></i></span>
-                        <input id="uploadImage" type="file" name="myPhoto" onchange="PreviewImage();" />
-                    </div>
-                    <button onclick="removeImage()" class="remove-button"><i class="fa-solid fa-trash p-1"></i></button>
-                </div>
-                <div class="details">
-                    <!-- Form content -->
-                    <label>Details about the internship opportunity:</label>
-                    <textarea class="form-control mb-3" rows="4"></textarea>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="startDate">Start Date:</label>
-                            <input type="date" class="form-control" id="startDate" name="startDate">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="endDate">End Date</label>
-                            <input type="date" class="form-control margin-bottom: 10px" id="endDate" name="endDate">
-                        </div>
-                    </div>
-                    <button class="publish">Publish</button>
-                </div>
-            </div>
+            <!-- Form with POST action -->
+            <form method="POST" action="/company/announcement" enctype="multipart/form-data">
+				<input type="hidden" name="companyId" value="<%= dataValues.id %>">
+				<input type="hidden" name="companyName" value="<%= dataValues.name %>">
+				<div class="uniform">
+					<div class="ground">
+						<div class="image-upload-container">
+							<div class="dashed-rectangle">Upload image (Optional)</div>
+							<img id="uploadPreview" alt="Image Preview" class="file-upload-img" />
+							<span><i class="fa-solid fa-image p-1"></i></span>
+							<input id="uploadImage" type="file" name="myPhoto" onchange="PreviewImage();" />
+						</div>
+						<button type="button" onclick="removeImage()" class="remove-button"><i class="fa-solid fa-trash p-1"></i></button>
+					</div>
+					<div id="myModal" class="modal">
+						<div class="modal-content">
+							<span class="close">&times;</span>
+							<p id="modalMessage">Please select a file.</p>
+						</div>
+					</div>
+					<div class="details">
+						<label>Title of the announcement:</label>
+						<textarea id="announcementName" name="announcementName" class="form-control mb-3" rows="1" style="min-height: 50px; max-height: 50px;" required></textarea>
+						<label>Details about the internship opportunity:</label>
+						<textarea id="description" name="description" class="form-control mb-3" rows="4" required></textarea>
+						<div class="row g-3">
+							<div class="col-md-6">
+								<label for="startDate">Start Date:</label>
+								<input type="date" class="form-control" id="startDate" name="startDate" required>
+							</div>
+							<div class="col-md-6">
+								<label for="endDate">End Date:</label>
+								<input type="date" class="form-control" id="endDate" name="endDate" required>
+							</div>
+						</div>
+						<!-- Ensure the button submits the form -->
+						<button type="submit" class="publish">Publish</button>
+					</div>
+				</div>
+			</form>
         </div>
     </div>
-    <script type="text/javascript">
+
+    <script>
+        const modal = document.getElementById('myModal');
+        const closeButton = document.getElementsByClassName('close')[0];
+
+        closeButton.onclick = function () {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function (event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+
         function PreviewImage() {
             var fileInput = document.getElementById("uploadImage");
             var file = fileInput.files[0];
 
             if (file) {
-                // Check if the selected file is an image
                 if (file.type.match('image.*')) {
                     var oFReader = new FileReader();
                     oFReader.readAsDataURL(file);
 
                     oFReader.onload = function (oFREvent) {
                         document.getElementById("uploadPreview").src = oFREvent.target.result;
-                        document.getElementById("uploadPreview").style.display = 'block'; // Make sure the preview is visible
+                        document.getElementById("uploadPreview").style.display = 'block';
                     };
 
                     oFReader.onerror = function (err) {
@@ -133,19 +153,32 @@
             } else {
                 alert('No file selected. Please select a file.');
             }
-        };
+        }
 
         function removeImage() {
             var fileInput = document.getElementById("uploadImage");
             var imagePreview = document.getElementById("uploadPreview");
 
-            // Clear the file input
             fileInput.value = "";
-            // Remove the image source from the preview
             imagePreview.src = "";
-            // Optionally, hide the image preview area if no image should be shown
             imagePreview.style.display = 'none';
-        };
+        }
+
+		document.addEventListener('DOMContentLoaded', function () {
+		    const form = document.querySelector('form');
+				
+		    form.addEventListener('submit', function (e) {
+		        // Get start and end date values from the form
+		        const startDate = document.getElementById('startDate').value;
+		        const endDate = document.getElementById('endDate').value;
+			
+		        // Compare dates
+		        if (new Date(startDate) >= new Date(endDate)) {
+		            e.preventDefault(); // Prevent form submission
+		            alert('End Date must be after the Start Date. Please adjust the dates.');
+		        }
+		    });
+		});
     </script>
 </body>
 

@@ -11,18 +11,17 @@ const Announcement = sequelize.define('announcement', {
       type: DataTypes.INTEGER,
       allowNull: false
     },
-    name: {
+	companyName: {
+		type: DataTypes.STRING(100),
+		allowNull: false
+	},
+    announcementName: {
       type: DataTypes.STRING(100),
       allowNull: false
     },
     description: {
       type: DataTypes.TEXT,
       allowNull: false
-    },
-    statusByDIC: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false
     },
     startDate: {
       type: DataTypes.DATE,
@@ -32,11 +31,19 @@ const Announcement = sequelize.define('announcement', {
       type: DataTypes.DATE,
       allowNull: false
     },
+	image: {
+		type: DataTypes.STRING(100),
+	},
     isActive: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true 
-    }
+    },
+	statusByDIC: {
+		type: DataTypes.BOOLEAN,
+		allowNull: false,
+		defaultValue: false
+	}
   }, {
     tableName: 'announcement',
     timestamps: false

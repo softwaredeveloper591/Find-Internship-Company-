@@ -10,6 +10,19 @@ const Announcement = require("../models/announcement-model");
 const Application_model = require("../models/application-model");
 const Document_model = require("../models/document-model");
 const { isEmail } = require('validator');
+const multer = require('multer');
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/'); // Make sure the uploads directory exists
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ storage: storage }).single('myPhoto');
 
 const handleErrors = (err) => {
     console.log(err.message, err.code);
@@ -26,53 +39,49 @@ const handleErrors = (err) => {
     if (err.message === 'Minimum password length') {
       errors.password = 'Minimum password length is 6 characters';
     }
-  
-    if (err.message === 'incorrect email') {
-      errors.email = 'That email is not registered';
-    }
     
-    // duplicate email error
     if (err.message === 'Validation error') {
       errors.duplicate = 'That email or company name is already registered';
     }
   
-    // validation errors
-    if (err.message.includes('user validation failed')) {
-      // console.log(err);
-      Object.values(err.errors).forEach(({ properties }) => {
-        // console.log(val);
-        // console.log(properties);
-        errors[properties.path] = properties.message;
-      });
-    }
-  
     return errors;
 };
-
-
 
 router.get("/company/announcement",[auth,checkUserRole("company")], async function(req,res){
     let company = await Company_model.findOne({ where: {id: req.user.id} });
     res.render("Company/companyShareOpportunity",{ usertype:"company", dataValues:company.dataValues});
 });
 
-router.post("/company/announcement",[auth,checkUserRole("company")], async function(req,res){
-    const { companyId, name, description, startDate , endDate } = req.body;
-    console.log(companyId, name, description, startDate , endDate);
-    try {
-        const newAnnouncement = await Announcement.create({
-            companyId:companyId,
-            name: name,
-            description: description,
-            startDate: startDate,
-            endDate: endDate
-          });
-        res.redirect("/company?action=formfilled");
-        
-    } catch (error) {
-        console.log(error);
-        res.status(500).send('An error occurred while creating the announcement in database.');   
-    }
+router.post('/company/announcement', [auth, checkUserRole('company')], (req, res) => {
+    upload(req, res, async (err) => {
+        if (err) {
+            console.error('Error uploading file:', err.message);
+            return res.status(500).send('Error occurred while uploading the image.');
+        }
+
+        const { companyId, companyName, announcementName, description, startDate, endDate } = req.body;
+        const imagePath = req.file ? `/uploads/${req.file.filename}` : '';
+
+		if (new Date(startDate) >= new Date(endDate)) {
+            return res.status(400).send('End Date must be after the Start Date.');
+        }
+
+        try {
+            await Announcement.create({
+                companyId,
+				companyName,
+                announcementName,
+                description,
+                startDate,
+                endDate,
+                image: imagePath 
+            });
+            res.redirect('/company?action=announcement-success');
+        } catch (error) {
+            console.error('Error:', error.message);
+            res.status(500).send('An error occurred while creating the announcement in the database.');
+        }
+    });
 });
 
 router.get("/company/applications",[auth,checkUserRole("company")],async function(req,res){
@@ -118,17 +127,16 @@ router.post("/signup/company",async function(req,res){
                 throw Error('Passwords do not match');
             }
 
-            const newCompany = await Company_model.create({
+            await Company_model.create({
                 name: name,
                 username: username,
                 email: email,
                 password: hashedPassword,
-                address: address
-              });
-            const token= createTokenWithIdandUserType(newCompany.id,"company");
-            res.cookie('jwt', token);
-            res.status(200).json({ company: newCompany.id });
-
+                address: address,
+				statusByDIC: false
+            });
+        
+            res.status(200).json({ message: "Your registration request has been sent to the admin." });
         } catch (err) {
             const errors = handleErrors(err);
             res.status(400).json({ errors });   

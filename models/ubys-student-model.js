@@ -1,14 +1,13 @@
 const { DataTypes}= require("sequelize");
 const sequelize=require("../data/db");
 
-const Student= sequelize.define('Student', {
+const ubysStudent= sequelize.define('ubysStudent', {
     id: {
         type: DataTypes.INTEGER,
         allowNull: false,
         primaryKey: true,
-        autoIncrement: true
       },
-      studentName: {
+      student_name: {
         type: DataTypes.STRING(45),
         allowNull: false
       },
@@ -17,14 +16,17 @@ const Student= sequelize.define('Student', {
         allowNull: false,
         unique: true
       },
-      password: {
+	  department: {
         type: DataTypes.STRING(45),
         allowNull: false,
-        unique: true
+      },
+      year: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
       }
     }, {
-      tableName: 'student',
+      tableName: 'ubys_student',
       timestamps: false 
     });
     
-    module.exports = Student;
+    module.exports = ubysStudent;

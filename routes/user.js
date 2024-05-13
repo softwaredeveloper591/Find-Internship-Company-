@@ -49,6 +49,10 @@ const handleErrors = (err) => {
 	if (err.message === "wrong username or password") {
 		errors.error = "wrong username or password";
 	}
+
+	if (err.message === "statusByDIC") {
+		errors.error = "Your registration request is still pending approval.";
+	}
   
     // validation errors
     if (err.message.includes('user validation failed')) {
@@ -74,24 +78,30 @@ router.get("/",function(req,res){
 router.post("/", async function(req,res){
     const { email, password } = req.body;
     try {
-		  const user = await findUserByEmail(email);
-      if(!user) {
-			  throw Error("wrong username or password");
-		  }
+		const user = await findUserByEmail(email);
+    	if(!user) {
+			throw Error("wrong username or password");
+		}
 
-      const checkPassword= await bcrypt.compare(password,user.user.password);
-		
-      if(!checkPassword) {
-			  throw Error("wrong username or password");
-		  }
+    	const checkPassword= await bcrypt.compare(password,user.user.password);
+	  
+    	if(!checkPassword) {
+			throw Error("wrong username or password");
+		}
 
-      const token= createTokenWithIdandUserType(user.user.id,user.userType);
-      res.cookie('jwt', token);
-		  res.status(200).json({ user: user.userType });
+		if (user.userType === "company") {
+			if (user.user.statusByDIC === 0) {
+				throw Error("statusByDIC");
+			}
+		}
+
+    	const token= createTokenWithIdandUserType(user.user.id,user.userType);
+    	res.cookie('jwt', token);
+		res.status(200).json({ user: user.userType });
     } 
-	  catch (error) {
-		  const errors = handleErrors(error);
-      res.status(400).json({ errors });
+	catch (error) {
+		const errors = handleErrors(error);
+      	res.status(400).json({ errors });
     }
 });
 
@@ -106,13 +116,13 @@ router.post("/forgotPassword", async function(req, res) {
     const transporter = nodeMailer.createTransport({
         service: 'gmail',
     	auth: {
-        	user: 'ahmetpro6401@gmail.com', // your Gmail address
-        	pass: 'evmr dtco usns gkql' // your Gmail password or App Password if 2FA is enabled
+        	user: 'enesbilalbabaturalpro06@gmail.com', // your Gmail address
+        	pass: 'elde beun xhtc btxu' // your Gmail password or App Password if 2FA is enabled
     	}
     });
 
     await transporter.sendMail({
-        from: 'ahmetpro6401@gmail.com',
+        from: '"Buket Erşahin" <enesbilalbabaturalpro06@gmail.com>',
         to: email,
         subject: 'Password Reset Link',
         html: `<a href="http://localhost:3000/changePassword?token=${token}">Reset Password</a>`
@@ -147,7 +157,7 @@ router.get('/changePassword', (req, res) => {
 router.post('/changePassword', async (req, res) => {
     const { password, confirmPassword, token } = req.body;
     if (password.length < 6) {
-        return res.status(404).json({ error: 'Minimum password length' });
+        return res.status(404).json({ error: 'Minimum password length is 6 characters' });
     }
 
 	if (password !== confirmPassword) {

@@ -10,16 +10,30 @@ const path = require('path');
 const { isEmail } = require('validator');
 
 const Student_model= require("../models/student-model");
+const UbysStudent_model = require("../models/ubys-student-model");
 const Admin_model= require("../models/admin-model");
 const Company_model= require("../models/company-model");
 const Announcement = require("../models/announcement-model");
 const Document_model = require("../models/document-model");
 const Application_model = require("../models/application-model");
+const ubysStudent = require("../models/ubys-student-model");
 
 
 const handleErrors = (err) => {
   console.log(err.message, err.code);
   let errors = { duplicate: '', email: '', password: '', confirmPassword: '' };
+
+  if (err.message === "not in ubys database") {
+	errors.email = "Incorrect student email";
+  }
+
+  if (err.message === "not eligible") {
+	errors.email = "That student is not eligible";
+  }
+
+  if (err.message === "not a std mail") {
+	errors.email = 'This is not a valid student email';
+  }
 
   if (err.message === "Passwords do not match") {
     errors.confirmPassword = 'Passwords do not match';
@@ -32,24 +46,9 @@ const handleErrors = (err) => {
   if (err.message === 'Minimum password length') {
     errors.password = 'Minimum password length is 6 characters';
   }
-
-  if (err.message === 'incorrect email') {
-    errors.email = 'That email is not registered';
-  }
   
-  // duplicate email error
   if (err.message === 'Validation error') {
-    errors.duplicate = 'That email or company name is already registered';
-  }
-
-  // validation errors
-  if (err.message.includes('user validation failed')) {
-    // console.log(err);
-    Object.values(err.errors).forEach(({ properties }) => {
-      // console.log(val);
-      // console.log(properties);
-      errors[properties.path] = properties.message;
-    });
+    errors.duplicate = 'That email is already registered';
   }
 
   return errors;
@@ -123,29 +122,49 @@ router.get("/student/opportunities/download/:studentId/:fileType",[auth,checkUse
 
 
 router.post("/signup/student",async function(req,res){
-    const { username, email, password, confirmPassword } = req.body;
+    const { email, password, confirmPassword } = req.body;
     const hashedPassword = await bcrypt.hash(password,10);
+
+	const mail = email;
+    const parts = mail.split("@");
+    const domain = parts[1]; 
+
         try {
-          if (!isEmail(email)) {
-            throw Error('Please enter a valid email');
-          }
+
+			if (!isEmail(email)) {
+            	throw Error('Please enter a valid email');
+          	}
+
+			if (domain !== "std.iyte.edu.tr") {
+				throw Error('not a std mail');
+			}
+
+			const ubysStudent = await UbysStudent_model.findOne({ where: { email } });
+
+			if(!ubysStudent) {
+				throw Error('not in ubys database');
+			}
+  
+			if(ubysStudent.department !== "CENG" || ubysStudent.year < 3) {
+				throw Error('not eligible');
+			}
         
-          if (password.length < 6) {
-            throw Error('Minimum password length');
-          }  
+          	if (password.length < 6) {
+           	 	throw Error('Minimum password length');
+          	}  
         
-          if (password !== confirmPassword) {
-            throw Error('Passwords do not match');
-          }
+          	if (password !== confirmPassword) {
+            	throw Error('Passwords do not match');
+          	}
 
             const newStudent = await Student_model.create({ 
-                username: username,
+                studentName: ubysStudent.student_name,
                 email: email,
                 password: hashedPassword
-              });
-              const token= createTokenWithIdandUserType(newStudent.id,"student");
-              res.cookie('jwt', token);
-    	        res.status(200).json({ student: newStudent.id });
+            });
+            const token= createTokenWithIdandUserType(newStudent.id,"student");
+            res.cookie('jwt', token);
+    	    res.status(200).json({ student: newStudent.id });
         } catch (err) {
           const errors = handleErrors(err);
           res.status(400).json({ errors });  
