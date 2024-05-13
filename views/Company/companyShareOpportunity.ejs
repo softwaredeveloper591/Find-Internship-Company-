@@ -25,18 +25,18 @@
                 </button>
                 <div id="sidebar" class="sidebar">
                     <button><a href="/company" class="order"><i class="fa-solid fa-house"></i>Home</a></button>
-                    <button style="background-color: red;"><a href="/company/announcement" class="order">Share Opportunity</a></button>
+                    <button style="background-color: rgb(217, 4, 4);"><a href="/company/announcement" class="order">Share Opportunity</a></button>
                     <button><a href="/company/applications" class="order">Applications</a></button>
                     <button><a href="link" class="order">Internships</a></button>
                 </div>
             </div>
-            <script>
+            <script type="text/javascript">
                 function toggleSidebar() {
                     var sidebar = document.getElementById('sidebar');
-                    if (sidebar.style.width === '180px') {
-                        sidebar.style.width = '0'; // Close sidebar
+                    if (sidebar.style.width == '0px') {
+                        sidebar.style.width = '180px'; 
                     } else {
-                        sidebar.style.width = '180px'; // Open sidebar
+                        sidebar.style.width = '0px'; 
                     }
                 }
             </script>
@@ -46,8 +46,12 @@
         </div>
         <div class="navbar justify-content-end">
             <div class="navbar-content">
-                <input type="text" class="search-bar" placeholder="Search">
-                <button><i class="fa-solid fa-magnifying-glass"></i></button>
+                <div class="nav-2">
+                    <form class="search-form">
+                        <input type="text" placeholder="Search..." class="search-input">
+                        <button type="submit" class="search-button"><i class="fa-solid fa-magnifying-glass p-1"></i></button>
+                    </form>
+                </div>
                 <div class="dropdown-center">
                     <button class="btn btn-secondary" type="button" data-bs-toggle="dropdown"
                         aria-expanded="false">
