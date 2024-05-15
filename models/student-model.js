@@ -1,5 +1,6 @@
 const { DataTypes}= require("sequelize");
 const sequelize=require("../data/db");
+const Application = require('./application-model');
 
 const Student= sequelize.define('Student', {
     id: {
@@ -26,5 +27,8 @@ const Student= sequelize.define('Student', {
       tableName: 'student',
       timestamps: false 
     });
-    
-    module.exports = Student;
+
+Application.belongsTo(Student, { foreignKey: 'studentId' });
+Student.hasMany(Application, { foreignKey: 'studentId' });
+
+module.exports = Student;

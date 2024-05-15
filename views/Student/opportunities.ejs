@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,50 +9,50 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 </head>
-
 <body>
     <%- include('../partials/nav') %>
 
     <div class="container mt-3">
         <div class="row">
             <div class="col-md-3">
-                <a href="/student/opportunities" class="list-group-item list-group-item-action bg-danger">Opportunities</a>
+                <div class="list-group">
+                    <a href="/student" class="list-group-item list-group-item-action">HOME</a>
+                    <a href="/student/opportunities" class="list-group-item list-group-item-action bg-danger">Opportunities</a>
+                    <a href="/student/status" class="list-group-item list-group-item-action">Check Status</a>
+                </div>
             </div>
             <div class="col-md-9">
                 <h1 class="h3 mb-3">Internship Opportunities</h1>
-
-                <% announcements.forEach(announcement => { %>
-                    <% if (announcement.dataValues.active != false) { %>
+                <% if (typeof formattedAnnouncements !== 'undefined' && formattedAnnouncements.length > 0) { %>
+                    <% formattedAnnouncements.forEach(announcement => { %>
                         <div class="card mb-3">
                             <div class="row">
-                                <% if (announcement.dataValues.image) { %>
+                                <% if (announcement.image) { %>
                                     <div class="col-md-4">
-                                        <img src="<%= announcement.dataValues.image %>" class="img-fluid" alt="Announcement Image">
+                                        <img src="<%= announcement.image %>" class="img-fluid" alt="Announcement Image">
                                     </div>
                                 <% } %>
-
-                                <div class="<%= announcement.dataValues.image ? 'col-md-8' : 'col-md-12' %>">
+                                <div class="<%= announcement.image ? 'col-md-8' : 'col-md-12' %>">
                                     <div class="card-body">
-                                        <h3 class="card-title"><%= announcement.companyName %></h3>
-                                        <h5 class="card-title"><%= announcement.dataValues.name %></h5>
-                                        <p class="card-text"><%= announcement.dataValues.description.replace(/\n/g, '<br>') %></p>
-
+                                        <h3 class="card-title"><%= announcement.name %></h3>
+                                        <h5 class="card-title"><%= announcement.announcementName %></h5>
+                                 
                                         <hr>
                                         <div class="row">
-                                            <p class="card-text col-md-4">Start Date: <%= announcement.dataValues.startDate %></p>
-                                            <p class="card-text col-md-4">End Date: <%= announcement.dataValues.endDate %></p>
-                                            <a href="/student/opportunities/:<%= announcement.dataValues.id %>"
+                                            <p class="card-text col-md-4">Duration: <%= announcement.duration %> days</p>
+                                            <a href="/student/opportunities/:<%= announcement.announcementId %>"
                                                class="btn btn-primary col-md-4">Apply</a>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    <% } %>
-                <% }) %>
+                    <% }) %>
+                <% } else { %>
+                    <p>You have either applied to all available opportunities or there are no active opportunities at this moment.</p>
+                <% } %>
             </div>
         </div>
     </div>
 </body>
-
 </html>

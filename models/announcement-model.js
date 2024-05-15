@@ -1,7 +1,8 @@
 const { DataTypes}= require("sequelize");
 const sequelize=require("../data/db");
+const Application = require('./application-model');
 
-const Announcement = sequelize.define('announcement', {
+const Announcement = sequelize.define('Announcement', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -11,10 +12,6 @@ const Announcement = sequelize.define('announcement', {
       type: DataTypes.INTEGER,
       allowNull: false
     },
-	companyName: {
-		type: DataTypes.STRING(100),
-		allowNull: false
-	},
     announcementName: {
       type: DataTypes.STRING(100),
       allowNull: false
@@ -23,31 +20,23 @@ const Announcement = sequelize.define('announcement', {
       type: DataTypes.TEXT,
       allowNull: false
     },
-    startDate: {
-      type: DataTypes.DATE,
-      allowNull: false
-    },
-    endDate: {
-      type: DataTypes.DATE,
-      allowNull: false
-    },
+	duration: {
+		type: DataTypes.INTEGER,
+      	allowNull: false
+	},
 	image: {
 		type: DataTypes.STRING(100),
 	},
-    isActive: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: true 
-    },
-	statusByDIC: {
-		type: DataTypes.BOOLEAN,
-		allowNull: false,
-		defaultValue: false
+	approvedAt: {
+		type: DataTypes.DATE,
+        allowNull: true,
 	}
   }, {
     tableName: 'announcement',
     timestamps: false
   });
 
-  module.exports=Announcement;
-  
+Application.belongsTo(Announcement, { foreignKey: 'announcementId' });
+Announcement.hasMany(Application, { foreignKey: 'announcementId' });
+
+module.exports=Announcement;

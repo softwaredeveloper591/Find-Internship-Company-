@@ -78,112 +78,98 @@
         <div class="content mt-4">
             <!-- Form with POST action -->
             <form method="POST" action="/company/announcement" enctype="multipart/form-data">
-				<input type="hidden" name="companyId" value="<%= dataValues.id %>">
-				<input type="hidden" name="companyName" value="<%= dataValues.name %>">
-				<div class="uniform">
-					<div class="ground">
-						<div class="image-upload-container">
-							<div class="dashed-rectangle">Upload image (Optional)</div>
-							<img id="uploadPreview" alt="Image Preview" class="file-upload-img" />
-							<span><i class="fa-solid fa-image p-1"></i></span>
-							<input id="uploadImage" type="file" name="myPhoto" onchange="PreviewImage();" />
-						</div>
-						<button type="button" onclick="removeImage()" class="remove-button"><i class="fa-solid fa-trash p-1"></i></button>
-					</div>
-					<div id="myModal" class="modal">
-						<div class="modal-content">
-							<span class="close">&times;</span>
-							<p id="modalMessage">Please select a file.</p>
-						</div>
-					</div>
-					<div class="details">
-						<label>Title of the announcement:</label>
-						<textarea id="announcementName" name="announcementName" class="form-control mb-3" rows="1" style="min-height: 50px; max-height: 50px;" required></textarea>
-						<label>Details about the internship opportunity:</label>
-						<textarea class="form-control mb-3" style="min-height: 150px; max-height: 150px;"  rows="4"></textarea>
-						<div class="row g-3">
-							<div class="col-md-6">
-								<label for="startDate">Start Date:</label>
-								<input type="date" class="form-control" id="startDate" name="startDate" required>
-							</div>
-							<div class="col-md-6">
-								<label for="endDate">End Date:</label>
-								<input type="date" class="form-control" id="endDate" name="endDate" required>
-							</div>
-						</div>
-						<!-- Ensure the button submits the form -->
-						<button type="submit" class="publish">Publish</button>
-					</div>
-				</div>
-			</form>
+                <input type="hidden" name="companyId" value="<%= dataValues.id %>">
+                <div class="uniform">
+                    <div class="ground">
+                        <div class="image-upload-container">
+                            <div class="dashed-rectangle">Upload image (Optional)</div>
+                            <img id="uploadPreview" alt="Image Preview" class="file-upload-img" />
+                            <span><i class="fa-solid fa-image p-1"></i></span>
+                            <input id="uploadImage" type="file" name="myPhoto" onchange="PreviewImage();" />
+                        </div>
+                        <button type="button" onclick="removeImage()" class="remove-button"><i class="fa-solid fa-trash p-1"></i></button>
+                    </div>
+                    <div id="myModal" class="modal">
+                        <div class="modal-content">
+                            <span class="close">&times;</span>
+                            <p id="modalMessage">Please select a file.</p>
+                        </div>
+                    </div>
+                    <div class="details">
+                        <label>Title of the announcement:</label>
+                        <textarea id="announcementName" name="announcementName" class="form-control mb-3" rows="1" required></textarea>
+                        <label>Details about the internship opportunity:</label>
+                        <textarea class="form-control mb-3" id="description" name="description" rows="4" required></textarea>
+                        <label for="duration">Duration (Days):</label>
+                        <input type="number" class="form-control" id="duration" name="duration" required>
+                        <button type="submit" class="publish">Publish</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 
     <script>
-        const modal = document.getElementById('myModal');
-        const closeButton = document.getElementsByClassName('close')[0];
-
-        closeButton.onclick = function () {
-            modal.style.display = 'none';
-        }
-
-        window.onclick = function (event) {
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
-        }
-
-        function PreviewImage() {
-            var fileInput = document.getElementById("uploadImage");
-            var file = fileInput.files[0];
-
-            if (file) {
-                if (file.type.match('image.*')) {
-                    var oFReader = new FileReader();
-                    oFReader.readAsDataURL(file);
-
-                    oFReader.onload = function (oFREvent) {
-                        document.getElementById("uploadPreview").src = oFREvent.target.result;
-                        document.getElementById("uploadPreview").style.display = 'block';
-                    };
-
-                    oFReader.onerror = function (err) {
-                        console.error('Error occurred reading file:', err);
-                        alert('Error occurred reading file. Please try again.');
-                    };
-                } else {
-                    alert('Please select an image file.');
-                }
-            } else {
-                alert('No file selected. Please select a file.');
-            }
-        }
-
-        function removeImage() {
-            var fileInput = document.getElementById("uploadImage");
-            var imagePreview = document.getElementById("uploadPreview");
-
-            fileInput.value = "";
-            imagePreview.src = "";
-            imagePreview.style.display = 'none';
-        }
-
+		const modal = document.getElementById('myModal');
+		const closeButton = document.getElementsByClassName('close')[0];
+	
+		closeButton.onclick = function () {
+			modal.style.display = 'none';
+		}
+	
+		window.onclick = function (event) {
+			if (event.target === modal) {
+				modal.style.display = 'none';
+			}
+		}
+	
+		function PreviewImage() {
+			var fileInput = document.getElementById("uploadImage");
+			var file = fileInput.files[0];
+	
+			if (file) {
+				if (file.type.match('image.*')) {
+					var oFReader = new FileReader();
+					oFReader.readAsDataURL(file);
+	
+					oFReader.onload = function (oFREvent) {
+						document.getElementById("uploadPreview").src = oFREvent.target.result;
+						document.getElementById("uploadPreview").style.display = 'block';
+					};
+	
+					oFReader.onerror = function (err) {
+						console.error('Error occurred reading file:', err);
+						alert('Error occurred reading file. Please try again.');
+					};
+				} else {
+					alert('Please select an image file.');
+				}
+			} else {
+				alert('No file selected. Please select a file.');
+			}
+		}
+	
+		function removeImage() {
+			var fileInput = document.getElementById("uploadImage");
+			var imagePreview = document.getElementById("uploadPreview");
+	
+			fileInput.value = "";
+			imagePreview.src = "";
+			imagePreview.style.display = 'none';
+		}
+	
 		document.addEventListener('DOMContentLoaded', function () {
-		    const form = document.querySelector('form');
-				
-		    form.addEventListener('submit', function (e) {
-		        // Get start and end date values from the form
-		        const startDate = document.getElementById('startDate').value;
-		        const endDate = document.getElementById('endDate').value;
-			
-		        // Compare dates
-		        if (new Date(startDate) >= new Date(endDate)) {
-		            e.preventDefault(); // Prevent form submission
-		            alert('End Date must be after the Start Date. Please adjust the dates.');
-		        }
-		    });
+			const form = document.querySelector('form');
+			form.addEventListener('submit', function (e) {
+				const duration = document.getElementById('duration').value;
+				// Validate that duration is a positive number
+				if (duration <= 0) {
+					e.preventDefault(); // Prevent form submission
+					alert('Duration must be a positive number of days.');
+				}
+			});
 		});
-    </script>
+	</script>
 </body>
 
 </html>

@@ -5,18 +5,19 @@ const jwt=require("jsonwebtoken");
 const auth = require("../middleware/auth");  //this auth turns yellow when I export it with a function name
 const checkUserRole= require("../middleware/checkUserRole");
 const multer= require("multer");
-const upload= multer();
+const upload = multer();
 const path = require('path');
 const { isEmail } = require('validator');
+const { Sequelize } = require('sequelize');
+const { Op } = require('sequelize');
 
 const Student_model= require("../models/student-model");
 const UbysStudent_model = require("../models/ubys-student-model");
 const Admin_model= require("../models/admin-model");
 const Company_model= require("../models/company-model");
-const Announcement = require("../models/announcement-model");
+const Announcement_model = require("../models/announcement-model");
 const Document_model = require("../models/document-model");
 const Application_model = require("../models/application-model");
-const ubysStudent = require("../models/ubys-student-model");
 
 
 const handleErrors = (err) => {
@@ -60,25 +61,70 @@ router.get("/student",[auth,checkUserRole("student")],async function(req,res){
     res.render("Student/student",{ usertype:"student", dataValues:student.dataValues});
 })
 
-router.get("/student/opportunities",[auth,checkUserRole("student")],async function(req,res){
-  let student = await Student_model.findOne({ where: {id: req.user.id} });
-  let announcements= await Announcement.findAll();  
-  let companies= Company_model.findAll();     
-  res.render("Student/opportunities",{ usertype:"student", dataValues:student.dataValues, announcements:announcements, companies});
+router.get("/student/opportunities", [auth, checkUserRole("student")], async function(req, res) {
+    try {
+        const student = await Student_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+
+		Announcement_model.findAll({
+			where: {
+				approvedAt: {
+					[Sequelize.Op.ne]: null // Ensure the announcement has been approved
+				},
+				id: {
+					[Op.notIn]: Sequelize.literal(`(
+						SELECT announcementId
+						FROM application
+						WHERE studentId = ${student.id}
+					)`)
+				}
+			},
+			include: [
+				{
+					model: Company_model,
+					attributes: ['name']
+				}
+			],
+			attributes: ['id', 'announcementName', 'description', 'duration']
+		}).then(announcements => {
+			const formattedAnnouncements = announcements.map(app => ({
+				announcementId: app.id,
+       			announcementName: app.announcementName,
+       			description: app.description,
+       			duration: app.duration,
+				name: app.Company ? app.Company.name : 'Unknown Company'
+			}));
+			res.render("Student/opportunities", {
+				usertype: "student",
+				dataValues: student.dataValues,
+				formattedAnnouncements
+			});
+		})	
+    } catch (err) {
+        console.error("Error fetching opportunities:", err);
+        res.status(500).send("Error fetching opportunities.");
+    }
 });
 
 router.get("/student/opportunities/:opportunityId",[auth,checkUserRole("student")],async function(req,res){
-  let student = await Student_model.findOne({ where: {id: req.user.id} });
-  let opportunityId=req.params.opportunityId.slice(1); //unfortunately I cannot get opportunityId properly here it comes with ":"
-  let announcement= await Announcement.findOne({ where: {id: opportunityId} });  
-  let company= Company_model.findOne({ where: {id: announcement.dataValues.companyId} });      
-  res.render("Student/single-opportunity",{ usertype:"student", dataValues:student.dataValues, announcement:announcement, company});
+	try {
+        const student = await Student_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+		const opportunityId = req.params.opportunityId.slice(1);
+        const announcement = await Announcement_model.findOne({ where: {id: opportunityId} });  
+
+        res.render("Student/single-opportunity", {
+            usertype: "student",
+            dataValues: student.dataValues,
+            announcement
+        });
+    } catch (err) {
+        console.error("Error fetching announcement requests:", err);
+        res.status(500).send("Error fetching announcement requests.");
+    }
 });
 
-
 router.post("/student/opportunities/:opportunityId",upload.single('CV'),[auth,checkUserRole("student")],async function(req,res){
-  const studentId=req.body.studentID;
-  const studentName=req.body.username;
+  const studentId=req.body.studentId;
+  const studentName=req.body.studentName;
   const announcementId=req.params.opportunityId.slice(1);
   const file =req.file;
   const binaryData = file.buffer;
@@ -91,18 +137,59 @@ router.post("/student/opportunities/:opportunityId",upload.single('CV'),[auth,ch
       status: "waiting for Company",
     });
 
-    const document= await Document_model.create({
+    await Document_model.create({
       name:name,
       applicationId: application.id,
       data: binaryData,
       fileType: fileType,
-      studentName:studentName
+      studentName: studentName
     });
-
+	res.redirect("/student/opportunities");
   }  catch (error) {
     console.log(error);
     res.status(500).send('An error occurred while creating the application or the document.'); 
   };
+});
+
+router.get("/student/Status",[auth,checkUserRole("student")],async function(req,res){
+	const student = await Student_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+	let formattedApplications = [];
+	try {
+        Application_model.findAll({
+			where: {
+				studentId: student.dataValues.id  // Filter applications by the provided student ID
+			},
+			include: [
+				{
+					model: Student_model,
+					attributes: ['studentName'] // Fetching only the student name
+				},
+				{
+					model: Announcement_model,
+					attributes: ['announcementName'] // Fetching only the announcement (opportunity) name
+				}
+			],
+			attributes: ['status'] // Include application-specific status
+		}).then(applications => {
+			if (applications.length > 0) {
+				formattedApplications = applications.map(app => ({
+					studentName: app.Student ? app.Student.studentName : 'Unknown Student',
+					announcementName: app.Announcement ? app.Announcement.announcementName : 'No Announcement',
+					status: app.status
+				}));
+			} 
+				res.render("Student/checkStatus", {
+					usertype: "student",
+					dataValues: student.dataValues,
+					formattedApplications,
+					message: formattedApplications.length > 0 ? '' : "You haven't applied for any internships yet."
+				});
+		})
+    }
+	catch (err) {
+        console.error("Error fetching announcement requests:", err);
+        res.status(500).send("Error fetching announcement requests.");
+    }
 });
 
 //bu get isteği şu anda herhangi bir yerde kullanılmııyor, ilerde kullanmak için yazıldı.---hala kullanılmıyor!!!!

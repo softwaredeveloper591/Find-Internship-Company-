@@ -22,43 +22,40 @@
 			</div>
 			<div class="col-md-9">
 				<h1 class="h3 mb-3">Pending Announcement Requests</h1>
-        <table class="table table-striped table-bordered">
-            <thead>
-                <tr>
-                    <th>Company Name</th>
-                    <th>Announcement Name</th>
-                    <th>Description</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (typeof announcements !== 'undefined' && announcements.length > 0) { %>
-                    <% announcements.forEach(announcement => { %>
-                        <tr>
-                            <td><%= announcement.companyName %></td>
-                            <td><%= announcement.announcementName %></td>
-                            <td><%= announcement.description %></td>
-                            <td><%= announcement.startDate %></td>
-                            <td><%= announcement.endDate %></td>
-                            <td>
-                                <button class="btn btn-success" onclick="updateAnnouncement('<%= announcement.id %>', true)">Approve</button>
-                                <button class="btn btn-danger" onclick="updateAnnouncement('<%= announcement.id %>', false)">Reject</button>
-                            </td>
-                        </tr>
-                    <% }); %>
-                <% } else { %>
-                    <tr>
-                        <td colspan="6" class="text-center">No pending announcements found.</td>
-                    </tr>
-                <% } %>
-            </tbody>
-        </table>
-			</div>
+				<table class="table table-striped table-bordered">
+					<thead>
+						<tr>
+							<th>Company Name</th>
+							<th>Announcement Name</th>
+							<th>Description</th>
+							<th>Duration (Days)</th>
+							<th>Action</th>
+						</tr>
+					</thead>
+					<tbody>
+						<% if (typeof formattedAnnouncements !== 'undefined' && formattedAnnouncements.length > 0) { %>
+							<% formattedAnnouncements.forEach(announcement => { %>
+								<tr>
+									<td><%= announcement.name %></td>
+									<td><%= announcement.announcementName %></td>
+									<td><%= announcement.description %></td>
+									<td><%= announcement.duration %></td>
+									<td>
+										<button class="btn btn-success" onclick="updateAnnouncement('<%= announcement.announcementId %>', true)">Approve</button>
+										<button class="btn btn-danger" onclick="updateAnnouncement('<%= announcement.announcementId %>', false)">Reject</button>
+									</td>
+								</tr>
+							<% }); %>
+						<% } else { %>
+							<tr>
+								<td colspan="5" class="text-center">No pending announcements found.</td>
+							</tr>
+						<% } %>
+					</tbody>
+				</table>
+			</div>			
 		</div>     
 	</div>
-
 
 </body>
 

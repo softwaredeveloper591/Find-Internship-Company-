@@ -59,21 +59,15 @@ router.post('/company/announcement', [auth, checkUserRole('company')], (req, res
             return res.status(500).send('Error occurred while uploading the image.');
         }
 
-        const { companyId, companyName, announcementName, description, startDate, endDate } = req.body;
+        const { companyId, announcementName, description, duration } = req.body;
         const imagePath = req.file ? `/uploads/${req.file.filename}` : '';
-
-		if (new Date(startDate) >= new Date(endDate)) {
-            return res.status(400).send('End Date must be after the Start Date.');
-        }
 
         try {
             await Announcement.create({
                 companyId,
-				companyName,
                 announcementName,
                 description,
-                startDate,
-                endDate,
+                duration,
                 image: imagePath 
             });
             res.redirect('/company?action=announcement-success');
