@@ -28,6 +28,11 @@ const Application = sequelize.define('application', {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false 
+    },
+	isRejected: {  // New field to indicate if the application has been rejected
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
     }
   }, {
     tableName: 'application',

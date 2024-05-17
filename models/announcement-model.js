@@ -20,16 +20,21 @@ const Announcement = sequelize.define('Announcement', {
       type: DataTypes.TEXT,
       allowNull: false
     },
-	duration: {
-		type: DataTypes.INTEGER,
-      	allowNull: false
-	},
 	image: {
 		type: DataTypes.STRING(100),
 	},
-	approvedAt: {
+	startDate: {
 		type: DataTypes.DATE,
-        allowNull: true,
+		allowNull: false
+	},
+	endDate: {
+		type: DataTypes.DATE,
+		allowNull: false
+	},
+	isActive: {
+		type: DataTypes.BOOLEAN,
+        allowNull: false,
+		defaultValue: false
 	}
   }, {
     tableName: 'announcement',

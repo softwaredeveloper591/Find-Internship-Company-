@@ -6,11 +6,16 @@ const bcrypt= require("bcrypt");
 const jwt=require("jsonwebtoken");
 const auth = require("../middleware/auth");  
 const checkUserRole= require("../middleware/checkUserRole");
-const Announcement = require("../models/announcement-model");
+const Announcement_model = require("../models/announcement-model");
 const Application_model = require("../models/application-model");
 const Document_model = require("../models/document-model");
+const Student_model = require("../models/student-model");
 const { isEmail } = require('validator');
 const multer = require('multer');
+const { Op } = require("sequelize");
+const nodeMailer = require("nodemailer");
+const moment = require('moment-timezone');
+
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -59,17 +64,23 @@ router.post('/company/announcement', [auth, checkUserRole('company')], (req, res
             return res.status(500).send('Error occurred while uploading the image.');
         }
 
-        const { companyId, announcementName, description, duration } = req.body;
+        const { companyId, announcementName, description, startDate, endDate } = req.body;
         const imagePath = req.file ? `/uploads/${req.file.filename}` : '';
 
         try {
-            await Announcement.create({
+
+			const startDateInTurkey = moment.tz(startDate, 'Europe/Istanbul').toDate();
+            const endDateInTurkey = moment.tz(endDate, 'Europe/Istanbul').toDate();
+
+            await Announcement_model.create({
                 companyId,
                 announcementName,
                 description,
-                duration,
+                startDate: startDateInTurkey,
+				endDate: endDateInTurkey,
                 image: imagePath 
             });
+
             res.redirect('/company?action=announcement-success');
         } catch (error) {
             console.error('Error:', error.message);
@@ -79,10 +90,94 @@ router.post('/company/announcement', [auth, checkUserRole('company')], (req, res
 });
 
 router.get("/company/applications",[auth,checkUserRole("company")],async function(req,res){
-    let company = await Company_model.findOne({ where: {id: req.user.id} });
-    let applications = await Application_model.findAll();
-    res.render("Company/applications",{ usertype:"company", dataValues:company.dataValues, applications:applications});
-})
+    try {
+        const company = await Company_model.findOne({ where: { id: req.user.id } });
+        const applications = await Application_model.findAll({
+			where: {
+				isApprovedByCompany: false,
+				isRejected: false
+			},
+            include: [
+				{
+                	model: Announcement_model,
+                	where: { companyId: company.id },
+					attributes: ['announcementName']
+				},
+				{
+					model: Student_model,
+					attributes: ['username']
+				}
+			]
+        });
+
+        res.render("Company/applications", {
+            usertype: "company",
+            dataValues: company.dataValues,
+            applications
+        });
+    } catch (err) {
+        console.error("Error fetching applications:", err);
+        res.status(500).send("Error fetching applications.");
+    }
+});
+
+router.put("/company/applications/:applicationId",[auth,checkUserRole("company")],async function(req,res){
+    try {
+		const applicationId = req.params.applicationId;
+		const isApproved = req.body.isApproved === "true"; 
+
+		const application = await Application_model.findOne({
+			where: {
+				id: applicationId
+			},
+            include: [
+				{
+                	model: Student_model,
+					attributes: ['username', 'email']
+				},
+				{
+                	model: Announcement_model,
+					attributes: ['announcementName']
+				}
+			]
+        });
+
+		const emailSubject = isApproved ? 'Application Approved' : 'Application Rejected';
+        const emailBody = `Hello ${application.Student.username},<br><br>
+            Your application titled "${application.Announcement.announcementName}" has been ${isApproved ? "approved by company" : "rejected by company and will be removed from our system"}.<br><br>
+            Best Regards,<br>Admin Team`;
+
+		const transporter = nodeMailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'enesbilalbabaturalpro06@gmail.com',
+                pass: 'elde beun xhtc btxu'
+            }
+        });
+
+        await transporter.sendMail({
+            from: '"Buket Erşahin" <enesbilalbabaturalpro06@gmail.com>',
+            to: application.Student.email,
+            subject: emailSubject,
+            html: emailBody
+        });
+
+		if (isApproved) {
+            application.isApprovedByCompany = true;
+			application.status = 1;
+            await application.save();
+            return res.status(200).json({ message: "Application approved." });
+        } else {
+            application.isRejected = true;
+			application.status = 4;
+			await application.save();
+            return res.status(200).json({ message: "Application rejected." });
+        }
+    } catch (err) {
+        console.error("Error fetching applications:", err);
+        res.status(500).send("Error fetching applications.");
+    }
+});
 
 router.get("/company/announcements/download/:applicationId/:fileType",[auth,checkUserRole("company")],async function(req,res){
     const applicationId = req.params.applicationId;
@@ -122,12 +217,11 @@ router.post("/signup/company",async function(req,res){
             }
 
             await Company_model.create({
-                name: name,
-                username: username,
-                email: email,
+                name,
+                username,
+                email,
                 password: hashedPassword,
-                address: address,
-				statusByDIC: false
+                address
             });
         
             res.status(200).json({ message: "Your registration request has been sent to the admin." });

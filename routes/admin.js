@@ -5,44 +5,42 @@ const checkUserRole= require("../middleware/checkUserRole")
 const Admin_model= require("../models/admin-model");
 const Company_model= require("../models/company-model");
 const Announcement_model = require("../models/announcement-model");
+const Application_model = require("../models/application-model");
+const Student_model = require("../models/student-model");
 const nodeMailer = require("nodemailer");
 const cron = require('node-cron');
 const { Sequelize } = require('sequelize');
+const moment = require('moment-timezone');
 
-async function deleteExpiredAnnouncements() {
+async function deactivateExpiredAnnouncements() {
     try {
-        const now = new Date();
-        const result = await Announcement_model.destroy({
-            where: {
-                approvedAt: {
-                    [Sequelize.Op.ne]: null // Ensure the announcement has been approved
-                },
-                [Sequelize.Op.and]: [
-                    Sequelize.where(
-                        Sequelize.fn('DATE_ADD', Sequelize.col('approvedAt'), Sequelize.literal('INTERVAL `duration` DAY')),
-                        '<=',
-                        now
-                    )
-                ]
+        const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
+        const result = await Announcement_model.update(
+            { isActive: false }, // Set isActive to false
+            {
+                where: {
+                    endDate: {
+                        [Sequelize.Op.lte]: now // Check if the current time is greater than or equal to endDate
+                    },
+                    isActive: true // Only update active announcements
+                }
             }
-        });
-        console.log(`Deleted ${result} expired announcements.`);
+        );
+        console.log(`Deactivated ${result[0]} expired announcements.`);
     } catch (error) {
-        console.error('Failed to delete expired announcements:', error);
+        console.error('Failed to deactivate expired announcements:', error);
     }
 }
 
-cron.schedule('0 0 * * *', deleteExpiredAnnouncements);
+cron.schedule('0 0 * * *', deactivateExpiredAnnouncements);
 
 router.get("/admin", [auth, checkUserRole("admin")], async function (req, res) {
     try {
-        let admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
-        const announcements = await Announcement_model.findAll({ where: { approvedAt: null } });
+        const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
 
-        res.render("Admin/announcementRequests", {
+        res.render("Admin/admin", {
             usertype: "admin",
-            dataValues: admin.dataValues,
-            announcements
+            dataValues: admin.dataValues
         });
     } catch (err) {
         console.error("Error loading admin dashboard:", err);
@@ -52,34 +50,31 @@ router.get("/admin", [auth, checkUserRole("admin")], async function (req, res) {
 });
 
 router.get("/admin/announcementRequests", [auth, checkUserRole("admin")], async (req, res) => {
+
     try {
 		const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
-		Announcement_model.findAll({
+		const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
+		
+		const announcements = await Announcement_model.findAll({
 			where: {
-				approvedAt: null
+				isActive: false,
+				endDate: {
+					[Sequelize.Op.gt]: now // Check if the current time is less than the endDate
+				}
 			},
 			include: [
 				{
 					model: Company_model,
 					attributes: ['name'] 
 				}
-			],
-			attributes: ['id', 'announcementName', 'description', 'duration']
-		}).then(announcements => {
-			const formattedAnnouncements = announcements.map(app => ({
-				announcementId: app.id,
-       			announcementName: app.announcementName,
-       			description: app.description,
-       			duration: app.duration,
-				name: app.Company ? app.Company.name : 'Unknown Company'
-			}));
-
-			res.render("Admin/announcementRequests", {
-				usertype: "admin",
-				dataValues: admin.dataValues,
-				formattedAnnouncements
-			});
+			]
 		})
+
+		res.render("Admin/announcementRequests", {
+			usertype: "admin",
+			dataValues: admin.dataValues,
+			announcements
+		});
     } catch (err) {
         console.error("Error fetching announcement requests:", err);
         res.status(500).send("Error fetching announcement requests.");
@@ -91,16 +86,24 @@ router.put("/admin/announcement/:announcementId", [auth, checkUserRole("admin")]
     const isApproved = req.body.isApproved === "true"; 
 
     try {
-        const announcement = await Announcement_model.findOne({ where: { id: announcementId } });
+        const announcement = await Announcement_model.findOne({
+			where: {
+				id: announcementId
+			},
+			include: [
+				{
+					model: Company_model,
+					attributes: ['username', 'email'] 
+				}
+			]
+		})
 
         if (!announcement) {
             return res.status(404).json({ errors: "Announcement not found." });
         }
 
-        const company = await Company_model.findOne({ where: { id: announcement.companyId } });
-
         const emailSubject = isApproved ? 'Announcement Approved' : 'Announcement Rejected';
-        const emailBody = `Hello ${company.username},<br><br>
+        const emailBody = `Hello ${announcement.Company.username},<br><br>
             Your announcement titled "${announcement.announcementName}" has been ${isApproved ? "approved" : "rejected and will be removed from our system"}.<br><br>
             Best Regards,<br>Admin Team`;
 
@@ -114,19 +117,19 @@ router.put("/admin/announcement/:announcementId", [auth, checkUserRole("admin")]
 
         await transporter.sendMail({
             from: '"Buket Erşahin" <enesbilalbabaturalpro06@gmail.com>',
-            to: company.email,
+            to: announcement.Company.email,
             subject: emailSubject,
             html: emailBody
         });
 
         if (!isApproved) {
-            await announcement.destroy();
-            return res.status(200).json({ message: "Announcement rejected and removed from the system." });
+			await Announcement_model.destroy({ where: { id: announcement.id } });
+			return res.status(200).json({ message: "Announcement rejected and removed from the system." });
         }
 
-        announcement.approvedAt = new Date();
+		announcement.isActive = true;
         await announcement.save();
-        res.status(200).json({ message: "Announcement approved." });
+		res.status(200).json({ message: "Announcement approved." });
 
     } catch (err) {
         console.error("Error processing announcement:", err);
@@ -193,6 +196,96 @@ router.put("/admin/company/:companyId", [auth, checkUserRole("admin")], async fu
     } catch (err) {
         console.error("Error processing company registration request:", err);
         res.status(400).json({ errors: "Unable to process the request." });
+    }
+});
+
+router.get("/admin/applicationRequests", [auth, checkUserRole("admin")], async (req, res) => {
+    try {
+        const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+        const applications = await Application_model.findAll({
+			where: {
+				isApprovedByCompany: true,
+				isApprovedByDIC: false,
+				isRejected: false
+			},
+            include: [
+				{
+                	model: Announcement_model,
+					attributes: ['announcementName']
+				},
+				{
+					model: Student_model,
+					attributes: ['username']
+				}
+			]
+        });
+
+		res.render("Admin/applicationRequests", {
+            usertype: "admin",
+            dataValues: admin.dataValues,
+            applications
+        });
+    } catch (err) {
+        console.error("Error fetching company registration requests:", err);
+        res.status(500).send("Error fetching company registration requests.");
+    }
+});
+
+router.put("/admin/applications/:applicationId",[auth,checkUserRole("admin")],async function(req,res){
+    try {
+		const applicationId = req.params.applicationId;
+		const isApproved = req.body.isApproved === "true"; 
+
+		const application = await Application_model.findOne({
+			where: {
+				id: applicationId
+			},
+            include: [
+				{
+                	model: Student_model,
+					attributes: ['username', 'email']
+				},
+				{
+                	model: Announcement_model,
+					attributes: ['announcementName']
+				}
+			]
+        });
+
+		const emailSubject = isApproved ? 'Application Approved' : 'Application Rejected';
+        const emailBody = `Hello ${application.Student.username},<br><br>
+            Your application titled "${application.Announcement.announcementName}" has been ${isApproved ? "approved by admin" : "rejected by company and will be removed from our system"}.<br><br>
+            Best Regards,<br>Admin Team`;
+
+		const transporter = nodeMailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'enesbilalbabaturalpro06@gmail.com',
+                pass: 'elde beun xhtc btxu'
+            }
+        });
+
+        await transporter.sendMail({
+            from: '"Buket Erşahin" <enesbilalbabaturalpro06@gmail.com>',
+            to: application.Student.email,
+            subject: emailSubject,
+            html: emailBody
+        });
+
+		if (isApproved) {
+            application.isApprovedByDIC = true;
+			application.status = 2;
+            await application.save();
+            return res.status(200).json({ message: "Application approved." });
+        } else {
+            application.isRejected = true;
+			application.status = 4;
+			await application.save();
+            return res.status(200).json({ message: "Application rejected." });
+        }
+    } catch (err) {
+        console.error("Error fetching applications:", err);
+        res.status(500).send("Error fetching applications.");
     }
 });
 

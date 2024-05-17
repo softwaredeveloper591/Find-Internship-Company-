@@ -14,9 +14,9 @@
         <div class="row">
             <div class="col-md-3">
                 <div class="list-group">
-                    <a href="/company/announcement" class="list-group-item list-group-item-action">Make an announcement</a>
-                    <a href="/company/applications" class="list-group-item list-group-item-action active">Applications</a>
-                    <a href="" class="list-group-item list-group-item-action">Programlama</a>
+                    <a href="/admin/announcementRequests" class="list-group-item list-group-item-action">Announcement Requests</a>
+					<a href="/admin/companyRequests" class="list-group-item list-group-item-action">Company Requests</a>
+					<a href="/admin/applicationRequests" class="list-group-item list-group-item-action bg-danger">Application Requests</a>
                 </div>
             </div>
             <div class="col-md-9">
@@ -29,7 +29,6 @@
                                     <div class="card-body">
                                         <h3 class="card-title">Student Name: <%= application.Student.studentName %></h3>
                                         <h5 class="card-title">Announcement Name: <%= application.Announcement.announcementName %></h5>
-                                        <button onclick="downloadButton('<%= application.id %>','CV')" class="btn btn-success">Download CV</button>
                                         <button class="btn btn-success" onclick="updateApplication('<%= application.id %>', true)">Approve</button>
                                         <button class="btn btn-danger" onclick="updateApplication('<%= application.id %>', false)">Reject</button>
                                         <hr>
@@ -44,38 +43,8 @@
     </div>
 
     <script>
-        async function downloadButton(applicationId, fileType) {
-            try {
-                const response = await fetch(`/company/announcements/download/${applicationId}/${fileType}`);
-                if (!response.ok) {
-                    throw new Error('Failed to download file');
-                }
-
-                const blob = await response.blob();
-                const contentDispositionHeader = response.headers.get('Content-Disposition');
-                const filename = contentDispositionHeader.split('filename=')[1].replace(/"/g, '');
-                const url = window.URL.createObjectURL(blob);
-
-                // Create a temporary link element
-                const link = document.createElement('a');
-                link.href = url;
-                link.setAttribute('download', filename);
-
-                // Append the link to the document body
-                document.body.appendChild(link);
-
-                // Programmatically click the link to trigger the download
-                link.click();
-
-                // Remove the link from the document body
-                document.body.removeChild(link);
-            } catch (error) {
-                console.error('Error downloading file:', error);
-            }
-        }
-
         function updateApplication(applicationId, isApproved) {
-            fetch(`/company/applications/${applicationId}`, {
+            fetch(`/admin/applications/${applicationId}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ isApproved: isApproved ? "true" : "false" })

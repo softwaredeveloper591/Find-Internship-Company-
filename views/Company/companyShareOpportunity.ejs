@@ -14,6 +14,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
         crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>
 </head>
 
 <body>
@@ -100,8 +102,10 @@
                         <textarea id="announcementName" name="announcementName" class="form-control mb-3" rows="1" required></textarea>
                         <label>Details about the internship opportunity:</label>
                         <textarea class="form-control mb-3" id="description" name="description" rows="4" required></textarea>
-                        <label for="duration">Duration (Days):</label>
-                        <input type="number" class="form-control" id="duration" name="duration" required>
+                        <label for="startDate">Start Date:</label>
+                        <input type="date" class="form-control" id="startDate" name="startDate" required>
+                        <label for="endDate">End Date:</label>
+                        <input type="date" class="form-control" id="endDate" name="endDate" required>
                         <button type="submit" class="publish">Publish</button>
                     </div>
                 </div>
@@ -110,66 +114,89 @@
     </div>
 
     <script>
-		const modal = document.getElementById('myModal');
-		const closeButton = document.getElementsByClassName('close')[0];
-	
-		closeButton.onclick = function () {
-			modal.style.display = 'none';
-		}
-	
-		window.onclick = function (event) {
-			if (event.target === modal) {
-				modal.style.display = 'none';
-			}
-		}
-	
-		function PreviewImage() {
-			var fileInput = document.getElementById("uploadImage");
-			var file = fileInput.files[0];
-	
-			if (file) {
-				if (file.type.match('image.*')) {
-					var oFReader = new FileReader();
-					oFReader.readAsDataURL(file);
-	
-					oFReader.onload = function (oFREvent) {
-						document.getElementById("uploadPreview").src = oFREvent.target.result;
-						document.getElementById("uploadPreview").style.display = 'block';
-					};
-	
-					oFReader.onerror = function (err) {
-						console.error('Error occurred reading file:', err);
-						alert('Error occurred reading file. Please try again.');
-					};
-				} else {
-					alert('Please select an image file.');
-				}
-			} else {
-				alert('No file selected. Please select a file.');
-			}
-		}
-	
-		function removeImage() {
-			var fileInput = document.getElementById("uploadImage");
-			var imagePreview = document.getElementById("uploadPreview");
-	
-			fileInput.value = "";
-			imagePreview.src = "";
-			imagePreview.style.display = 'none';
-		}
-	
-		document.addEventListener('DOMContentLoaded', function () {
-			const form = document.querySelector('form');
-			form.addEventListener('submit', function (e) {
-				const duration = document.getElementById('duration').value;
-				// Validate that duration is a positive number
-				if (duration <= 0) {
-					e.preventDefault(); // Prevent form submission
-					alert('Duration must be a positive number of days.');
-				}
-			});
-		});
-	</script>
+        const modal = document.getElementById('myModal');
+        const closeButton = document.getElementsByClassName('close')[0];
+
+        closeButton.onclick = function () {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function (event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function PreviewImage() {
+            var fileInput = document.getElementById("uploadImage");
+            var file = fileInput.files[0];
+
+            if (file) {
+                if (file.type.match('image.*')) {
+                    var oFReader = new FileReader();
+                    oFReader.readAsDataURL(file);
+
+                    oFReader.onload = function (oFREvent) {
+                        document.getElementById("uploadPreview").src = oFREvent.target.result;
+                        document.getElementById("uploadPreview").style.display = 'block';
+                    };
+
+                    oFReader.onerror = function (err) {
+                        console.error('Error occurred reading file:', err);
+                        alert('Error occurred reading file. Please try again.');
+                    };
+                } else {
+                    alert('Please select an image file.');
+                }
+            } else {
+                alert('No file selected. Please select a file.');
+            }
+        }
+
+        function removeImage() {
+            var fileInput = document.getElementById("uploadImage");
+            var imagePreview = document.getElementById("uploadPreview");
+
+            fileInput.value = "";
+            imagePreview.src = "";
+            imagePreview.style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.querySelector('form');
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+
+            // Use moment-timezone to get the current date in Turkey time zone
+            const today = moment().tz('Europe/Istanbul').format('YYYY-MM-DD');
+            startDateInput.setAttribute('min', today);
+
+            startDateInput.addEventListener('change', function () {
+                const startDate = startDateInput.value;
+                // Set the minimum value for endDate to the selected startDate
+                let minEndDate = moment(startDate).add(1, 'days').format('YYYY-MM-DD');
+                endDateInput.setAttribute('min', minEndDate);
+            });
+
+            // Additional server-side validation (optional, but recommended)
+            form.addEventListener('submit', function (e) {
+                const startDate = new Date(startDateInput.value);
+                const endDate = new Date(endDateInput.value);
+                const now = new Date(moment().tz('Europe/Istanbul').format('YYYY-MM-DD')).setHours(0, 0, 0, 0);
+
+                if (startDate < now) {
+                    e.preventDefault(); // Prevent form submission
+                    alert('Start Date must be today or a future date.');
+                    return;
+                }
+
+                if (endDate <= startDate) {
+                    e.preventDefault(); // Prevent form submission
+                    alert('End Date must be after the Start Date.');
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

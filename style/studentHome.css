@@ -1,0 +1,51 @@
+.steps, .details {
+    margin: 20px 0;
+}
+
+.steps {
+    display: flex;
+
+}
+
+.steps div {
+    width: 10%;
+    padding: 25px;
+    background: #f9f9f9;
+    border: 1px solid #ccc;
+    text-align: center;
+    border-radius: 5px;
+}
+
+.steps div img {
+    width: 30px;
+    height: 30px;
+    margin-bottom: 10px;
+}
+
+.steps div p {
+    margin: 0;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.steps div span {
+    font-size: 14px;
+    color: gray;
+}
+
+
+.stage {
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    text-align: center;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    margin-left: 10px;
+}
+
+.stage.active {
+    font-weight: bold;
+    background-color: rgb(241, 232, 232);
+    border-color: black;
+}

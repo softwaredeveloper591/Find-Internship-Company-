@@ -18,13 +18,13 @@
                 <div class="list-group">
                     <a href="/student" class="list-group-item list-group-item-action">HOME</a>
                     <a href="/student/opportunities" class="list-group-item list-group-item-action bg-danger">Opportunities</a>
-                    <a href="/student/status" class="list-group-item list-group-item-action">Check Status</a>
+                    <a href="/student/applications" class="list-group-item list-group-item-action">Check Applications</a>
                 </div>
             </div>
             <div class="col-md-9">
                 <h1 class="h3 mb-3">Internship Opportunities</h1>
-                <% if (typeof formattedAnnouncements !== 'undefined' && formattedAnnouncements.length > 0) { %>
-                    <% formattedAnnouncements.forEach(announcement => { %>
+                <% if (typeof announcements !== 'undefined' && announcements.length > 0) { %>
+                    <% announcements.forEach(announcement => { %>
                         <div class="card mb-3">
                             <div class="row">
                                 <% if (announcement.image) { %>
@@ -34,13 +34,13 @@
                                 <% } %>
                                 <div class="<%= announcement.image ? 'col-md-8' : 'col-md-12' %>">
                                     <div class="card-body">
-                                        <h3 class="card-title"><%= announcement.name %></h3>
+                                        <h3 class="card-title"><%= announcement.Company.name %></h3>
                                         <h5 class="card-title"><%= announcement.announcementName %></h5>
                                  
                                         <hr>
                                         <div class="row">
-                                            <p class="card-text col-md-4">Duration: <%= announcement.duration %> days</p>
-                                            <a href="/student/opportunities/:<%= announcement.announcementId %>"
+                                            <p class="card-text">End Time: <%= new Date(announcement.endDate).toLocaleString() %></p>
+                                            <a href="/student/opportunities/:<%= announcement.id %>"
                                                class="btn btn-primary col-md-4">Apply</a>
                                         </div>
                                     </div>

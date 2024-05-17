@@ -18,7 +18,7 @@
                 <div class="list-group">
                     <a href="/student" class="list-group-item list-group-item-action">HOME</a>
                     <a href="/student/opportunities" class="list-group-item list-group-item-action bg-danger">Opportunities</a>
-                    <a href="/student/status" class="list-group-item list-group-item-action">Check Status</a>
+                    <a href="/student/applications" class="list-group-item list-group-item-action">Check Applications</a>
                 </div>
             </div>
             <div class="col-md-9">
@@ -32,14 +32,14 @@
                                     <p class="card-text"><%= announcement.description %></p>
                                     <hr>
                                     <div class="row">
-                                        <p class="card-text col-md-6">Duration: <%= announcement.duration %> days</p>
+                                        <p class="card-text col-md-6">End Time: <%= new Date(announcement.endDate).toLocaleString() %></p>
                                     </div>
                                     <div class="row mt-3">
                                         <form action="" method="post" enctype="multipart/form-data">
                                             <label for="CV" class="col-sm-2 col-form-label">Upload CV:</label>
                                             <div class="col-sm-10">
                                                 <input type="file" class="form-control" id="CV" name="CV" required>
-												<input type="hidden" name="studentName" value="<%= dataValues.studentName %>">
+												<input type="hidden" name="studentName" value="<%= dataValues.username %>">
                                                 <input type="hidden" name="studentId" value="<%= dataValues.id %>">
                                                 <button type="submit" class="btn btn-primary mt-3">Apply</button>
                                             </div>

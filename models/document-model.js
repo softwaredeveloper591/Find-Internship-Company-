@@ -24,7 +24,7 @@ const Document = sequelize.define('Document', {
     type: DataTypes.STRING(45),
     allowNull: false
   },
-  studentName: {
+  username: {
     type: DataTypes.STRING(45),
     allowNull: false
   },
