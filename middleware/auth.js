@@ -7,7 +7,7 @@ module.exports=function (req, res, next){
     }
     try {
         const decodedToken=jwt.verify(token, 'privateKey');  //verify method throws exception if verification fails.
-        req.user=decodedToken.id;  //?
+        req.user=decodedToken.id;  
         next();
     } catch (ex) {
         res.status(400).send("hatalı token");

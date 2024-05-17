@@ -83,11 +83,12 @@ router.post("/student/opportunities/:opportunityId",upload.single('CV'),[auth,ch
   const studentId=req.body.studentID;
   const studentName=req.body.username;
   const announcementId=req.params.opportunityId.slice(1);
-  const file =req.file;
-  const binaryData = file.buffer;
   const fileType="CV";
-  const name = file.originalname;
+  
   try {
+    const name = file.originalname;
+    const file =req.file;
+    const binaryData = file.buffer; //if file is not selected.  //the file should not be sent before uploading
     const application = await Application_model.create({
       studentId,
       announcementId,
@@ -125,7 +126,7 @@ router.get("/student/opportunities/download/:studentId/:fileType",[auth,checkUse
 
 
 router.post("/signup/student",async function(req,res){
-    const { username, email, password, confirmPassword } = req.body;
+    const {email, password, confirmPassword } = req.body;
     const hashedPassword = await bcrypt.hash(password,10);
         try {
           if (!isEmail(email)) {
@@ -141,7 +142,7 @@ router.post("/signup/student",async function(req,res){
           }
 
             const newStudent = await Student_model.create({ 
-                username: username,
+                studentName: username,
                 email: email,
                 password: hashedPassword
               });

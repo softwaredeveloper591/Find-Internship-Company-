@@ -19,7 +19,9 @@ router.get("/admin/announcementRequests",[auth,checkUserRole("admin")],async fun
   
   router.get("/admin",[auth,checkUserRole("admin")],async function(req,res){
     let admin = await Admin_model.findOne({ where: {id: req.user.id} });
-    res.render("Admin/admin",{ usertype:"admin", dataValues:admin.dataValues});
+    let announcements= await Announcement.findAll();  
+    let companies= Company_model.findAll();    
+    res.render("Admin/announcementRequests",{ usertype:"admin", dataValues:admin.dataValues, announcements:announcements, companies});
 });
 
 router.put("/admin/announcement/:opportunityId",[auth,checkUserRole("admin")],async function(req,res){

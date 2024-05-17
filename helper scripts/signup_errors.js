@@ -31,14 +31,13 @@ studentForm.addEventListener('submit', async (e) => {
 
     // Get student form values
     const email = studentForm.querySelector('#student-email').value;
-    const username = studentForm.querySelector('#student-username').value;
     const password = studentForm.querySelector('#student-password').value;
     const confirmPassword = studentForm.querySelector('#student-confirmPassword').value;
 
     try {
         const res = await fetch('/signup/student', { 
             method: 'POST', 
-            body: JSON.stringify({ email, username, password, confirmPassword }),
+            body: JSON.stringify({ email, password, confirmPassword }),
             headers: {'Content-Type': 'application/json'}
         });
         const data = await res.json();
@@ -96,7 +95,7 @@ companyForm.addEventListener('submit', async (e) => {
 
     // Get company form values
     const name = companyForm.querySelector('#company-name').value;
-    const username = companyForm.querySelector('#company-username').value;
+    const username = companyForm.querySelector('#representative-name').value;
     const email = companyForm.querySelector('#company-email').value;
     const address = companyForm.querySelector('#company-address').value;
     const password = companyForm.querySelector('#company-password').value;
@@ -131,8 +130,8 @@ companyForm.addEventListener('submit', async (e) => {
                 companyForm.querySelector('#company-password').style.border = borderStyleError;
             }
         }
-        if (data.company) {
-            location.assign('/company'); 
+        if (data.message) {
+            alert(data.message);
         }
     } catch (err) {
         emailError.textContent = 'Failed to communicate with the server';

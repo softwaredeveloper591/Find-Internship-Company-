@@ -11,7 +11,7 @@ const Announcement = sequelize.define('announcement', {
       type: DataTypes.INTEGER,
       allowNull: false
     },
-    name: {
+      announcementName: { 
       type: DataTypes.STRING(100),
       allowNull: false
     },
@@ -31,6 +31,9 @@ const Announcement = sequelize.define('announcement', {
     endDate: {
       type: DataTypes.DATE,
       allowNull: false
+    },
+    image: {
+      type: DataTypes.STRING(100),
     },
     isActive: {
       type: DataTypes.BOOLEAN,

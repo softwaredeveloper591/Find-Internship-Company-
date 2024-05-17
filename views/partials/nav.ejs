@@ -21,7 +21,7 @@
         </script>
     </div>
     <div class="logo">
-        <img src="/İyte Logo.png" class="top-left-logo"> <!-- Update the src for Iztech logo -->
+        <img src="/İyte Logo.png" class="top-left-logo"> 
     </div>
     <div class="navbar justify-content-end">
         <div class="navbar-content">
@@ -39,20 +39,12 @@
                 <ul class="dropdown-menu ">
                     <li class="dropdown-item disabled">
                         <%= usertype %>
-                            <% if (usertype=="student" ) { %>
-                                <%= dataValues.id %>
-                                    <% } %>
                     </li>
                     <hr>
                     <li><a class="dropdown-item" href="/logout">Log Out</a></li>
                 </ul>
             </div>
 
-
-            <!-- <p class="text_navbar">Company Name</p>                         Update the name attribute with actual company name from db -->
-            <!-- <div class="top-right-logo">
-                <img src="aselsan_logo.png" alt="logo">                     
-            </div> -->
         </div>
     </div>
 </header>
