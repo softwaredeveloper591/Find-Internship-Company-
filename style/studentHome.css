@@ -1,10 +1,20 @@
+.content-container {
+    position: absolute;
+    top: 120px;         /* Adjust based on your header height */
+    bottom: 0;
+    left: 0;
+    right: 0;
+    overflow-y: auto;   /* Make only the content div scrollable */
+    padding: 20px;
+}
+
+
 .steps, .details {
     margin: 20px 0;
 }
 
 .steps {
     display: flex;
-
 }
 
 .steps div {
@@ -32,7 +42,6 @@
     font-size: 14px;
     color: gray;
 }
-
 
 .stage {
     padding: 10px;

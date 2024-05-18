@@ -134,5 +134,4 @@ header {
 .content {
     margin-left: 180px; /* Adjust this value to match the sidebar's width */
     padding: 20px;
-    overflow: hidden; /* Prevent content overflow */
 }

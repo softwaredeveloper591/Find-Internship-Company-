@@ -12,43 +12,15 @@
 </head>
 <body>
     <header>
-        <div>
-            <div class="dp-menu">
-                <button class="navbar-content" style="background: darkred; border: none;" onclick="toggleSidebar()">
-                    <i class="fa-solid fa-bars p-2"></i>
-                </button>
-                <div id="sidebar" class="sidebar">
-                    <a href="/student" class="order"><button><i class="fa-solid fa-house"></i>Home</button></a>
-                    <a href="/student/opportunities" class="order"><button>Opportunities</button></a>
-                    <a href="/student/applications" class="order"><button style="background-color: rgb(217, 4, 4);">Applications</button></a>
-                    <a href="link" class="order"><button>Internship</button></a>
-                </div>
-            </div>
-            <script type="text/javascript">
-                function toggleSidebar() {
-                    var sidebar = document.getElementById('sidebar');
-                    if (sidebar.style.width == '0px') {
-                        sidebar.style.width = '180px';
-                    } else {
-                        sidebar.style.width = '0px';
-                    }
-                }
-            </script>
-        </div>
-        <div class="logo">
-            <img src="/İyte Logo.png" class="top-left-logo">
-        </div>
-        <div class="navbar justify-content-end">
-            <div class="navbar-content">
-                <form class="search-form">
-                    <input type="text" placeholder="Search..." class="search-input">
-                    <button type="submit" class="search-button"><i class="fa-solid fa-magnifying-glass p-1"></i></button>
-                </form>
-                <p class="text_navbar"><%= dataValues.studentName %></p>
-            </div>
+        <%- include('../partials/nav') %>
+        <div id="sidebar" class="sidebar">
+            <a href="/student" class="order"><button ><i class="fa-solid fa-house"></i>Home</button></a>
+            <a href="/student/opportunities" class="order"><button >Opportunities</button></a>
+            <a href="/student/applications" class="order"><button style="background-color: rgb(217, 4, 4);">Applications</button></a>
         </div>
     </header>
-    <div class="content">
+    <div class="content-container">
+        <div class="content">
         <% applications.forEach(application => { %>
             <div class="application">
                 <h3>Application for <%= application.Announcement.announcementName %></h3>
@@ -82,7 +54,8 @@
                 </div>
             </div>
         <% }) %>
-    </div>
+        </div>
+</div>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const applications = <%- JSON.stringify(applications) %>; // Convert applications data to a JavaScript object
@@ -108,8 +81,6 @@
                     document.querySelector(`#rejected-${idSuffix} span`).textContent = `(1)`;
                 }
             }
-
-            // Process each application and set the active stages
             applications.forEach(application => setActiveStages(application));
         });
     </script>
