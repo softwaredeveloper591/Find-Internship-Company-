@@ -78,7 +78,7 @@
             fetch(`/company/applications/${applicationId}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ isApproved: isApproved ? "true" : "false" })
+                body: JSON.stringify({ isApproved })
             })
             .then(response => response.json())
             .then(data => {

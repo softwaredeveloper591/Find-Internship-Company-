@@ -124,7 +124,7 @@ router.get("/company/applications",[auth,checkUserRole("company")],async functio
 router.put("/company/applications/:applicationId",[auth,checkUserRole("company")],async function(req,res){
     try {
 		const applicationId = req.params.applicationId;
-		const isApproved = req.body.isApproved === "true"; 
+		const isApproved = req.body.isApproved; 
 
 		const application = await Application_model.findOne({
 			where: {
