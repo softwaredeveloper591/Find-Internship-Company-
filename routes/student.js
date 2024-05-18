@@ -76,7 +76,6 @@ router.get("/student/opportunities", [auth, checkUserRole("student")], async fun
 						SELECT announcementId
 						FROM application
 						WHERE studentId = ${student.id}
-						OR isApprovedByCompany = false
 					)`)
 				}
 			},

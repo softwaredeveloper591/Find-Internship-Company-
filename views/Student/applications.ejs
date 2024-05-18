@@ -44,10 +44,11 @@
                     <input type="text" placeholder="Search..." class="search-input">
                     <button type="submit" class="search-button"><i class="fa-solid fa-magnifying-glass p-1"></i></button>
                 </form>
-                <p class="text_navbar"><%= dataValues.studentName %></p>
+                <p class="text_navbar"><%= dataValues.username %></p>
             </div>
         </div>
     </header>
+	<div class="content-container">
     <div class="content">
         <% applications.forEach(application => { %>
             <div class="application">
@@ -83,6 +84,7 @@
             </div>
         <% }) %>
     </div>
+</div>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const applications = <%- JSON.stringify(applications) %>; // Convert applications data to a JavaScript object
