@@ -204,46 +204,41 @@ router.post("/signup/student",async function(req,res){
     const parts = mail.split("@");
     const domain = parts[1]; 
 
-        try {
+    try {
+		if (!isEmail(email)) {
+        	throw Error('Please enter a valid email');
+      	}
+		if (domain !== "std.iyte.edu.tr") {
+			throw Error('not a std mail');
+		}
+		const ubysStudent = await UbysStudent_model.findOne({ where: { email } });
+		if(!ubysStudent) {
+			throw Error('not in ubys database');
+		}
 
-			if (!isEmail(email)) {
-            	throw Error('Please enter a valid email');
-          	}
-
-			if (domain !== "std.iyte.edu.tr") {
-				throw Error('not a std mail');
-			}
-
-			const ubysStudent = await UbysStudent_model.findOne({ where: { email } });
-
-			if(!ubysStudent) {
-				throw Error('not in ubys database');
-			}
-  
-			if(ubysStudent.department !== "CENG" || ubysStudent.year < 3) {
-				throw Error('not eligible');
-			}
-        
-          	if (password.length < 6) {
-           	 	throw Error('Minimum password length');
-          	}  
-        
-          	if (password !== confirmPassword) {
-            	throw Error('Passwords do not match');
-          	}
-
-            const newStudent = await Student_model.create({ 
-                username: ubysStudent.student_name,
-                email: email,
-                password: hashedPassword
-            });
-            const token= createTokenWithIdandUserType(newStudent.id,"student");
-            res.cookie('jwt', token);
-    	    res.status(200).json({ student: newStudent.id });
-        } catch (err) {
-          const errors = handleErrors(err);
-          res.status(400).json({ errors });  
-        }
+		if(ubysStudent.department !== "CENG" || ubysStudent.year < 3) {
+			throw Error('not eligible');
+		}
+    
+      	if (password.length < 6) {
+       	 	throw Error('Minimum password length');
+      	}  
+    
+      	if (password !== confirmPassword) {
+        	throw Error('Passwords do not match');
+      	}
+        const newStudent = await Student_model.create({ 
+            username: ubysStudent.student_name,
+            email: email,
+            password: hashedPassword
+        });
+        const token= createTokenWithIdandUserType(newStudent.id,"student");
+        res.cookie('jwt', token);
+        res.status(200).json({ student: newStudent.id });
+    } catch (err) {
+      const errors = handleErrors(err);
+      res.status(400).json({ errors });  
+    }
 });
 
 function createTokenWithIdandUserType(id,userType){       //we can add this function into the models so that every model has its own function.

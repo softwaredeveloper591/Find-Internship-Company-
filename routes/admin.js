@@ -83,7 +83,7 @@ router.get("/admin/announcementRequests", [auth, checkUserRole("admin")], async 
 
 router.put("/admin/announcement/:announcementId", [auth, checkUserRole("admin")], async function (req, res) {
     const announcementId = req.params.announcementId;
-    const isApproved = req.body.isApproved === "true"; 
+    const isApproved = req.body.isApproved; 
 
     try {
         const announcement = await Announcement_model.findOne({
@@ -155,7 +155,7 @@ router.get("/admin/companyRequests", [auth, checkUserRole("admin")], async (req,
 
 router.put("/admin/company/:companyId", [auth, checkUserRole("admin")], async function (req, res) {
     const companyId = req.params.companyId;
-    const isApproved = req.body.isApproved === true;
+    const isApproved = req.body.isApproved;
 
     try {
         const company = await Company_model.findOne({ where: { id: companyId } });
@@ -234,7 +234,7 @@ router.get("/admin/applicationRequests", [auth, checkUserRole("admin")], async (
 router.put("/admin/applications/:applicationId",[auth,checkUserRole("admin")],async function(req,res){
     try {
 		const applicationId = req.params.applicationId;
-		const isApproved = req.body.isApproved === "true"; 
+		const isApproved = req.body.isApproved; 
 
 		const application = await Application_model.findOne({
 			where: {
