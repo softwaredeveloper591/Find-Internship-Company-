@@ -204,7 +204,7 @@ router.get("/admin/applicationRequests", [auth, checkUserRole("admin")], async (
         const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
         const applications = await Application_model.findAll({
 			where: {
-				isApprovedByCompany: null,
+				isApprovedByCompany: true,
 				isApprovedByDIC: null			
 			},
             include: [
