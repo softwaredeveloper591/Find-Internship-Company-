@@ -94,8 +94,7 @@ router.get("/company/applications",[auth,checkUserRole("company")],async functio
         const company = await Company_model.findOne({ where: { id: req.user.id } });
         const applications = await Application_model.findAll({
 			where: {
-				isApprovedByCompany: false,
-				isRejected: false
+				isApprovedByCompany: null,
 			},
             include: [
 				{
@@ -168,7 +167,7 @@ router.put("/company/applications/:applicationId",[auth,checkUserRole("company")
             await application.save();
             return res.status(200).json({ message: "Application approved." });
         } else {
-            application.isRejected = true;
+            application.isApprovedByCompany = false;
 			application.status = 4;
 			await application.save();
             return res.status(200).json({ message: "Application rejected." });

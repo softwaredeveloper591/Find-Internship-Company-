@@ -21,18 +21,12 @@ const Application = sequelize.define('application', {
     },
     isApprovedByCompany: {
       type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false 
+      defaultValue: null
     },
     isApprovedByDIC: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false 
-    },
-	isRejected: {  // New field to indicate if the application has been rejected
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false
     }
   }, {
     tableName: 'application',
