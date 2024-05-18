@@ -204,9 +204,8 @@ router.get("/admin/applicationRequests", [auth, checkUserRole("admin")], async (
         const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
         const applications = await Application_model.findAll({
 			where: {
-				isApprovedByCompany: true,
-				isApprovedByDIC: false,
-				isRejected: false
+				isApprovedByCompany: null,
+				isApprovedByDIC: null			
 			},
             include: [
 				{
@@ -278,7 +277,7 @@ router.put("/admin/applications/:applicationId",[auth,checkUserRole("admin")],as
             await application.save();
             return res.status(200).json({ message: "Application approved." });
         } else {
-            application.isRejected = true;
+            application.isApprovedByDIC = false;
 			application.status = 4;
 			await application.save();
             return res.status(200).json({ message: "Application rejected." });

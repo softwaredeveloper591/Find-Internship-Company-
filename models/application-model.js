@@ -25,8 +25,7 @@ const Application = sequelize.define('application', {
     },
     isApprovedByDIC: {
       type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false 
+      defaultValue: null
     }
   }, {
     tableName: 'application',
