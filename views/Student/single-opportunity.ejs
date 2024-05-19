@@ -10,16 +10,18 @@
         integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 </head>
 <body>
-    <%- include('../partials/nav') %>
+    <header>
+        <%- include('../partials/nav') %>
+        <div id="sidebar" class="sidebar">
+            <a href="/student" class="order"><button><i class="fa-solid fa-house"></i>Home</button></a>
+            <a href="/student/opportunities" class="order"><button >Opportunities</button></a>
+            <a href="/student/applications" class="order"><button >Applications</button></a>
+        </div>
+    </header>
 
     <div class="container mt-3">
         <div class="row">
-            <div class="col-md-3">
-                <div class="list-group">
-                    <a href="/student" class="list-group-item list-group-item-action">HOME</a>
-                    <a href="/student/opportunities" class="list-group-item list-group-item-action bg-danger">Opportunities</a>
-                    <a href="/student/applications" class="list-group-item list-group-item-action">Check Applications</a>
-                </div>
+            <div class="col-md-1">
             </div>
             <div class="col-md-9">
                 <h1 class="h3 mb-3">Internship Opportunity Details</h1>
