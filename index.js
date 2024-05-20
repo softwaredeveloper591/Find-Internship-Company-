@@ -6,7 +6,6 @@ app.use(express.urlencoded({extended:false})); // to obtain the data coming from
 app.use(express.json());  //to be able to send data as a json format via postman
 app.set("view engine", "ejs");
 
-
 app.use(express.static("Pictures"));
 app.use(express.static("node_modules"));
 app.use(express.static("style"));

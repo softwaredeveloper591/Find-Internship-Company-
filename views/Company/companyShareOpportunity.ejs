@@ -7,6 +7,8 @@
     <title>Internship Announce Page</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script> 
+    <link rel="stylesheet" href="/companyShareOpportunity.css">
+    <link rel="stylesheet" href="/popupModel.css">
 </head>
 
 <body>
@@ -19,38 +21,35 @@
         </div>
     </header>
 
-    <div class="uniform">
-        <div class="content mt-4">
-            <!-- Form with POST action -->
+    <div class="container-company">
+        <div class="uniform">
             <form method="POST" action="/company/announcement" enctype="multipart/form-data">
                 <input type="hidden" name="companyId" value="<%= dataValues.id %>">
-                <div class="uniform">
-                    <div class="ground">
-                        <div class="image-upload-container">
-                            <div class="dashed-rectangle">Upload image (Optional)</div>
-                            <img id="uploadPreview" alt="Image Preview" class="file-upload-img" />
-                            <span><i class="fa-solid fa-image p-1"></i></span>
-                            <input id="uploadImage" type="file" name="myPhoto" onchange="PreviewImage();" />
-                        </div>
-                        <button type="button" onclick="removeImage()" class="remove-button"><i class="fa-solid fa-trash p-1"></i></button>
+                <div class="ground">
+                    <div class="image-upload-container">
+                        <div class="dashed-rectangle">Upload image (Optional)</div>
+                        <img id="uploadPreview" alt="Image Preview" class="file-upload-img" />
+                        <span><i class="fa-solid fa-image p-1"></i></span>
+                        <input id="uploadImage" type="file" name="myPhoto" onchange="PreviewImage();" />
                     </div>
-                    <div id="myModal" class="modal">
-                        <div class="modal-content">
-                            <span class="close">&times;</span>
-                            <p id="modalMessage">Please select a file.</p>
-                        </div>
+                    <button type="button" onclick="removeImage()" class="remove-button"><i class="fa-solid fa-trash p-1"></i></button>
+                </div>
+                <div id="myModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <p id="modalMessage">Please select a file.</p>
                     </div>
-                    <div class="details">
-                        <label>Title of the announcement:</label>
-                        <textarea id="announcementName" name="announcementName" class="form-control mb-3" rows="1" required></textarea>
-                        <label>Details about the internship opportunity:</label>
-                        <textarea class="form-control mb-3" id="description" name="description" rows="4" required></textarea>
-                        <label for="startDate">Start Date:</label>
-                        <input type="date" class="form-control" id="startDate" name="startDate" required>
-                        <label for="endDate">End Date:</label>
-                        <input type="date" class="form-control" id="endDate" name="endDate" required>
-                        <button type="submit" class="publish">Publish</button>
-                    </div>
+                </div>
+                <div class="details">
+                    <label>Title of the announcement:</label>
+                    <textarea id="announcementName" name="announcementName" class="form-control mb-3" rows="1" required></textarea>
+                    <label>Details about the internship opportunity:</label>
+                    <textarea class="form-control mb-3" id="description" name="description" rows="4" required></textarea>
+                    <label for="startDate">Start Date:</label>
+                    <input type="date" class="form-control" id="startDate" name="startDate" required>
+                    <label for="endDate">End Date:</label>
+                    <input type="date" class="form-control" id="endDate" name="endDate" required>
+                    <button type="submit" class="publish">Publish</button>
                 </div>
             </form>
         </div>
@@ -117,7 +116,7 @@
             startDateInput.addEventListener('change', function () {
                 const startDate = startDateInput.value;
                 // Set the minimum value for endDate to the selected startDate
-                let minEndDate = moment(startDate).add(1, 'days').format('YYYY-MM-DD');
+                let minEndDate = moment(startDate).format('YYYY-MM-DD');
                 endDateInput.setAttribute('min', minEndDate);
             });
 
@@ -133,9 +132,9 @@
                     return;
                 }
 
-                if (endDate <= startDate) {
+                if (endDate < startDate) {
                     e.preventDefault(); // Prevent form submission
-                    alert('End Date must be after the Start Date.');
+                    alert('End Date must be on or after the Start Date.');
                 }
             });
         });

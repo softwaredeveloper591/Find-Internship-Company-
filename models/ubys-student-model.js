@@ -7,7 +7,7 @@ const ubysStudent= sequelize.define('ubysStudent', {
         allowNull: false,
         primaryKey: true,
       },
-      student_name: {
+      username: {
         type: DataTypes.STRING(45),
         allowNull: false
       },

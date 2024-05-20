@@ -1,13 +1,14 @@
 function updateAnnouncement(announcementId, isApproved) {
+	const feedback = document.getElementById('feedback').value;
     fetch(`/admin/announcement/${announcementId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isApproved })
+        body: JSON.stringify({ isApproved, feedback })
     })
     .then(response => response.json())
     .then(data => {
         alert(data.message);
-        location.reload(); // Reload the page to refresh the content
+        location.href = '/admin/announcementRequests';
     })
     .catch(error => {
         console.error("Error processing the request:", error);

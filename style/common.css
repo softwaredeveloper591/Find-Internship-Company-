@@ -2,7 +2,7 @@ body, html {
     margin: 0;
     padding: 0;
     font-family: Arial, sans-serif;
-    overflow-x: hidden; /* Prevent horizontal scrolling */
+    overflow: hidden; /* Prevent horizontal scrolling */
 }
 
 .top-right-logo {
@@ -15,7 +15,10 @@ body, html {
 }
 
 header {
-    height: 70px;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+    height: 110px;
     background: -webkit-linear-gradient(left, darkred, #bf1b1b, #bf1b1b, darkred);
     display: flex;
     align-items: center;
@@ -133,5 +136,5 @@ header {
 
 .content {
     margin-left: 180px; /* Adjust this value to match the sidebar's width */
-    padding: 20px;
+    padding: 20px;
 }

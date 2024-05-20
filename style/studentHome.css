@@ -1,11 +1,43 @@
+.content-applications{
+	padding-top: 140px;
+	padding-left: 135px;
+
+}
 .content-container {
-    position: absolute;
-    top: 120px;         /* Adjust based on your header height */
+    /* Remove position: absolute */
+    top: 160px; /* Adjust based on your header height */
     bottom: 0;
-    left: 0;
+    left: 90px; /* Default left margin */
     right: 0;
-    overflow-y: auto;   /* Make only the content div scrollable */
-    padding: 20px;
+    overflow-y: auto; /* Make only the content div scrollable vertically */
+    padding: 5px;
+    display: flex;
+    flex-direction: row; /* Align items in a row */
+    justify-content: center; /* Center items */
+    align-items: flex-start; /* Align items at the top */
+    gap: 20px; /* Space between items */
+}
+
+
+#info-container {
+    border: 1px solid #ccc; 
+    margin-top: 20px;
+    padding-left: 5px; 
+    display: flex;
+    flex-direction: column;
+    border-radius: 5px;
+    min-width: 150px;
+    min-height: 180px;
+    text-align: center;
+    background-color: #f9f9f9;
+    font-size: 1vw; /* Adjust font size based on viewport width */
+	justify-content: center; /* Vertically center the content */
+    align-items: center; /* Horizontally center the content */
+}
+
+#information {
+    justify-self: right;
+    margin-bottom: 10px; /* Space between Application ID and Company Name */
 }
 
 .steps, .details {
@@ -13,47 +45,80 @@
 }
 
 .steps {
-    display: flex;
+    display: flex; /* Changed from inline-flex to flex */
+    gap: 10px; /* Space between items */
 }
 
 .steps div {
-    width: 10%;
-    padding: 25px;
+    height: 185px;
+    width: 10vw; /* Adjust width to fit 4 items in a row */
+    padding: 20px; /* Reduce padding */
     background: #f9f9f9;
     border: 1px solid #ccc;
     text-align: center;
     border-radius: 5px;
+	display: flex; /* Add this to enable flexbox layout */
+    flex-direction: column; /* Align items in a column */
+    justify-content: space-between; /* Add space between items */
+	
 }
 
 .steps div img {
-    width: 30px;
-    height: 30px;
-    margin-bottom: 10px;
+	align-items: center;
+    margin-left: 50px;
+	width: 2.2vw;
 }
+
 
 .steps div p {
     margin: 0;
-    font-size: 12px;
+    font-size: 0.9vw; /* Adjust font size based on viewport width */
     font-weight: bold;
 }
 
 .steps div span {
-    font-size: 14px;
+    font-size: 1vw; /* Adjust font size based on viewport width */
     color: gray;
+	
 }
 
 .stage {
-    padding: 10px;
+    padding: 15px;
     background-color: #f9f9f9;
     border: 1px solid #ccc;
     text-align: center;
     border-radius: 5px;
     margin-bottom: 10px;
-    margin-left: 10px;
 }
 
 .stage.active {
     font-weight: bold;
     background-color: rgb(241, 232, 232);
     border-color: black;
+}
+
+@media (max-width: 1024px) {
+    .steps div {
+        height: 50px;
+    }
+    .content-container {
+        left: 30px; /* Reduce left margin for medium screens */
+    }
+}
+
+@media (max-width: 768px) {
+    .content-container {
+        left: 80px; /* Reduce left margin for small screens */
+        flex-direction: column; /* Stack elements vertically */
+        align-items: center; /* Center items */
+    }
+    .steps {
+        justify-content: center; /* Center items */
+    }
+    .steps div {
+        left: 0px;
+        width: 10vw; /* Full width for small screens */
+        margin-bottom: 10px; /* Add space between items */
+        height: 50px;
+    }
 }

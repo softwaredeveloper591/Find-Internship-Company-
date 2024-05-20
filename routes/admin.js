@@ -81,9 +81,37 @@ router.get("/admin/announcementRequests", [auth, checkUserRole("admin")], async 
     }
 });
 
+router.get("/admin/announcement/:announcementId", [auth, checkUserRole("admin")], async function (req, res) {
+	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+	const announcementId = req.params.announcementId.slice(1);
+    const announcement = await Announcement_model.findOne({ 
+		where: {
+			id: announcementId
+		},
+		include: [
+			{
+				model: Company_model,
+				attributes: ['name']
+			}
+		]
+	}) 
+
+	const formattedAnnouncement = {
+        ...announcement.dataValues,
+        formattedStartDate: moment(announcement.startDate).tz('Europe/Istanbul').format('DD/MM/YYYY'),
+        formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD/MM/YYYY')
+    };
+
+    res.render("Admin/innerAnnouncement", {
+		usertype: "admin",
+		dataValues: admin.dataValues,
+		announcement: formattedAnnouncement
+	});
+});
+
 router.put("/admin/announcement/:announcementId", [auth, checkUserRole("admin")], async function (req, res) {
     const announcementId = req.params.announcementId;
-    const isApproved = req.body.isApproved; 
+    const { isApproved, feedback } = req.body;
 
     try {
         const announcement = await Announcement_model.findOne({
@@ -104,7 +132,7 @@ router.put("/admin/announcement/:announcementId", [auth, checkUserRole("admin")]
 
         const emailSubject = isApproved ? 'Announcement Approved' : 'Announcement Rejected';
         const emailBody = `Hello ${announcement.Company.username},<br><br>
-            Your announcement titled "${announcement.announcementName}" has been ${isApproved ? "approved" : "rejected and will be removed from our system"}.<br><br>
+            Your announcement titled "${announcement.announcementName}" has been ${isApproved ? "approved" : "rejected and will be removed from our system"}.<br> Feedback: <br> ${feedback} <br><br>
             Best Regards,<br>Admin Team`;
 
         const transporter = nodeMailer.createTransport({

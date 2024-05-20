@@ -7,91 +7,67 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
         integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="/common.css">
     <link rel="stylesheet" href="/studentHome.css">
 </head>
 <body>
     <header>
-        <div>
-            <div class="dp-menu">
-                <button class="navbar-content" style="background: darkred; border: none;" onclick="toggleSidebar()">
-                    <i class="fa-solid fa-bars p-2"></i>
-                </button>
-                <div id="sidebar" class="sidebar">
-                    <a href="/student" class="order"><button><i class="fa-solid fa-house"></i>Home</button></a>
-                    <a href="/student/opportunities" class="order"><button>Opportunities</button></a>
-                    <a href="/student/applications" class="order"><button style="background-color: rgb(217, 4, 4);">Applications</button></a>
-                    <a href="link" class="order"><button>Internship</button></a>
-                </div>
-            </div>
-            <script type="text/javascript">
-                function toggleSidebar() {
-                    var sidebar = document.getElementById('sidebar');
-                    if (sidebar.style.width == '0px') {
-                        sidebar.style.width = '180px';
-                    } else {
-                        sidebar.style.width = '0px';
-                    }
-                }
-            </script>
-        </div>
-        <div class="logo">
-            <img src="/İyte Logo.png" class="top-left-logo">
-        </div>
-        <div class="navbar justify-content-end">
-            <div class="navbar-content">
-                <form class="search-form">
-                    <input type="text" placeholder="Search..." class="search-input">
-                    <button type="submit" class="search-button"><i class="fa-solid fa-magnifying-glass p-1"></i></button>
-                </form>
-                <p class="text_navbar"><%= dataValues.username %></p>
-            </div>
+        <%- include('../partials/nav') %>
+        <div id="sidebar" class="sidebar">
+            <a href="/student" class="order"><button><i class="fa-solid fa-house"></i>Home</button></a>
+            <a href="/student/opportunities" class="order"><button>Opportunities</button></a>
+            <a href="/student/applications" class="order"><button style="background-color: rgb(217, 4, 4);">Applications</button></a>
+			<a href="/student/applications" class="order"><button>Internships</button></a>
         </div>
     </header>
-<div class="content-container">
-    <div class="content">
-        <% applications.forEach(application => { %>
-            <div class="application">
-                <h3>Application for <%= application.Announcement.announcementName %></h3>
-                <!-- Steps Section -->
-                <div class="steps">
-                    <div id="pre-evaluation-<%= application.id %>" class="stage">
-                        <img src="/interview.jpg" alt="Pre Evaluation">
-                        <p>Ön Değerlendirme</p>
-                        <span>(0)</span>
+    <div class="content-applications">
+		<% applications.forEach(application => { %>
+        <div class="content-container">
+                    <div id="info-container">
+                        <p id="company-name-<%= application.id %>"><%= application.Announcement.Company.name %></p>
+                        <p id="announcement-title-<%= application.id %>"><%= application.Announcement.announcementName %></p>
                     </div>
-                    <div id="evaluation-<%= application.id %>" class="stage">
-                        <img src="/evaluation.jpg" alt="Evaluation Stage">
-                        <p>Değerlendirme Aşaması</p>
-                        <span>(0)</span>
+                    <img src="/arrow.png" alt="Arrow" style="height: 40px; margin-top: 90px;">
+                    <!-- Steps Section -->
+                    <div class="steps">
+                        <div id="pre-evaluation-<%= application.id %>" class="stage">
+                            <img src="/interview.png" alt="Pre Evaluation">
+                            <p>Şirket Değerlendirmesi</p>
+                            <span>(0)</span>
+                        </div>
+                        <div id="evaluation-<%= application.id %>" class="stage">
+                            <img src="/evaluation.png" alt="Evaluation Stage">
+                            <p>Koordinatör Değerlendirme Aşaması</p>
+                            <span>(0)</span>
+                        </div>
+                        <div id="ssi-<%= application.id %>" class="stage">
+                            <img src="/loading.png" alt="SSI Stage">
+                            <p>SSK İşlemleri Aşaması</p>
+                            <span>(0)</span>
+                        </div>
+                        <div id="internship-<%= application.id %>" class="stage">
+                            <img src="/employee.png" alt="Internship Stage">
+                            <p>Staj Aşaması</p>
+                            <span>(0)</span>
+                        </div>
+                        <div id="rejected-<%= application.id %>" class="stage">
+                            <img src="/reject.png" alt="Rejected">
+                            <p>Rejected</p>
+                            <span>(0)</span>
+                        </div>
                     </div>
-                    <div id="ssi-<%= application.id %>" class="stage">
-                        <img src="/loading.jpg" alt="SSI Stage">
-                        <p>SSK İşlemleri Aşaması</p>
-                        <span>(0)</span>
-                    </div>
-                    <div id="internship-<%= application.id %>" class="stage">
-                        <img src="/employee.jpg" alt="Internship Stage">
-                        <p>Staj Aşaması</p>
-                        <span>(0)</span>
-                    </div>
-					<div id="rejected-<%= application.id %>" class="stage">
-                        <img src="/reject.png" alt="Rejected">
-                        <p>Rejected</p>
-                        <span>(0)</span>
-                    </div>
-                </div>
-            </div>
-        <% }) %>
+        </div>
+		<% }) %>
     </div>
-</div>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const applications = <%- JSON.stringify(applications) %>; // Convert applications data to a JavaScript object
 
-            function setActiveStages(application) {
+            applications.forEach(application => {
                 const idSuffix = application.id; // Get the unique ID for each application
+                setActiveStages(application, idSuffix);
+            });
 
+            function setActiveStages(application, idSuffix) {
                 // Check the status of the application and update the corresponding stage
                 if (application.status === 0) {
                     document.getElementById(`pre-evaluation-${idSuffix}`).classList.add('active');
@@ -110,7 +86,6 @@
                     document.querySelector(`#rejected-${idSuffix} span`).textContent = `(1)`;
                 }
             }
-            applications.forEach(application => setActiveStages(application));
         });
     </script>
 </body>

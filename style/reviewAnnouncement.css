@@ -1,0 +1,182 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Sayfanın tamamının kaydırılmasını engeller */
+}
+
+.container {
+	margin-top: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-left: 200px;
+    width: 87%;
+    height: calc(100vh - 110px); /* Header yüksekliği kadar boşluk bırak */
+    overflow-y: auto;
+}
+
+.company-info {
+    display: flex;
+    align-items: start;
+    margin-bottom: 20px;
+    margin-left: 20px;
+}
+
+.company-info img {
+    max-width: 250px;
+    margin-top: 30px;
+    margin-right: 150px;
+}
+
+.details {
+    margin-left: -30px;
+}
+
+.details h2,
+.details h3 {
+    margin-top: 30px;
+    padding: 2px;
+}
+
+.details p {
+    margin-top: 10px;
+}
+
+.input-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    margin-top: 20px;
+    margin-left: -50px;
+    margin-bottom: 20px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: row;
+    width: 150px; 
+    margin-bottom: 20px;
+}
+
+.apply-btn {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background-color: darkred;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    align-self: flex-end;
+}
+
+.apply-btn:hover {
+    background-color: rgb(217, 4, 4);
+}
+
+.preview-btn {
+    padding: 10px;
+    margin-bottom: 20px;
+    background-color: darkred;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    align-self: flex-end;
+}
+
+.preview-btn:hover {
+    background-color: rgb(217, 4, 4);
+}
+
+.feedback-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Sola hizalama */
+    width: 80%;
+    margin-left: 20px; /* Sola yaslamak için margin ekleyin */
+    margin-top: 20px;
+}
+
+.feedback-container .input-group {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.feedback-container .input-group label {
+    margin-bottom: 5px;
+}
+
+.input-form{
+	width: 100%; 
+    margin-bottom: 20px;
+}
+
+.feedback-container .input-group .input-form textarea {
+    width: 100%;
+    min-height: 100px;
+    max-height: 100px;
+    padding: 10px;
+    resize: vertical;
+}
+
+.feedback-container .button-group {
+    display: flex;
+    gap: 10px;
+}
+
+.feedback-container .approve-btn,
+.feedback-container .reject-btn {
+    padding: 10px 20px;
+	min-width: 100px;
+    background-color: darkred;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.feedback-container .approve-btn:hover,
+.feedback-container .reject-btn:hover {
+    background-color: rgb(217, 4, 4);
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+    color: white;
+    background-color: darkred;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 20%;
+    border-radius: 8px;
+    box-shadow: 20px 10px 5px rgba(76, 73, 73, 0.5);
+}
+
+.modal-content .close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: white;
+    text-decoration: none;
+    cursor: pointer;
+}

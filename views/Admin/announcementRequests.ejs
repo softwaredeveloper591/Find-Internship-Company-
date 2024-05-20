@@ -5,60 +5,89 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Announcement Requests</title>
-    <script src="/admin_functions.js"></script>
+	<link rel="stylesheet" href="/studentApplication.css">
 </head>
 
 <body>
     <header>
         <%- include('../partials/nav') %>
         <div id="sidebar" class="sidebar">
-            <a href="/admin/announcementRequests" class="order"><button style="background-color: rgb(217, 4, 4);"><i class="fa-solid fa-house"></i>Announcement Requests</button></a>
+            <a href="/admin/announcementRequests" class="order"><button style="background-color: rgb(217, 4, 4);">Announcement Requests</button></a>
             <a href="/admin/companyRequests" class="order"><button >Company Requests</button></a>
             <a href="/admin/applicationRequests"  class="order"><button>Application Requests</button></a>
         </div>
     </header>
-    <div class="container mt-1">
-        <div class="row">
-            <div class="col-md-1">
-            </div>
-            <div class="col-md-9">
-                <h1 class="h3 mb-3">Pending Announcement Requests</h1>
-                <table class="table table-striped table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Company Name</th>
-                            <th>Announcement Name</th>
-                            <th>Description</th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if (typeof announcements !== 'undefined' && announcements.length > 0) { %>
-                            <% announcements.forEach(announcement => { %>
-                                <tr>
-                                    <td><%= announcement.Company.name %></td>
-                                    <td><%= announcement.announcementName %></td>
-                                    <td><%= announcement.description %></td>
-                                    <td><%= new Date(announcement.startDate).toLocaleString() %></td>
-                                    <td><%= new Date(announcement.endDate).toLocaleString() %></td>
-                                    <td>
-                                        <button class="btn btn-success" onclick="updateAnnouncement('<%= announcement.id %>', true)">Approve</button>
-                                        <button class="btn btn-danger" onclick="updateAnnouncement('<%= announcement.id %>', false)">Reject</button>
-                                    </td>
-                                </tr>
-                            <% }); %>
-                        <% } else { %>
-                            <tr>
-                                <td colspan="6" class="text-center">No pending announcements found.</td>
-                            </tr>
-                        <% } %>
-                    </tbody>
-                </table>
-            </div>
+	<div class="content-container">
+        <div class="content-2" id="content">
+            <% announcements.forEach(announcement => { %>
+                <div class="card">
+                    <img src="<%= announcement.image %>" alt="Announcement Logo">
+                    <div class="card-body">
+                        <p class="card-title"><%= announcement.Company.name %></p>
+                        <p class="card-text"><%= announcement.announcementName %></p>
+                        <button class="details-button" onclick="window.location.href='/admin/announcement/:<%= announcement.id %>'">More Details</button>
+                    </div>
+                </div>
+            <% }) %>
         </div>
     </div>
+    
+	<script> 
+		document.addEventListener("DOMContentLoaded", function() {
+            const contentDiv = document.getElementById('content');
+            const searchForm = document.getElementById('search-form');
+            const searchInput = document.getElementById('search-input');
+
+            // Mock data fetching
+            const internships = <%= JSON.stringify(announcements) %>;
+
+            // Function to render list items
+            function renderListItems(items) {
+                contentDiv.innerHTML = ''; // Clear the content before rendering
+
+                items.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+
+                    const img = document.createElement('img');
+                    img.src = item.image;
+                    img.alt = 'Opportunity Logo';
+
+                    const cardBody = document.createElement('div');
+                    cardBody.className = 'card-body';
+
+                    const companyTitle = document.createElement('p');
+                    companyTitle.className = 'card-title';
+                    companyTitle.textContent = item.Company.name;
+
+                    const itemTitle = document.createElement('p');
+                    itemTitle.className = 'card-text';
+                    itemTitle.textContent = item.announcementName;
+
+                    const itemDueDate = document.createElement('p');
+                    itemDueDate.className = 'card-due-date';
+                    itemDueDate.textContent = `Due Date: ${item.endDate}`;
+
+                    const detailsButton = document.createElement('button');
+                    detailsButton.className = 'details-button';
+                    detailsButton.textContent = 'More Details';
+                    detailsButton.onclick = () => window.location.href = `/admin/announcement/:${item.id}`; // Redirect to details page
+
+                    cardBody.appendChild(companyTitle);
+                    cardBody.appendChild(itemTitle);
+                    cardBody.appendChild(itemDueDate); // Add due date here
+                    cardBody.appendChild(detailsButton);
+
+                    card.appendChild(img);
+                    card.appendChild(cardBody);
+
+                    contentDiv.appendChild(card);
+                });
+            }
+
+            // Render the list items with the mock data
+            renderListItems(internships);
+	</script>
 </body>
 
 </html>

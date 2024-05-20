@@ -11,6 +11,15 @@ const { isEmail } = require('validator');
 const { Sequelize } = require('sequelize');
 const { Op } = require('sequelize');
 const moment = require('moment-timezone');
+const { Document, Packer, Paragraph, TextRun } = require('docx');
+const bodyParser = require('body-parser');
+const fs = require('fs');
+const AdmZip = require("adm-zip");
+
+const app = express();
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 const Student_model= require("../models/student-model");
 const UbysStudent_model = require("../models/ubys-student-model");
@@ -57,42 +66,47 @@ const handleErrors = (err) => {
 }
 
 router.get("/student",[auth,checkUserRole("student")],async function(req,res){
-    let student = await Student_model.findOne({ where: {id: req.user.id} });
+    const student = await UbysStudent_model.findOne({ where: {id: req.user.id} });
     res.render("Student/student",{ usertype:"student", dataValues:student.dataValues});
 })
 
 router.get("/student/opportunities", [auth, checkUserRole("student")], async function(req, res) {
     try {
-        const student = await Student_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-		const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
-		const announcements = await Announcement_model.findAll({
-			where: {
-				isActive: true,
-				startDate: {
+        const student = await UbysStudent_model.findOne({ where: { id: req.user.id }});
+        const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
+        const announcements = await Announcement_model.findAll({
+            where: {
+                isActive: true,
+                startDate: {
                     [Sequelize.Op.lte]: now // Ensure the announcement has started
                 },
-				id: {
-					[Op.notIn]: Sequelize.literal(`(
-						SELECT announcementId
-						FROM application
-						WHERE studentId = ${student.id}
-					)`)
-				}
-			},
-			include: [
-				{
-					model: Company_model,
-					attributes: ['name']
-				}
-			]
-		})
-		
-		res.render("Student/opportunities", {
-			usertype: "student",
-			dataValues: student.dataValues,
-			announcements
-		});
-		
+                id: {
+                    [Op.notIn]: Sequelize.literal(`(
+                        SELECT announcementId
+                        FROM application
+                        WHERE studentId = ${student.id}
+                    )`)
+                }
+            },
+            include: [
+                {
+                    model: Company_model,
+                    attributes: ['name']
+                }
+            ]
+        });
+
+        // Format the endDate for each announcement
+        const formattedAnnouncements = announcements.map(announcement => ({
+            ...announcement.dataValues,
+            formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD MM YYYY')
+        }));
+
+        res.render("Student/opportunities", {
+            usertype: "student",
+            dataValues: student.dataValues,
+            announcements: formattedAnnouncements
+        });
     } catch (err) {
         console.error("Error fetching opportunities:", err);
         res.status(500).send("Error fetching opportunities.");
@@ -101,11 +115,21 @@ router.get("/student/opportunities", [auth, checkUserRole("student")], async fun
 
 router.get("/student/opportunities/:opportunityId",[auth,checkUserRole("student")],async function(req,res){
 	try {
-        const student = await Student_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+        const student = await UbysStudent_model.findOne({ where: { id: req.user.id }});
 		const opportunityId = req.params.opportunityId.slice(1);
-        const announcement = await Announcement_model.findOne({ where: {id: opportunityId} });  
+        const announcement = await Announcement_model.findOne({ 
+			where: {
+				id: opportunityId
+			},
+			include: [
+				{
+					model: Company_model,
+					attributes: ['name']
+				}
+			]
+		}) 
 
-        res.render("Student/single-opportunity", {
+        res.render("Student/apply", {
             usertype: "student",
             dataValues: student.dataValues,
             announcement
@@ -117,53 +141,84 @@ router.get("/student/opportunities/:opportunityId",[auth,checkUserRole("student"
 });
 
 router.post("/student/opportunities/:opportunityId",upload.single('CV'),[auth,checkUserRole("student")],async function(req,res){
-  const studentId=req.body.studentId;
-  const studentName=req.body.studentName;
-  const announcementId=req.params.opportunityId.slice(1);
-  const file =req.file;
-  const binaryData = file.buffer;
-  const fileType="CV";
-  const name = file.originalname;
+	const student = await UbysStudent_model.findOne( { where: { id: req.user.id }} );
 
-  try {
-    const application = await Application_model.create({
-      studentId,
-      announcementId,
-      status: 0,
-    });
+  	const announcementId=req.params.opportunityId.slice(1);
+  	const file =req.CV;
+  	const binaryData = file.buffer;
+  	const fileType="CV";
+  	const name = file.originalname;
 
-    await Document_model.create({
-      name,
-      applicationId: application.id,
-      data: binaryData,
-      fileType,
-      username: studentName
-    });
-	res.redirect("/student/opportunities");
-  }  catch (error) {
-    console.log(error);
-    res.status(500).send('An error occurred while creating the application or the document.'); 
-  };
+  	const { tcNo, user_phone, relative_phone } = req.body;
+
+	const templatePath = 'C:/Users/ahmet/OneDrive/Masaüstü/doc_files/ApplicationForm.docx';
+    const outputPath = `C:/Users/ahmet/OneDrive/Masaüstü/doc_files/ApplicationForm2_${student.username}.docx`;
+
+    const createFilledDocument = async () => {
+        const zip = new AdmZip(templatePath);
+        const docxTemplate = zip.readAsText("word/document.xml");
+
+        const filledDocx = docxTemplate
+            .replace(/«name»/g, student.username)
+            .replace(/«studentClass»/g, student.year)
+            .replace(/«studentNumber»/g, student.id)
+            .replace(/«tcNo»/g, tcNo)
+            .replace(/«user_phone»/g, user_phone)
+            .replace(/«relative_phone»/g, relative_phone)
+            .replace(/«email»/g, student.email);
+
+        zip.updateFile("word/document.xml", Buffer.from(filledDocx, "utf-8"));
+        zip.writeZip(outputPath);
+
+    };
+	
+  	try {
+		await createFilledDocument();
+
+  	  const application = await Application_model.create({
+  	    studentId: student.id,
+  	    announcementId,
+  	    status: 0,
+  	  });
+
+  	  await Document_model.create({
+  	    name,
+  	    applicationId: application.id,
+  	    data: binaryData,
+  	    fileType,
+  	    username: student.username
+  	  });
+		res.redirect("/student/opportunities");
+  	}  catch (error) {
+  	  console.log(error);
+  	  res.status(500).send('An error occurred while creating the application or the document.'); 
+  	};
 });
 
 router.get("/student/applications",[auth,checkUserRole("student")],async function(req,res){
-	const student = await Student_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+	const student = await UbysStudent_model.findOne({ where: { id: req.user.id }});
 
 	try {
         const applications = await Application_model.findAll({
 			where: {
-				studentId: student.dataValues.id  // Filter applications by the provided student ID
+			  studentId: student.dataValues.id  // Filter applications by the provided student ID
 			},
 			include: [
-				{
+			  	{
 					model: Student_model,
 					attributes: ['username'] // Fetching only the student name
-				},
-				{
+			  	},
+			  	{
 					model: Announcement_model,
-					attributes: ['announcementName'] // Fetching only the announcement (opportunity) name
-				}
-			],
+					attributes: ['announcementName'],
+					include: [
+					  {
+						model: Company_model,
+						attributes: ['name'] // Fetching the company name
+					  }
+					]
+			  	}
+			]
 		});
 
 		res.render("Student/applications", {
@@ -227,8 +282,9 @@ router.post("/signup/student",async function(req,res){
         	throw Error('Passwords do not match');
       	}
         const newStudent = await Student_model.create({ 
-            username: ubysStudent.student_name,
-            email: email,
+            id: ubysStudent.id,
+			username: ubysStudent.username,
+			email,
             password: hashedPassword
         });
         const token= createTokenWithIdandUserType(newStudent.id,"student");

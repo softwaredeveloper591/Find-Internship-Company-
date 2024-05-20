@@ -1,0 +1,178 @@
+body{
+	margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+
+}
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 20px;
+    overflow-y: auto; /* Add vertical scrolling */
+}
+
+.company-info {
+	margin-top: 200px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.company-info img {
+	margin-left: 200px;
+    width: 550px;
+    margin-right: 50px;
+}
+
+.details {
+    flex: 1;
+}
+
+.details h2,
+.details h3 {
+    margin-top: 30px;
+    padding: 2px;
+}
+
+.details p {
+    margin-top: 10px;
+}
+
+.input-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.file-upload {
+    margin-top: 50px;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.upload-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+}
+
+.upload-box input[type="file"] {
+    display: none;
+}
+
+.upload-box .file-icon {
+    display: inline-block;
+    width: 50px; /* Adjust width */
+    height: 50px; /* Adjust height */
+    background-size: cover;
+    cursor: pointer;
+    position: relative;
+}
+
+.upload-box .file-icon::after {
+    content: attr(data-filename);
+    position: absolute;
+    top: -25px;
+    left: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+    font-size: 12px;
+}
+
+.input-form {
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 80%;
+    gap: 25px; 
+}
+
+.input-group {
+    display: flex;
+    flex-direction: row;
+    width: 150px; 
+    margin-bottom: 20px;
+}
+
+.apply-btn {
+	margin-right: 0px;
+    margin-top: 250px;
+    padding: 10px 20px;
+    background-color: darkred;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    align-self: flex-end;
+}
+
+.apply-btn:hover {
+    background-color: rgb(217, 4, 4);
+}
+
+.preview-btn {
+    padding: 10px;
+    margin-bottom: 20px;
+    background-color: darkred;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    align-self: flex-end;
+}
+
+.preview-btn:hover {
+    background-color: rgb(217, 4, 4);
+}
+
+.modal-student {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-student-content {
+    color: white;
+    background-color: darkred;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 20%;
+	height: 15%;
+    border-radius: 8px;
+    box-shadow: 20px 10px 5px rgba(76, 73, 73, 0.5);
+    position: relative;
+}
+
+.modal-student-content .ok-btn {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    padding: 8px 16px;
+    background-color: darkred;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.modal-student-content .ok-btn:hover {
+    background-color: rgb(217, 4, 4);
+}

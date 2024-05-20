@@ -68,16 +68,15 @@ router.post('/company/announcement', [auth, checkUserRole('company')], (req, res
         const imagePath = req.file ? `/uploads/${req.file.filename}` : '';
 
         try {
-
-			const startDateInTurkey = moment.tz(startDate, 'Europe/Istanbul').toDate();
-            const endDateInTurkey = moment.tz(endDate, 'Europe/Istanbul').toDate();
+            const startDateInTurkey = moment.tz(startDate, 'Europe/Istanbul').startOf('day').toDate();
+            const endDateInTurkey = moment.tz(endDate, 'Europe/Istanbul').endOf('day').toDate();
 
             await Announcement_model.create({
                 companyId,
                 announcementName,
                 description,
                 startDate: startDateInTurkey,
-				endDate: endDateInTurkey,
+                endDate: endDateInTurkey,
                 image: imagePath 
             });
 

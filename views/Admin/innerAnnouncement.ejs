@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Apply Page</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="/reviewAnnouncement.css">
+    <script src="https://unpkg.com/docx@7.1.0/build/index.js"></script>
+	<script src="/admin_functions.js"></script>
+</head>
+
+<body>
+    <header>
+        <%- include('../partials/nav') %>
+        <div id="sidebar" class="sidebar">
+            <a href="/admin/announcementRequests" class="order"><button style="background-color: rgb(217, 4, 4);">Announcement Requests</button></a>
+            <a href="/admin/companyRequests" class="order"><button >Company Requests</button></a>
+            <a href="/admin/applicationRequests"  class="order"><button>Application Requests</button></a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="company-info">
+            <img src="<%= announcement.image %>" alt="Announcement Image">
+            <div class="details">
+                <h2><%= announcement.Company.name %></h2>
+                <h3><%= announcement.announcementName %></h3>
+                <p><%= announcement.description %></p>
+                <p>Start Date: <%= announcement.formattedStartDate %></p>
+                <p>End Date: <%= announcement.formattedEndDate %></p>
+            </div>
+        </div>
+        <div class="feedback-container">
+            <div class="input-group">
+                <label for="feedback">Feedback:</label>
+                <form action="" class="input-form">
+					<textarea id="feedback" name="feedback" placeholder="Enter your feedback here..." required></textarea>
+				</form>
+                <div class="input-feedback" id="feedback-error"></div>
+            </div>
+            <div class="button-group">
+                <button class="approve-btn" onclick="updateAnnouncement('<%= announcement.id %>', true)">Approve</button>
+                <button class="reject-btn" onclick="updateAnnouncement('<%= announcement.id %>', false)">Reject</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
