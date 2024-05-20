@@ -5,9 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Apply Page</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="/apply.css">
-    <script src="https://unpkg.com/docx@7.1.0/build/index.js"></script>
 </head>
 
 <body>
@@ -30,146 +31,101 @@
                 <p><%= announcement.description %></p>
             </div>
         </div>
-        <form class="input-form" action="/student/opportunities/<%= announcement.id %>" method="POST" enctype="multipart/form-data">
-            <div class="input-group">
-                <input type="text" id="tc-kimlik" name="tcNo" placeholder="TC ID No" required>
+        <div id="myModal" class="modal-student">
+            <div class="modal-student-content">
+                <span class="close2">&times;</span>
+                <p id="modal-message">Please fill all parts.</p>
             </div>
-            <div class="input-group">
-                <input type="tel" id="telefon" name="user_phone" placeholder="(05_)" required>
-            </div>
-            <div class="input-group">
-                <input type="tel" id="yakın-telefon" name="relative_phone" placeholder="(05_)" required>
-            </div>
-            <div class="file-upload">
-                <div class="upload-box">
-                    <input type="file" id="resume" name="resume" accept=".pdf" required>
-                    <label class="file-icon" for="resume" style="background-image: url('/resume.jpg');" data-filename="Cv"></label>
+        </div>
+        <div class="input-row">
+            
+            <form class="input-form" id="applyForm" method="POST" action="/student/opportunities/:<%= announcement.id %>" enctype="multipart/form-data">
+				<div class="file-upload">
+					<div class="upload-box">
+						<input type="file" id="CV" name="CV" accept=".pdf" style="display: none;">
+						<label class="file-icon" for="CV" style="background-image: url('/resume.jpg');"
+							data-filename="Cv"></label>
+					</div>
+				</div>
+                <div class="input-group">
+                    <input type="text" id="tc-kimlik" name="tcNo" placeholder="TC ID No" required>
                 </div>
-            </div>
-            <button class="apply-btn" type="submit">Apply</button>
-        </form>
+                <div class="input-group">
+                    <input type="tel" id="telefon" name="user_phone" placeholder="(05_)" required>
+                </div>
+                <div class="input-group">
+                    <input type="tel" id="yakın-telefon" name="relative_phone" placeholder="(05_)" required>
+                </div>
+                <button class="apply-btn" type="submit">Apply</button>
+            </form>
+        </div>
     </div>
-	
+
     <script>
         function showModal(message) {
-    var modal = document.getElementById("myModal");
-    var modalContent = document.querySelector(".modal-student-content");
-    var modalMessage = document.getElementById("modal-message");
-    var okBtn = document.createElement("button");
+            var modal = document.getElementById("myModal");
+            var modalContent = document.querySelector(".modal-student-content");
+            var modalMessage = document.getElementById("modal-message");
+            var okBtn = document.createElement("button");
 
-    modalMessage.textContent = message;
-    modal.style.display = "block";
+            modalMessage.textContent = message;
+            modal.style.display = "block";
 
-    // Remove the close button
-    var closeBtn = modalContent.querySelector(".close2");
-    if (closeBtn) {
-        modalContent.removeChild(closeBtn);
-    }
+            // Remove the close button
+            var closeBtn = modalContent.querySelector(".close2");
+            if (closeBtn) {
+                modalContent.removeChild(closeBtn);
+            }
 
-    // Create and add the "OK" button
-    okBtn.classList.add("ok-btn");
-    okBtn.textContent = "OK";
-    okBtn.onclick = function() {
-        modal.style.display = "none";
-    };
-    modalContent.appendChild(okBtn);
+            // Create and add the "OK" button
+            okBtn.classList.add("ok-btn");
+            okBtn.textContent = "OK";
+            okBtn.onclick = function() {
+                modal.style.display = "none";
+            };
+            modalContent.appendChild(okBtn);
 
-    // Close the modal when clicking outside of it
-    window.onclick = function (event) {
-        if (event.target == modal) {
-            modal.style.display = "none";
+            // Close the modal when clicking outside of it
+            window.onclick = function (event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            };
         }
-    };
-}
 
         function isValidTCKimlikNo(value) {
-            // TC Kimlik Numarası kontrolü
             return /^\d{11}$/.test(value);
         }
 
         function isValidPhoneNumber(value) {
-            // Telefon Numarası kontrolü
             return /^\d{11}$/.test(value);
         }
 
-        function previewDoc() {
+        document.getElementById('applyForm').onsubmit = function (e) {
             const tcKimlik = document.getElementById('tc-kimlik').value;
             const telefon = document.getElementById('telefon').value;
             const yakinTelefon = document.getElementById('yakın-telefon').value;
 
             if (!isValidTCKimlikNo(tcKimlik)) {
                 showModal('TC ID No must be 11 digits and only contain numbers.');
-                return;
+                e.preventDefault();
+                return false;
             }
 
-            // Telefon Numarası kontrolü
             if (!isValidPhoneNumber(telefon)) {
                 showModal('Phone No must be 11 digits and only contain numbers.');
-                return;
+                e.preventDefault();
+                return false;
             }
 
             if (!isValidPhoneNumber(yakinTelefon)) {
                 showModal('Second Phone No must be 11 digits and only contain numbers.');
-                return;
+                e.preventDefault();
+                return false;
             }
 
-            if (!tcKimlik || !telefon || !yakinTelefon) {
-                showModal('Please fill all parts.');
-                return;
-            }
-
-            const { Document, Packer, Paragraph, TextRun } = docx;
-            const fileName = 'Application_Form.docx';
-
-            const resumeFile = document.getElementById('resume').files[0];
-            const resumeFileName = resumeFile ? resumeFile.name : 'Cv';
-            const isPdfFile = resumeFile && resumeFile.type === 'application/pdf';
-
-            const doc = new Document({
-                sections: [
-                    {
-                        properties: {},
-                        children: [
-                            new Paragraph({
-                                children: [
-                                    new TextRun("TC ID No: " + tcKimlik),
-                                ],
-                            }),
-                            new Paragraph({
-                                children: [
-                                    new TextRun("Phone No: " + telefon),
-                                ],
-                            }),
-                            new Paragraph({
-                                children: [
-                                    new TextRun("2. Phone No: " + yakinTelefon),
-                                ],
-                            }),
-                        ],
-                    },
-                ],
-            });
-
-            Packer.toBlob(doc).then(blob => {
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.setAttribute('download', fileName);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-
-                const fileIcon = document.querySelector('.file-icon');
-                if (isPdfFile) {
-                    fileIcon.style.backgroundImage = 'none';
-                    fileIcon.textContent = resumeFileName;
-                } else {
-                    fileIcon.style.backgroundImage = 'url("resume.png")';
-                    fileIcon.textContent = 'Cv';
-                }
-            });
-        }
-
+            return true;
+        };
     </script>
 </body>
 

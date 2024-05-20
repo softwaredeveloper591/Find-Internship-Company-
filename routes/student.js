@@ -11,9 +11,7 @@ const { isEmail } = require('validator');
 const { Sequelize } = require('sequelize');
 const { Op } = require('sequelize');
 const moment = require('moment-timezone');
-const { Document, Packer, Paragraph, TextRun } = require('docx');
 const bodyParser = require('body-parser');
-const fs = require('fs');
 const AdmZip = require("adm-zip");
 
 const app = express();
@@ -144,7 +142,7 @@ router.post("/student/opportunities/:opportunityId",upload.single('CV'),[auth,ch
 	const student = await UbysStudent_model.findOne( { where: { id: req.user.id }} );
 
   	const announcementId=req.params.opportunityId.slice(1);
-  	const file =req.CV;
+  	const file = req.file;
   	const binaryData = file.buffer;
   	const fileType="CV";
   	const name = file.originalname;
@@ -224,8 +222,7 @@ router.get("/student/applications",[auth,checkUserRole("student")],async functio
 		res.render("Student/applications", {
 			usertype: "student",
 			dataValues: student.dataValues,
-			applications,
-			message: applications.length > 0 ? '' : "You haven't applied for any internships yet."
+			applications
 		});
     }
 	catch (err) {

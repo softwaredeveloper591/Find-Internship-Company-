@@ -20,8 +20,9 @@
         </div>
     </header>
     <div class="content-applications">
-		<% applications.forEach(application => { %>
         <div class="content-container">
+			<% if (typeof applications !== 'undefined' && applications.length > 0) { %>
+				<% applications.forEach(application => { %>
                     <div id="info-container">
                         <p id="company-name-<%= application.id %>"><%= application.Announcement.Company.name %></p>
                         <p id="announcement-title-<%= application.id %>"><%= application.Announcement.announcementName %></p>
@@ -55,9 +56,13 @@
                             <span>(0)</span>
                         </div>
                     </div>
-        </div>
-		<% }) %>
+				<% }) %>
+			<% } else { %>
+				<h2>You haven't applied any internship yet.</h2>
+			<% } %>
+        </div>	
     </div>
+	
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const applications = <%- JSON.stringify(applications) %>; // Convert applications data to a JavaScript object

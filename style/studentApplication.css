@@ -78,6 +78,11 @@ body, html {
     background-color:  rgb(217, 4, 4);
 }
 
+.content-container h2{
+	margin-top: 150px;
+	margin-left: 220px;
+}
+
 @media (max-width: 1200px) {
     .content-2 {
         grid-template-columns: repeat(2, 1fr); 

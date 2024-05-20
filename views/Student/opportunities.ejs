@@ -20,19 +20,23 @@
         </div>
     </header>
     <div class="content-container">
-        <div class="content-2" id="content">
-            <% announcements.forEach(announcement => { %>
-                <div class="card">
-                    <img src="<%= announcement.image %>" alt="Opportunity Logo">
-                    <div class="card-body">
-                        <p class="card-title"><%= announcement.Company.name %></p>
-                        <p class="card-text"><%= announcement.announcementName %></p>
-                        <p class="card-due-date">Due Date: <%= announcement.formattedEndDate %></p>
-                        <button class="details-button" onclick="window.location.href='/student/opportunities/:<%= announcement.id %>'">More Details</button>
-                    </div>
-                </div>
-            <% }) %>
-        </div>
+		<% if (typeof announcements !== 'undefined' && announcements.length > 0) { %>
+        	<div class="content-2" id="content">
+        	    	<% announcements.forEach(announcement => { %>
+        	    	    <div class="card">
+        	    	        <img src="<%= announcement.image %>" alt="Opportunity Logo">
+        	    	        <div class="card-body">
+        	    	            <p class="card-title"><%= announcement.Company.name %></p>
+        	    	            <p class="card-text"><%= announcement.announcementName %></p>
+        	    	            <p class="card-due-date">Due Date: <%= announcement.formattedEndDate %></p>
+        	    	            <button class="details-button" onclick="window.location.href='/student/opportunities/:<%= announcement.id %>'">More Details</button>
+        	    	        </div>
+        	    	    </div>
+        	    	<% }) %>
+        	</div>
+		<% } else { %>
+			<h2>There are no available announcements or you have applied all announcements</h2>
+		<% } %>
     </div>
     <script>
         document.addEventListener("DOMContentLoaded", function() {

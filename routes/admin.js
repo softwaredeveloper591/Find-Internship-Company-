@@ -132,7 +132,7 @@ router.put("/admin/announcement/:announcementId", [auth, checkUserRole("admin")]
 
         const emailSubject = isApproved ? 'Announcement Approved' : 'Announcement Rejected';
         const emailBody = `Hello ${announcement.Company.username},<br><br>
-            Your announcement titled "${announcement.announcementName}" has been ${isApproved ? "approved" : "rejected and will be removed from our system"}.<br> Feedback: <br> ${feedback} <br><br>
+            Your announcement titled "${announcement.announcementName}" has been ${isApproved ? "approved" : `rejected and will be removed from our system. <br><br> ${feedback ? `Feedback: <br> ${feedback}` : ""}`}. <br><br>
             Best Regards,<br>Admin Team`;
 
         const transporter = nodeMailer.createTransport({

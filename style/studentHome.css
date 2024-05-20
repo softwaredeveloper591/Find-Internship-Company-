@@ -18,6 +18,11 @@
     gap: 20px; /* Space between items */
 }
 
+.content-container h2{
+	margin-top: 150px;
+	margin-left: 220px;
+}
+
 
 #info-container {
     border: 1px solid #ccc; 
