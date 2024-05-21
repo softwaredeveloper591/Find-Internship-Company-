@@ -1,0 +1,24 @@
+{
+
+    "student":[
+        {
+            "id":280201069,
+            "tc":28545627546,
+            "name":"Enes Sezer",
+            "mail":"enessezer@std.iyte.edu.tr",
+            "year":3,
+            "department": "CENG"
+        },
+
+        {
+            "id":280201066,
+            "tc":2854562754,
+            "name":"Mehmet Anıl Cömert",
+            "mail":"mehmetcomert@std.iyte.edu.tr",
+            "year":3,
+            "department": "CENG"
+        }
+        
+    ]
+
+}

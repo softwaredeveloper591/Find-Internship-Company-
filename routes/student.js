@@ -13,6 +13,7 @@ const { Op } = require('sequelize');
 const moment = require('moment-timezone');
 const bodyParser = require('body-parser');
 const AdmZip = require("adm-zip");
+const axios = require('axios');
 
 const app = express();
 
@@ -20,7 +21,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const Student_model= require("../models/student-model");
-const UbysStudent_model = require("../models/ubys-student-model");
 const Admin_model= require("../models/admin-model");
 const Company_model= require("../models/company-model");
 const Announcement_model = require("../models/announcement-model");
@@ -64,13 +64,13 @@ const handleErrors = (err) => {
 }
 
 router.get("/student",[auth,checkUserRole("student")],async function(req,res){
-    const student = await UbysStudent_model.findOne({ where: {id: req.user.id} });
+    const student = await Student_model.findOne({ where: {id: req.user.id} });
     res.render("Student/student",{ usertype:"student", dataValues:student.dataValues});
 })
 
 router.get("/student/opportunities", [auth, checkUserRole("student")], async function(req, res) {
     try {
-        const student = await UbysStudent_model.findOne({ where: { id: req.user.id }});
+        const student = await Student_model.findOne({ where: { id: req.user.id }});
         const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
         const announcements = await Announcement_model.findAll({
             where: {
@@ -113,7 +113,7 @@ router.get("/student/opportunities", [auth, checkUserRole("student")], async fun
 
 router.get("/student/opportunities/:opportunityId",[auth,checkUserRole("student")],async function(req,res){
 	try {
-        const student = await UbysStudent_model.findOne({ where: { id: req.user.id }});
+        const student = await Student_model.findOne({ where: { id: req.user.id }});
 		const opportunityId = req.params.opportunityId.slice(1);
         const announcement = await Announcement_model.findOne({ 
 			where: {
@@ -139,7 +139,7 @@ router.get("/student/opportunities/:opportunityId",[auth,checkUserRole("student"
 });
 
 router.post("/student/opportunities/:opportunityId",upload.single('CV'),[auth,checkUserRole("student")],async function(req,res){
-	const student = await UbysStudent_model.findOne( { where: { id: req.user.id }} );
+	const student = await Student_model.findOne( { where: { id: req.user.id }} );
 
   	const announcementId=req.params.opportunityId.slice(1);
   	const file = req.file;
@@ -194,7 +194,7 @@ router.post("/student/opportunities/:opportunityId",upload.single('CV'),[auth,ch
 });
 
 router.get("/student/applications",[auth,checkUserRole("student")],async function(req,res){
-	const student = await UbysStudent_model.findOne({ where: { id: req.user.id }});
+	const student = await Student_model.findOne({ where: { id: req.user.id }});
 
 	try {
         const applications = await Application_model.findAll({
@@ -262,7 +262,12 @@ router.post("/signup/student",async function(req,res){
 		if (domain !== "std.iyte.edu.tr") {
 			throw Error('not a std mail');
 		}
-		const ubysStudent = await UbysStudent_model.findOne({ where: { email } });
+    
+    
+const Student= await axios.get('http://localhost:3500/student?mail='+email);
+    const ubysStudent=Student.data[0];
+
+    console.log(ubysStudent);
 		if(!ubysStudent) {
 			throw Error('not in ubys database');
 		}
@@ -271,17 +276,17 @@ router.post("/signup/student",async function(req,res){
 			throw Error('not eligible');
 		}
     
-      	if (password.length < 6) {
-       	 	throw Error('Minimum password length');
-      	}  
+    if (password.length < 6) {
+      throw Error('Minimum password length');
+    }  
     
-      	if (password !== confirmPassword) {
-        	throw Error('Passwords do not match');
-      	}
+    if (password !== confirmPassword) {
+      throw Error('Passwords do not match');
+  	}
         const newStudent = await Student_model.create({ 
             id: ubysStudent.id,
-			username: ubysStudent.username,
-			email,
+			      username: ubysStudent.name,
+			      email,
             password: hashedPassword
         });
         const token= createTokenWithIdandUserType(newStudent.id,"student");
