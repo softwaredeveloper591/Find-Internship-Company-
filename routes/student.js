@@ -287,6 +287,9 @@ const Student= await axios.get('http://localhost:3500/student?mail='+email);
             id: ubysStudent.id,
 			      username: ubysStudent.name,
 			      email,
+            tc:ubysStudent.tc,
+            year:ubysStudent.year,
+            department:ubysStudent.department,
             password: hashedPassword
         });
         const token= createTokenWithIdandUserType(newStudent.id,"student");

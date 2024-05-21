@@ -17,6 +17,15 @@
             "mail":"mehmetcomert@std.iyte.edu.tr",
             "year":3,
             "department": "CENG"
+        },
+
+        {
+            "id":280201051,
+            "tc":2854562751,
+            "name":"Enes Bilal Çavdar",
+            "mail":"enesbilal@std.iyte.edu.tr",
+            "year":3,
+            "department": "CENG"
         }
         
     ]
