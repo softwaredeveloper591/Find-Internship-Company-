@@ -15,6 +15,7 @@ const multer = require('multer');
 const { Op } = require("sequelize");
 const nodeMailer = require("nodemailer");
 const moment = require('moment-timezone');
+const { error } = require("console");
 
 
 const storage = multer.diskStorage({
@@ -181,6 +182,9 @@ router.get("/company/announcements/download/:applicationId/:fileType",[auth,chec
     const applicationId = req.params.applicationId;
     const fileType = req.params.fileType;
     const takenDocument = await Document_model.findOne({where:{applicationId:applicationId, fileType:fileType}});
+    if(!takenDocument){
+        throw error("There is no such document.")
+    }
     let filename= takenDocument.dataValues.name;
     let binaryData= takenDocument.dataValues.data;
     const fileExtension = path.extname(filename).toLowerCase();

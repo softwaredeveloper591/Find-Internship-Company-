@@ -149,8 +149,8 @@ router.post("/student/opportunities/:opportunityId",upload.single('CV'),[auth,ch
 
   	const { user_phone, relative_phone } = req.body;
 
-	const templatePath = 'C:/Users/ahmet/OneDrive/Masaüstü/doc_files/ApplicationForm.docx';
-    const outputPath = `C:/Users/ahmet/OneDrive/Masaüstü/doc_files/ApplicationForm_${student.username}.docx`;
+    const templatePath = path.join(__dirname, '../Pictures', 'ApplicationForm.docx');
+    
 
     const createFilledDocument = async () => {
         const zip = new AdmZip(templatePath);
@@ -166,18 +166,27 @@ router.post("/student/opportunities/:opportunityId",upload.single('CV'),[auth,ch
             .replace(/«email»/g, student.email);
 
         zip.updateFile("word/document.xml", Buffer.from(filledDocx, "utf-8"));
-        zip.writeZip(outputPath);
+        return zip.toBuffer();
 
     };
 	
   	try {
-		await createFilledDocument();
+		bufferedApplicationForm = await createFilledDocument();
 
-  	  const application = await Application_model.create({
-  	    studentId: student.id,
-  	    announcementId,
-  	    status: 0,
-  	  });
+    const application = await Application_model.create({
+      studentId: student.id,
+      announcementId,
+      status: 0,
+    });
+
+    await Document_model.create({
+      name:`${student.username}_ApplicationForm.docx`,
+      applicationId: application.id,
+      data: bufferedApplicationForm,
+      fileType:'Application Form',
+      username: student.username
+    });
+
 
   	  await Document_model.create({
   	    name,

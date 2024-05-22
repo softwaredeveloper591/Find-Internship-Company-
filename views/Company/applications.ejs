@@ -29,7 +29,8 @@
                                     <div class="card-body">
                                         <h3 class="card-title">Student Name: <%= application.Student.studentName %></h3>
                                         <h5 class="card-title">Announcement Name: <%= application.Announcement.announcementName %></h5>
-                                        <button onclick="downloadButton('<%= application.id %>','CV')" class="btn btn-success">Download CV</button>
+                                        <button onclick="downloadButton('<%= application.id %>','CV')" class="btn btn-primary">Download CV</button>
+                                        <button onclick="downloadButton('<%= application.id %>','Application Form')" class="btn btn-primary">Download Application Form</button>
                                         <button class="btn btn-success" onclick="updateApplication('<%= application.id %>', true)">Approve</button>
                                         <button class="btn btn-danger" onclick="updateApplication('<%= application.id %>', false)">Reject</button>
                                         <hr>
