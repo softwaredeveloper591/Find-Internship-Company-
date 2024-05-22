@@ -1,6 +1,7 @@
 .content-applications{
 	padding-top: 140px;
-	padding-left: 135px;
+	justify-content: center;
+	align-items: center;
 
 }
 .content-container {

@@ -147,10 +147,10 @@ router.post("/student/opportunities/:opportunityId",upload.single('CV'),[auth,ch
   	const fileType="CV";
   	const name = file.originalname;
 
-  	const { tcNo, user_phone, relative_phone } = req.body;
+  	const { user_phone, relative_phone } = req.body;
 
 	const templatePath = 'C:/Users/ahmet/OneDrive/Masaüstü/doc_files/ApplicationForm.docx';
-    const outputPath = `C:/Users/ahmet/OneDrive/Masaüstü/doc_files/ApplicationForm2_${student.username}.docx`;
+    const outputPath = `C:/Users/ahmet/OneDrive/Masaüstü/doc_files/ApplicationForm_${student.username}.docx`;
 
     const createFilledDocument = async () => {
         const zip = new AdmZip(templatePath);
@@ -160,7 +160,7 @@ router.post("/student/opportunities/:opportunityId",upload.single('CV'),[auth,ch
             .replace(/«name»/g, student.username)
             .replace(/«studentClass»/g, student.year)
             .replace(/«studentNumber»/g, student.id)
-            .replace(/«tcNo»/g, tcNo)
+            .replace(/«tcNo»/g, student.tc)
             .replace(/«user_phone»/g, user_phone)
             .replace(/«relative_phone»/g, relative_phone)
             .replace(/«email»/g, student.email);

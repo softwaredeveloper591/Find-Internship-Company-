@@ -29,9 +29,13 @@
             <div class="details">
                 <h2><%= announcement.Company.name %></h2>
                 <h3><%= announcement.announcementName %></h3>
+				<div class="date">
+				<b style="margin-right: -10px;">Start Date: </b> 
+				<p> <%= announcement.formattedStartDate %> </p>
+                <b style="margin-right: -10px; margin-left: 15px;">End Date: </b> 
+				<p> <%= announcement.formattedEndDate %></p>
+			</div>
                 <p><%= announcement.description %></p>
-                <p>Start Date: <%= announcement.formattedStartDate %></p>
-                <p>End Date: <%= announcement.formattedEndDate %></p>
             </div>
         </div>
         <div class="feedback-container">

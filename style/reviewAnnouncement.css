@@ -30,16 +30,20 @@ html, body {
 }
 
 .details {
+	margin-top: 50px;
     margin-left: -30px;
 }
 
 .details h2,
 .details h3 {
-    margin-top: 30px;
     padding: 2px;
 }
 
-.details p {
+
+.details .date p{
+	display: inline-block;
+	width: 100px;
+	padding-left: 10px;
     margin-top: 10px;
 }
 

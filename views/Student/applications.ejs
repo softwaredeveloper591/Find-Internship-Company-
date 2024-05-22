@@ -20,48 +20,49 @@
         </div>
     </header>
     <div class="content-applications">
-        <div class="content-container">
-			<% if (typeof applications !== 'undefined' && applications.length > 0) { %>
-				<% applications.forEach(application => { %>
-                    <div id="info-container">
-                        <p id="company-name-<%= application.id %>"><%= application.Announcement.Company.name %></p>
-                        <p id="announcement-title-<%= application.id %>"><%= application.Announcement.announcementName %></p>
-                    </div>
-                    <img src="/arrow.png" alt="Arrow" style="height: 40px; margin-top: 90px;">
-                    <!-- Steps Section -->
-                    <div class="steps">
-                        <div id="pre-evaluation-<%= application.id %>" class="stage">
-                            <img src="/interview.png" alt="Pre Evaluation">
-                            <p>Şirket Değerlendirmesi</p>
-                            <span>(0)</span>
-                        </div>
-                        <div id="evaluation-<%= application.id %>" class="stage">
-                            <img src="/evaluation.png" alt="Evaluation Stage">
-                            <p>Koordinatör Değerlendirme Aşaması</p>
-                            <span>(0)</span>
-                        </div>
-                        <div id="ssi-<%= application.id %>" class="stage">
-                            <img src="/loading.png" alt="SSI Stage">
-                            <p>SSK İşlemleri Aşaması</p>
-                            <span>(0)</span>
-                        </div>
-                        <div id="internship-<%= application.id %>" class="stage">
-                            <img src="/employee.png" alt="Internship Stage">
-                            <p>Staj Aşaması</p>
-                            <span>(0)</span>
-                        </div>
-                        <div id="rejected-<%= application.id %>" class="stage">
-                            <img src="/reject.png" alt="Rejected">
-                            <p>Rejected</p>
-                            <span>(0)</span>
-                        </div>
-                    </div>
+		<% if (typeof applications !== 'undefined' && applications.length > 0) { %>
+		<% applications.forEach(application => { %>
+		<div class="content-container">
+					<div id="info-container">
+						<p id="company-name-<%= application.id %>"><%= application.Announcement.Company.name %></p>
+						<p id="announcement-title-<%= application.id %>"><%= application.Announcement.announcementName %></p>
+					</div>
+					<img src="/arrow.png" alt="Arrow" style="height: 40px; margin-top: 90px;">
+					<!-- Steps Section -->
+					<div class="steps">
+						<div id="pre-evaluation-<%= application.id %>" class="stage">
+							<img src="/interview.png" alt="Pre Evaluation">
+							<p>Şirket Değerlendirmesi</p>
+							<span>(0)</span>
+						</div>
+						<div id="evaluation-<%= application.id %>" class="stage">
+							<img src="/evaluation.png" alt="Evaluation Stage">
+							<p>Koordinatör Değerlendirme Aşaması</p>
+							<span>(0)</span>
+						</div>
+						<div id="ssi-<%= application.id %>" class="stage">
+							<img src="/loading.png" alt="SSI Stage">
+							<p>SSK İşlemleri Aşaması</p>
+							<span>(0)</span>
+						</div>
+						<div id="internship-<%= application.id %>" class="stage">
+							<img src="/employee.png" alt="Internship Stage">
+							<p>Staj Aşaması</p>
+							<span>(0)</span>
+						</div>
+						<div id="rejected-<%= application.id %>" class="stage">
+							<img src="/reject.png" alt="Rejected">
+							<p>Rejected</p>
+							<span>(0)</span>
+						</div>
+					</div>
+		</div>    
 				<% }) %>
-			<% } else { %>
-				<h2>You haven't applied any internship yet.</h2>
-			<% } %>
-        </div>	
-    </div>
+		<% } else { %>
+			<h2>You haven't applied any internship yet.</h2>
+		<% } %>
+	</div>
+	
 	
     <script>
         document.addEventListener("DOMContentLoaded", function () {
