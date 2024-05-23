@@ -50,7 +50,6 @@ router.get("/admin", [auth, checkUserRole("admin")], async function (req, res) {
 });
 
 router.get("/admin/announcementRequests", [auth, checkUserRole("admin")], async (req, res) => {
-
     try {
 		const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
 		const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
@@ -70,10 +69,17 @@ router.get("/admin/announcementRequests", [auth, checkUserRole("admin")], async 
 			]
 		})
 
+		const announcementsWithImages = announcements.map(announcement => {
+            return {
+                ...announcement.dataValues,
+				imageBase64: `data:image/png;base64,${announcement.image.toString('base64')}`
+            };
+        });
+
 		res.render("Admin/announcementRequests", {
 			usertype: "admin",
 			dataValues: admin.dataValues,
-			announcements
+			announcements: announcementsWithImages
 		});
     } catch (err) {
         console.error("Error fetching announcement requests:", err);
@@ -99,7 +105,8 @@ router.get("/admin/announcement/:announcementId", [auth, checkUserRole("admin")]
 	const formattedAnnouncement = {
         ...announcement.dataValues,
         formattedStartDate: moment(announcement.startDate).tz('Europe/Istanbul').format('DD/MM/YYYY'),
-        formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD/MM/YYYY')
+        formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD/MM/YYYY'),
+		imageBase64: `data:image/png;base64,${announcement.image.toString('base64')}`
     };
 
     res.render("Admin/innerAnnouncement", {

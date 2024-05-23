@@ -1,23 +1,25 @@
 const express = require("express");
 const router= express.Router();
 const path=require("path");
-const Company_model= require("../models/company-model");
 const bcrypt= require("bcrypt");
 const jwt=require("jsonwebtoken");
+const { isEmail } = require('validator');
+const { Op } = require("sequelize");
+const nodeMailer = require("nodemailer");
+const moment = require('moment-timezone');
+const fs = require('fs');
+const multer= require("multer");
+const upload = multer();
+
 const auth = require("../middleware/auth");  
 const checkUserRole= require("../middleware/checkUserRole");
+const Company_model= require("../models/company-model");
 const Announcement_model = require("../models/announcement-model");
 const Application_model = require("../models/application-model");
 const Document_model = require("../models/document-model");
 const Student_model = require("../models/student-model");
-const { isEmail } = require('validator');
-const multer = require('multer');
-const { Op } = require("sequelize");
-const nodeMailer = require("nodemailer");
-const moment = require('moment-timezone');
 
-
-const storage = multer.diskStorage({
+/*const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'uploads/'); // Make sure the uploads directory exists
     },
@@ -27,7 +29,7 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage: storage }).single('myPhoto');
+const upload = multer({ storage: storage }).single('myPhoto');*/
 
 const handleErrors = (err) => {
     console.log(err.message, err.code);
@@ -57,35 +59,27 @@ router.get("/company/announcement",[auth,checkUserRole("company")], async functi
     res.render("Company/companyShareOpportunity",{ usertype:"company", dataValues:company.dataValues});
 });
 
-router.post('/company/announcement', [auth, checkUserRole('company')], (req, res) => {
-    upload(req, res, async (err) => {
-        if (err) {
-            console.error('Error uploading file:', err.message);
-            return res.status(500).send('Error occurred while uploading the image.');
-        }
-
-        const { companyId, announcementName, description, startDate, endDate } = req.body;
-        const imagePath = req.file ? `/uploads/${req.file.filename}` : '';
-
-        try {
-            const startDateInTurkey = moment.tz(startDate, 'Europe/Istanbul').startOf('day').toDate();
-            const endDateInTurkey = moment.tz(endDate, 'Europe/Istanbul').endOf('day').toDate();
-
-            await Announcement_model.create({
-                companyId,
-                announcementName,
-                description,
-                startDate: startDateInTurkey,
-                endDate: endDateInTurkey,
-                image: imagePath 
-            });
-
-            res.redirect('/company?action=announcement-success');
-        } catch (error) {
-            console.error('Error:', error.message);
-            res.status(500).send('An error occurred while creating the announcement in the database.');
-        }
-    });
+router.post('/company/announcement',upload.single('image'), [auth, checkUserRole('company')],async function(req,res){
+    const { companyId, announcementName, description, startDate, endDate } = req.body;
+	const file = req.file;
+  	const image = file.buffer;
+    //const imagePath = req.file ? `/uploads/${req.file.filename}` : '';
+    try {
+        const startDateInTurkey = moment.tz(startDate, 'Europe/Istanbul').startOf('day').toDate();
+        const endDateInTurkey = moment.tz(endDate, 'Europe/Istanbul').endOf('day').toDate();
+        await Announcement_model.create({
+            companyId,
+            announcementName,
+            description,
+            startDate: startDateInTurkey,
+            endDate: endDateInTurkey,
+            image
+        });
+        res.redirect('/company?action=announcement-success');
+    } catch (error) {
+        console.error('Error:', error.message);
+        res.status(500).send('An error occurred while creating the announcement in the database.');
+    }
 });
 
 router.get("/company/applications",[auth,checkUserRole("company")],async function(req,res){

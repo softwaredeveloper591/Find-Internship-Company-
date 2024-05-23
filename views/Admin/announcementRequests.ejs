@@ -21,7 +21,7 @@
         <div class="content-2" id="content">
             <% announcements.forEach(announcement => { %>
                 <div class="card">
-                    <img src="<%= announcement.image %>" alt="Announcement Logo">
+                    <img src="<%= announcement.imageBase64 %>" alt="Announcement Logo">
                     <div class="card-body">
                         <p class="card-title"><%= announcement.Company.name %></p>
                         <p class="card-text"><%= announcement.announcementName %></p>
@@ -50,7 +50,7 @@
                     card.className = 'card';
 
                     const img = document.createElement('img');
-                    img.src = item.image;
+                    img.src = item.imageBase64;
                     img.alt = 'Opportunity Logo';
 
                     const cardBody = document.createElement('div');

@@ -23,39 +23,43 @@
     </header>
 
     <div class="container">
-        <div class="company-info">
-            <img src="<%= announcement.image %>" alt="Announcement Image">
-            <div class="details">
-                <h2><%= announcement.Company.name %></h2>
-                <h3><%= announcement.announcementName %></h3>
-                <p><%= announcement.description %></p>
-            </div>
-        </div>
-        <div id="myModal" class="modal-student">
-            <div class="modal-student-content">
-                <span class="close2">&times;</span>
-                <p id="modal-message">Please fill all parts.</p>
-            </div>
-        </div>
-        <div class="input-row">
-            
-            <form class="input-form" id="applyForm" method="POST" action="/student/opportunities/:<%= announcement.id %>" enctype="multipart/form-data">
-				<div class="file-upload">
-					<div class="upload-box">
-						<input type="file" id="CV" name="CV" accept=".pdf" style="display: none;">
-						<label class="file-icon" for="CV" style="background-image: url('/resume.jpg');"
-							data-filename="Cv"></label>
+		<% if (announcement !== null) { %>
+        	<div class="company-info">
+        	    <img src="<%= announcement.imageBase64 %>" alt="Announcement Image">
+        	    <div class="details">
+        	        <h2><%= announcement.Company.name %></h2>
+        	        <h3><%= announcement.announcementName %></h3>
+        	        <p><%= announcement.description %></p>
+        	    </div>
+        	</div>
+        	<div id="myModal" class="modal-student">
+        	    <div class="modal-student-content">
+        	        <span class="close2">&times;</span>
+        	        <p id="modal-message">Please fill all parts.</p>
+        	    </div>
+        	</div>
+        	<div class="input-row">
+			
+        	    <form class="input-form" id="applyForm" method="POST" action="/student/opportunities/:<%= announcement.id %>" enctype="multipart/form-data">
+					<div class="file-upload">
+						<div class="upload-box">
+							<input type="file" id="CV" name="CV" accept=".pdf" style="display: none;" required>
+							<label class="file-icon" for="CV" style="background-image: url('/resume.jpg');"
+								data-filename="Cv"></label>
+						</div>
 					</div>
-				</div>
-                <div class="input-group">
-                    <input type="tel" id="telefon" name="user_phone" placeholder="(05_)" required>
-                </div>
-                <div class="input-group">
-                    <input type="tel" id="yakın-telefon" name="relative_phone" placeholder="(05_)" required>
-                </div>
-                <button class="apply-btn" type="submit">Apply</button>
-            </form>
-        </div>
+        	        <div class="input-group">
+        	            <input type="tel" id="telefon" name="user_phone" placeholder="(05_)" required>
+        	        </div>
+        	        <div class="input-group">
+        	            <input type="tel" id="yakın-telefon" name="relative_phone" placeholder="(05_)" required>
+        	        </div>
+        	        <button class="apply-btn" type="submit">Apply</button>
+        	    </form>
+        	</div>
+		<% } else { %>
+			<h2>No information found about this announcement.</h2>
+		<% } %>
     </div>
 
     <script>

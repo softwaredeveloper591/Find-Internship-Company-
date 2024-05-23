@@ -30,7 +30,7 @@
                         <div class="dashed-rectangle">Upload image (Optional)</div>
                         <img id="uploadPreview" alt="Image Preview" class="file-upload-img" />
                         <span><i class="fa-solid fa-image p-1"></i></span>
-                        <input id="uploadImage" type="file" name="myPhoto" onchange="PreviewImage();" />
+                        <input id="image" name="image" type="file" name="myPhoto" onchange="PreviewImage();" />
                     </div>
                     <button type="button" onclick="removeImage()" class="remove-button"><i class="fa-solid fa-trash p-1"></i></button>
                 </div>
@@ -70,7 +70,7 @@
         }
 
         function PreviewImage() {
-            var fileInput = document.getElementById("uploadImage");
+            var fileInput = document.getElementById("image");
             var file = fileInput.files[0];
 
             if (file) {
@@ -96,7 +96,7 @@
         }
 
         function removeImage() {
-            var fileInput = document.getElementById("uploadImage");
+            var fileInput = document.getElementById("image");
             var imagePreview = document.getElementById("uploadPreview");
 
             fileInput.value = "";

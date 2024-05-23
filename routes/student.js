@@ -69,6 +69,7 @@ router.get("/student",[auth,checkUserRole("student")],async function(req,res){
 })
 
 router.get("/student/opportunities", [auth, checkUserRole("student")], async function(req, res) {
+
     try {
         const student = await Student_model.findOne({ where: { id: req.user.id }});
         const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
@@ -97,7 +98,8 @@ router.get("/student/opportunities", [auth, checkUserRole("student")], async fun
         // Format the endDate for each announcement
         const formattedAnnouncements = announcements.map(announcement => ({
             ...announcement.dataValues,
-            formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD MM YYYY')
+            formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD MM YYYY'),
+			imageBase64: `data:image/png;base64,${announcement.image.toString('base64')}`
         }));
 
         res.render("Student/opportunities", {
@@ -115,9 +117,14 @@ router.get("/student/opportunities/:opportunityId",[auth,checkUserRole("student"
 	try {
         const student = await Student_model.findOne({ where: { id: req.user.id }});
 		const opportunityId = req.params.opportunityId.slice(1);
+		const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
+
         const announcement = await Announcement_model.findOne({ 
 			where: {
-				id: opportunityId
+				id: opportunityId,
+				endDate: {
+					[Sequelize.Op.gt]: now // Check if the current time is less than the endDate
+				}
 			},
 			include: [
 				{
@@ -127,10 +134,15 @@ router.get("/student/opportunities/:opportunityId",[auth,checkUserRole("student"
 			]
 		}) 
 
+		const formattedAnnouncement = {
+			...announcement.dataValues,
+			imageBase64: `data:image/png;base64,${announcement.image.toString('base64')}`
+		};
+
         res.render("Student/apply", {
             usertype: "student",
             dataValues: student.dataValues,
-            announcement
+            announcement: formattedAnnouncement
         });
     } catch (err) {
         console.error("Error fetching announcement requests:", err);
