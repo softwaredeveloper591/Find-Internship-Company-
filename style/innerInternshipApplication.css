@@ -1,0 +1,117 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    overflow: auto;
+}
+
+.content {
+	margin-top: 120px;
+    margin-left: 180px; /* Adjust this value to match the sidebar's width */
+    padding: 20px;
+    padding-top: 130px; /* Adjust padding to ensure content is below the header */
+    background-color: #f9f9f9;
+}
+
+.application-form {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="tel"],
+.form-group input[type="file"] {
+    width: calc(100% - 22px);
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.form-buttons {
+    display: flex;
+    justify-content: space-between;
+}
+
+.btn-upload,
+.btn-download-cv,
+.btn-approve,
+.btn-reject {
+    background-color: darkred;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-upload:hover,
+.btn-download-cv:hover,
+.btn-approve:hover,
+.btn-reject:hover {
+    background-color: rgb(100, 1, 1);
+}
+
+.cv-section {
+    margin-top: 40px;
+}
+
+.cv-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+/* Add the CSS styles directly for simplicity */
+.applicationForm {
+	display: flex;
+	flex-direction: column;
+	gap: 10px; /* Add some space between form elements */
+}
+
+.applicationForm input,
+.applicationForm select,
+.applicationForm button,
+.applicationForm label {
+	width: 100%;
+	font-size: 14px;
+	margin-bottom: 10px;
+}
+
+.form-buttons,
+.cv-buttons {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 10px;
+}
+
+.form-buttons button,
+.cv-buttons button {
+	flex: 1;
+	margin: 5px;
+}
+
+.file-upload {
+	margin-top: 10px;
+}
+
+.file-icon {
+	cursor: pointer;
+}
+
+.content {
+	padding: 20px;
+}

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Page</title>
+    <link rel="stylesheet" href="/innerInternshipApplication.css">
+</head>
+<body>
+    <header>
+        <%- include('../partials/nav') %>
+        <div id="sidebar" class="sidebar">
+            <a href="/company" class="order"><button>HOME</button></a>
+            <a href="/company/announcement" class="order"><button >Share Opportunity</button></a>
+            <a href="/company/applications"  class="order"><button>Applications</button></a>
+        </div>
+    </header>
+
+    <div class="content">
+        <h1>Application Form</h1>
+
+		<form method = "post" id="applicationForm" class="applicationForm">
+			<input type="date" style="font-size: 14px;" placeholder="Intern Start Date" id="internStartDate" name="internStartDate" required>
+			<input type="date" style="font-size: 14px;" placeholder="Intern End Date" id="internEndDate" name="internEndDate" required>
+			<input type="text" style="font-size: 14px;" placeholder="Intern Duration (as work days)" id="internDuration" name="internDuration" required>
+            <input type="text" style="font-size: 14px;" placeholder="Duty and Title of The Representative" id="dutyAndTitle" name="dutyAndTitle" required>
+			
+			<label for="workOnSaturday" style="font-size: 14px;">Cumartesi günleri çalışıyor musunuz?</label>
+    		<select name="option" id="workOnSaturday" style="font-size: 14px;" required>
+    		    <option value="yes">Yes</option>
+    		    <option value="no">No</option>
+    		</select>
+
+			<label for="workOnHoliday" style="font-size: 14px;">Resmi-Dini Bayram/Tatil, Arefe Çalışıyor mu? </label>
+    		<select name="option" id="workOnHoliday" style="font-size: 14px;" required>
+    		    <option value="yes">Yes</option>
+    		    <option value="no">No</option>
+    		</select>
+
+			<label for="sgk" style="font-size: 14px;">Sigorta yapılmasını istemiyorum. </label>
+    		<select name="option" id="sgk" style="font-size: 14px;" required>
+    		    <option value="yes">Yes</option>
+    		    <option value="no">No</option>
+    		</select>
+
+			<button type="submit">Confirm the form</button>
+        </form>
+
+		<div class="file-upload">
+			<div class="upload-box">
+				<input type="file" id="ApplicationForm" name="ApplicationForm" accept=".docx" style="display: none;" required>
+				<label class="file-icon" for="ApplicationForm" style="background-image: url('/resume.jpg');"
+					data-filename="ApplicationForm"></label>
+			</div>
+		</div>
+
+		<div class="form-buttons">
+			<button onclick="downloadButton('<%= application.id %>', 'Updated Application Form')" class="btn btn-primary">Download Application Form</button>
+			<button onclick="downloadButton('<%= application.id %>', 'CV')" class="btn btn-primary">Download CV</button>
+		</div>
+
+        <div class="cv-section">
+            <h2>Curriculum Vitae</h2>
+            <iframe src="" id="cvFrame" style="width:100%; height:500px;"></iframe>
+            <div class="cv-buttons">
+                <button class="btn btn-success" onclick="updateApplication('<%= application.id %>', true)">Approve</button>
+                <button class="btn btn-danger" onclick="updateApplication('<%= application.id %>', false)">Reject</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+		const applicationForm = document.querySelector('form.applicationForm');
+
+		applicationForm.addEventListener('submit', async (e) => {
+		    e.preventDefault();
+		   
+			const internStartDate = applicationForm.internStartDate.value;
+		    const internEndDate = applicationForm.internEndDate.value;
+			const internDuration = applicationForm.internDuration.value;
+			const dutyAndTitle = applicationForm.dutyAndTitle.value;
+			const workOnSaturday = applicationForm.workOnSaturday.value;
+		    const workOnHoliday = applicationForm.workOnHoliday.value;
+			const sgk = applicationForm.sgk.value;
+
+		    try {
+		        const res = await fetch('/company/applications/<%= application.id %>/fillApplicationForm', { 
+		            method: 'POST', 
+		            body: JSON.stringify({ internStartDate, internEndDate, internDuration, dutyAndTitle, workOnSaturday, workOnHoliday, sgk }),
+		            headers: {'Content-Type': 'application/json'}
+		        });
+		        const data = await res.json();
+		    } catch (err) {
+		        error.textContent = 'Failed to communicate with the server';
+		        error.style.display = 'block';
+		    }
+		});
+
+        async function downloadButton(applicationId, fileType) {
+            try {
+                const response = await fetch(`/company/announcements/download/${applicationId}/${fileType}`);
+                if (!response.ok) {
+					const data = await response.json();
+                    alert(data.error);
+                }
+
+                const blob = await response.blob();
+                const contentDispositionHeader = response.headers.get('Content-Disposition');
+                const filename = contentDispositionHeader.split('filename=')[1].replace(/"/g, '');
+                const url = window.URL.createObjectURL(blob);
+
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', filename);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (error) {
+                console.error('Error downloading file:', error);
+            }
+        }
+
+        async function updateApplication(applicationId, isApproved) {
+            try {
+                const response = await fetch(`/company/applications/${applicationId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ isApproved })
+                });
+
+                const data = await response.json();
+                alert(data.message);
+                location.reload(); // Reload the page to refresh the content
+            } catch (error) {
+                console.error("Error processing the request:", error);
+                alert("An error occurred. Please try again later.");
+            }
+        }
+    </script>
+</body>
+</html>

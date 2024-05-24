@@ -106,9 +106,10 @@ router.get("/company/applications",[auth,checkUserRole("company")],async functio
 router.get("/company/applications/:applicationId",[auth,checkUserRole("company")],async function(req,res){
     try {
         const company = await Company_model.findOne({ where: { id: req.user.id } });
+		const applicationId = req.params.applicationId.slice(1);
         const application = await Application_model.findOne({
 			where: {
-				isApprovedByCompany: null,
+				id: applicationId
 			},
             include: [
 				{
@@ -123,7 +124,7 @@ router.get("/company/applications/:applicationId",[auth,checkUserRole("company")
 			]
         });
 
-        res.render("Company/innerApplication", {
+        res.render("Company/innerInternshipApplication", {
             usertype: "company",
             dataValues: company.dataValues,
             application
@@ -137,48 +138,52 @@ router.get("/company/applications/:applicationId",[auth,checkUserRole("company")
 router.post("/company/applications/:applicationId/fillApplicationForm",[auth,checkUserRole("company")],async function(req,res){
     try {
 
-		let { internStartDate, internEndDate, internDuration, dutyAndTitle, y1, n1, y2, n2, days, y3, n3 } = req.body;
-		console.log(internStartDate, internEndDate, internDuration, dutyAndTitle);
+		let { internStartDate, internEndDate, internDuration, dutyAndTitle, workOnSaturday, workOnHoliday, days, sgk } = req.body;
+		let y1,n1,y2,n2,y3,n3;
 
 		const applicationId = req.params.applicationId;
 
 		const document = await Document_model.findOne({
-            where: { applicationId },
-            include: {
-                model: Application_model,
-                include: {
-                    model: Announcement_model,
-                    include: {
-                        model: Company_model
-                    }
-                }
-            }
-        });
+			where: { applicationId, fileType: "Application Form" },
+			include: {
+				model: Application_model,
+				include: [
+					{
+						model: Announcement_model,
+						include: {
+							model: Company_model
+						}
+					},
+					{
+						model: Student_model
+					}
+				]
+			}
+		});
 
 		const binaryData = document.data;
 		const zip = new AdmZip(binaryData);
 		let docxTemplate = zip.readAsText("word/document.xml");
 
-		if (typeof y1 === undefined) {
-			y1 = "";
+		if (workOnSaturday === "yes") {
+			y1 = "X", n1 = "";
 		}
 		else {
-			n1 = "";
+			y1 = "", n1 = "X";
 		}
 
-		if (typeof y2 === undefined) {
-			y2 = "";
-			days = "";
+		if (workOnHoliday === "yes") {
+			y2 = "X", n2 = "";
 		}
 		else {
-			n2 = "";
+			y2 = "", n2 = "X", days = "";
 		}
 
-		if (typeof y3 === undefined) {
-			y3 = "";
+		if (sgk === "yes") {
+			y3 = "X", n3 = "";
 		}
 		else {
-			n3 = "";
+			y3 = "", n3 = "X";
 		}
 
 		docxTemplate = docxTemplate
@@ -199,7 +204,20 @@ router.post("/company/applications/:applicationId/fillApplicationForm",[auth,che
 
 		zip.updateFile("word/document.xml", Buffer.from(docxTemplate, "utf-8"));
 		const updatedDocxBuffer = zip.toBuffer();
-		await Document_model.update({ data: updatedDocxBuffer }, { where: { id: document.id } });
+		const updatedApplicationForm = await Document_model.findOne({where: {applicationId, fileType: "Updated Application Form"}});
+
+		if (updatedApplicationForm === null) {
+			await Document_model.create({
+				name:`${document.Application.Student.username}_ApplicationForm.docx`,
+				applicationId,
+				data: updatedDocxBuffer,
+				fileType:'Updated Application Form',
+				username: document.Application.Student.username
+			  });
+		}
+		else {
+			await Document_model.update({ data: updatedDocxBuffer }, { where: { applicationId, fileType: "Updated Application Form" } });
+		}
 		
     } catch (err) {
         console.error("Error fetching applications:", err);
@@ -270,7 +288,7 @@ router.get("/company/announcements/download/:applicationId/:fileType",[auth,chec
     const fileType = req.params.fileType;
     const takenDocument = await Document_model.findOne({where:{applicationId:applicationId, fileType:fileType}});
     if(!takenDocument){
-        throw error("There is no such document.")
+        return res.status(400).json({ error: "You need to fill the form before downloading the application form." });
     }
     let filename= takenDocument.dataValues.name;
     let binaryData= takenDocument.dataValues.data;
