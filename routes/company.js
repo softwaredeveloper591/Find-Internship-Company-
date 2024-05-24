@@ -11,11 +11,6 @@ const fs = require('fs');
 const multer= require("multer");
 const { error } = require("console");
 const upload = multer();
-<<<<<<< Updated upstream
-const { error } = require("console");
-=======
-const AdmZip = require("adm-zip");
->>>>>>> Stashed changes
 
 const auth = require("../middleware/auth");  
 const checkUserRole= require("../middleware/checkUserRole");
@@ -24,21 +19,6 @@ const Announcement_model = require("../models/announcement-model");
 const Application_model = require("../models/application-model");
 const Document_model = require("../models/document-model");
 const Student_model = require("../models/student-model");
-<<<<<<< Updated upstream
-
-/*const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/'); // Make sure the uploads directory exists
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-    }
-});
-
-const upload = multer({ storage: storage }).single('myPhoto');*/
-=======
->>>>>>> Stashed changes
 
 const handleErrors = (err) => {
     console.log(err.message, err.code);
