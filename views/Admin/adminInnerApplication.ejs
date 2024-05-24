@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>change this!!!</title>
+    <link rel="icon" href="/İyte Logo.png">
+    <link rel="stylesheet" href="/adminApplicationReview.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+	<script src="/admin_functions.js"></script>
+</head>
+<body>
+    <header>
+        <%- include('../partials/nav') %>
+        <div id="sidebar" class="sidebar">
+            <a href="/admin/announcementRequests" class="order"><button>Announcement Requests <%= totalAnnouncementsCount %></button></a>
+            <a href="/admin/companyRequests" class="order"><button >Company Requests</button></a>
+            <a href="/admin/applicationRequests" class="order"><button style="background-color: rgb(217, 4, 4);">Upload Employment Certificate</button></a>
+        </div>
+    </header>
+
+    <div class="container-iar">
+        <div class="content-iar">
+            <h2>Student Application Details</h2>
+            <div class="student-info margin-top-4">
+                <p><strong>Student Name:</strong> <%= application.Student.username %></p>
+                <p><strong>Student ID:</strong> <%= application.Student.id %></p>
+                <p><strong>Company Name:</strong> <%= application.Announcement.Company.name %></p>
+                <br>
+                <div class="send-to-sec">
+					<button class="as" onclick="downloadButton('<%= application.id %>', 'Application Form')">
+                    <div class="download-file">
+                        <i  class="fa-solid fa-file-pdf"></i>Download Application Form<i class="fa-solid fa-download"></i>
+                    </div>
+					</button>
+                    <br>
+                        <button class="btn btn-success" onclick="updateApplication('<%= application.id %>', true)">Send to secretary</button>
+                </div>
+            </div>
+			    
+                <div class="feedback-section margin-top-4">
+                    <h4>Feedback</h4>
+                    <div class="form-group">
+                        <label for="feedback" class="label-feedback">Provide feedback about application to send company.</label>
+                        <textarea class="input-feedback" id="feedback" name="feedback" placeholder="(Optional)" rows="4"></textarea>
+                    </div>
+                    <button class="btn btn-danger" onclick="updateApplication('<%= application.id %>', false)">Reject</button>
+                </div>
+        </div>
+    </div>
+</body> 
+</html>

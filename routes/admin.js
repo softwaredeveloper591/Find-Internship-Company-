@@ -1,5 +1,10 @@
 const express = require("express");
 const router= express.Router();
+const nodeMailer = require("nodemailer");
+const cron = require('node-cron');
+const { Sequelize } = require('sequelize');
+const moment = require('moment-timezone');
+
 const auth = require("../middleware/auth"); 
 const checkUserRole= require("../middleware/checkUserRole")
 const Admin_model= require("../models/admin-model");
@@ -7,10 +12,73 @@ const Company_model= require("../models/company-model");
 const Announcement_model = require("../models/announcement-model");
 const Application_model = require("../models/application-model");
 const Student_model = require("../models/student-model");
-const nodeMailer = require("nodemailer");
-const cron = require('node-cron');
-const { Sequelize } = require('sequelize');
-const moment = require('moment-timezone');
+const Document_model = require("../models/document-model");
+
+let totalAnnouncementsCount = 0;
+let totalApplicationsCount = 0;
+let totalCompaniesCount = 0;
+
+async function updateTotalAnnouncementsCount() {
+    try {
+		const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
+        totalAnnouncementsCount = await Announcement_model.count( 
+			{ 
+				where: {
+					isActive: false,
+					endDate: {
+						[Sequelize.Op.gt]: now // Check if the current time is less than the endDate
+					}
+				} 
+			} 
+		);
+    } catch (error) {
+        console.error('Failed to fetch total announcements count:', error);
+    }
+}
+
+router.use(async (req, res, next) => {
+    await updateTotalAnnouncementsCount();
+    next();
+});
+
+async function updateTotalApplicationsCount() {
+    try {
+        totalApplicationsCount = await Application_model.count( 
+			{ 
+				where: {
+					isApprovedByCompany: true,
+					isApprovedByDIC: null		
+				} 
+			} 
+		);
+    } catch (error) {
+        console.error('Failed to fetch total applications count:', error);
+    }
+}
+
+router.use(async (req, res, next) => {
+    await updateTotalApplicationsCount();
+    next();
+});
+
+async function updateTotalCompaniesCount() {
+    try {
+        totalCompaniesCount = await Company_model.count( 
+			{ 
+				where: {
+					 statusByDIC: false 
+				} 
+			} 
+		);
+    } catch (error) {
+        console.error('Failed to fetch total announcements count:', error);
+    }
+}
+
+router.use(async (req, res, next) => {
+    await updateTotalCompaniesCount();
+    next();
+});
 
 async function deactivateExpiredAnnouncements() {
     try {
@@ -40,7 +108,10 @@ router.get("/admin", [auth, checkUserRole("admin")], async function (req, res) {
 
         res.render("Admin/admin", {
             usertype: "admin",
-            dataValues: admin.dataValues
+            dataValues: admin.dataValues,
+			totalAnnouncementsCount,
+			totalApplicationsCount,
+			totalCompaniesCount
         });
     } catch (err) {
         console.error("Error loading admin dashboard:", err);
@@ -79,7 +150,9 @@ router.get("/admin/announcementRequests", [auth, checkUserRole("admin")], async 
 		res.render("Admin/announcementRequests", {
 			usertype: "admin",
 			dataValues: admin.dataValues,
-			announcements: announcementsWithImages
+			announcements: announcementsWithImages,
+			totalApplicationsCount,
+			totalCompaniesCount
 		});
     } catch (err) {
         console.error("Error fetching announcement requests:", err);
@@ -112,7 +185,9 @@ router.get("/admin/announcement/:announcementId", [auth, checkUserRole("admin")]
     res.render("Admin/innerAnnouncement", {
 		usertype: "admin",
 		dataValues: admin.dataValues,
-		announcement: formattedAnnouncement
+		announcement: formattedAnnouncement,
+		totalApplicationsCount,
+		totalCompaniesCount
 	});
 });
 
@@ -180,7 +255,9 @@ router.get("/admin/companyRequests", [auth, checkUserRole("admin")], async (req,
         res.render("Admin/companyRequests", {
             usertype: "admin",
             dataValues: admin.dataValues,
-            companies: pendingCompanies
+            companies: pendingCompanies,
+			totalAnnouncementsCount,
+			totalApplicationsCount
         });
     } catch (err) {
         console.error("Error fetching company registration requests:", err);
@@ -245,11 +322,14 @@ router.get("/admin/applicationRequests", [auth, checkUserRole("admin")], async (
             include: [
 				{
                 	model: Announcement_model,
-					attributes: ['announcementName']
+					include: {
+						model: Company_model,
+						attributes: ['name']
+					}
 				},
 				{
 					model: Student_model,
-					attributes: ['username']
+					attributes: ['username'] ['id']
 				}
 			]
         });
@@ -257,13 +337,67 @@ router.get("/admin/applicationRequests", [auth, checkUserRole("admin")], async (
 		res.render("Admin/applicationRequests", {
             usertype: "admin",
             dataValues: admin.dataValues,
-            applications
+            applications,
+			totalAnnouncementsCount,
+			totalCompaniesCount
         });
     } catch (err) {
         console.error("Error fetching company registration requests:", err);
         res.status(500).send("Error fetching company registration requests.");
     }
 });
+
+router.get("/admin/applications/:applicationId",[auth,checkUserRole("admin")],async function(req,res){
+	try {
+		const applicationId = req.params.applicationId.slice(1);
+        const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+        const application = await Application_model.findOne({
+			where: {
+				id: applicationId		
+			},
+            include: [
+				{
+                	model: Announcement_model,
+					include: {
+						model: Company_model,
+						attributes: ['name']
+					}
+				},
+				{
+					model: Student_model,
+					attributes: ['username', 'id']
+				}
+			]
+        });
+
+		res.render("Admin/adminInnerApplication", {
+            usertype: "admin",
+            dataValues: admin.dataValues,
+            application,
+			totalAnnouncementsCount,
+			totalCompaniesCount
+        });
+    } catch (err) {
+        console.error("Error fetching company registration requests:", err);
+        res.status(500).send("Error fetching company registration requests.");
+    }
+});
+
+router.get("/admin/applications/download/:applicationId/:fileType",[auth,checkUserRole("admin")],async function(req,res){
+    const applicationId = req.params.applicationId;
+    const fileType = req.params.fileType;
+    const takenDocument = await Document_model.findOne({where:{applicationId:applicationId, fileType:fileType}});
+    if(!takenDocument){
+        throw error("There is no such document.")
+    }
+    let filename= takenDocument.dataValues.name;
+    let binaryData= takenDocument.dataValues.data;
+    let contentType = 'application/octet-stream'; // Default content type
+    contentType = 'image/jpeg';
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', contentType);
+    res.send(binaryData);
+  });
 
 router.put("/admin/applications/:applicationId",[auth,checkUserRole("admin")],async function(req,res){
     try {
@@ -317,6 +451,7 @@ router.put("/admin/applications/:applicationId",[auth,checkUserRole("admin")],as
 			await application.save();
             return res.status(200).json({ message: "Application rejected." });
         }
+
     } catch (err) {
         console.error("Error fetching applications:", err);
         res.status(500).send("Error fetching applications.");

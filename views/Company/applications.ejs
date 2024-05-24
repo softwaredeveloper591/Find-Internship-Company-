@@ -3,92 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Students</title>
+    <link rel="stylesheet" href="/adminApplications.css">
 </head>
 <body>
     <header>
         <%- include('../partials/nav') %>
         <div id="sidebar" class="sidebar">
-            <a href="/company" class="order"><button ><i class="fa-solid fa-house"></i>Home</button></a>
-            <a href="/company/announcement" class="order"><button >Share Opportunity</button></a>
+			<a href="/company" class="order"><button>HOME</button></a>
+            <a href="/company/companyShareOpportunity" class="order"><button>Share Opportunity</button></a>
             <a href="/company/applications" class="order"><button style="background-color: rgb(217, 4, 4);">Applications</button></a>
-            
         </div>
     </header>
-    <div class="container mt-3">
-        <div class="row">
-            <div class="col-md-1">
-            </div>
-            <div class="col-md-9">
-                <h1 class="h3 mb-3 ms-5">Applications</h1>
-                <div class="row">
-                    <% applications.forEach(application => { %>
-                        <div class="card text-bg-dark bordered border-3 mb-3 col-md-5 me-auto ms-auto">
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="card-body">
-                                        <h3 class="card-title">Student Name: <%= application.Student.studentName %></h3>
-                                        <h5 class="card-title">Announcement Name: <%= application.Announcement.announcementName %></h5>
-                                        <!-- Add More Details button -->
-                                        <a href="/company/applications/:<%= application.id %>" class="btn btn-info">More Details</a>
-                                        <hr>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    <% }) %>
-                </div>
+
+    <div class="container-apl">
+        <div class="content-apl">
+            <div class="students-container row row-cols-sm-1 row-cols-md-2 row-cols-lg-2 row-cols-xl-4 row-cols-xxl-5 g-4">
+				<% if (typeof applications !== 'undefined' && applications.length > 0) { %>
+                	<% applications.forEach(application => { %>
+                	    <div class="col">
+							<button class="as" onclick="window.location.href='/company/applications/:<%= application.id %>'">
+                	        <div class="student-card card h-100 shadow-sm">
+                	            <div class="card-body">
+                	                <h5 class="card-title"><strong><%= application.Student.username %></strong></h5>
+                	                <p class="card-text"><strong>ID:</strong> <%= application.Student.id %></p>
+                	                <p class="card-text"><strong>Announcement:</strong> <%= application.Announcement.announcementName %></p>
+                	            </div>
+                	        </div>
+							</button>
+                	    </div>
+                	<% }) %>
+				<% } else { %>
+					<h2>There are no applications or you have reviewed all applications</h2>
+				<% } %>
             </div>
         </div>
     </div>
-
-    <script>
-        async function downloadButton(applicationId, fileType) {
-            try {
-                const response = await fetch(`/company/announcements/download/${applicationId}/${fileType}`);
-                if (!response.ok) {
-                    throw new Error('Failed to download file');
-                }
-
-                const blob = await response.blob();
-                const contentDispositionHeader = response.headers.get('Content-Disposition');
-                const filename = contentDispositionHeader.split('filename=')[1].replace(/"/g, '');
-                const url = window.URL.createObjectURL(blob);
-
-                // Create a temporary link element
-                const link = document.createElement('a');
-                link.href = url;
-                link.setAttribute('download', filename);
-
-                // Append the link to the document body
-                document.body.appendChild(link);
-
-                // Programmatically click the link to trigger the download
-                link.click();
-
-                // Remove the link from the document body
-                document.body.removeChild(link);
-            } catch (error) {
-                console.error('Error downloading file:', error);
-            }
-        }
-
-        function updateApplication(applicationId, isApproved) {
-            fetch(`/company/applications/${applicationId}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ isApproved })
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert(data.message);
-                location.reload(); // Reload the page to refresh the content
-            })
-            .catch(error => {
-                console.error("Error processing the request:", error);
-                alert("An error occurred. Please try again later.");
-            });
-        }
-    </script>
 </body>
 </html>

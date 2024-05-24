@@ -3,44 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-	<script src="/admin_functions.js"></script>
+    <title>Students</title>
+    <link rel="stylesheet" href="/adminApplications.css">
 </head>
 <body>
     <header>
         <%- include('../partials/nav') %>
         <div id="sidebar" class="sidebar">
-            <a href="/admin/announcementRequests" class="order"><button >Announcement Requests</button></a>
+            <a href="/admin/announcementRequests" class="order"><button>Announcement Requests <%= totalAnnouncementsCount %></button></a>
             <a href="/admin/companyRequests" class="order"><button >Company Requests</button></a>
-            <a href="/admin/applicationRequests"  class="order"><button style="background-color: rgb(217, 4, 4);">Application Requests</button></a>
+            <a href="/admin/applicationRequests" class="order"><button style="background-color: rgb(217, 4, 4);">Application Requests</button></a>
         </div>
     </header>
-    <div class="container mt-3">
-        <div class="row">
-            <div class="col-md-1">
-            </div>
-            <div class="col-md-9">
-                <h1 class="h3 mb-3 ms-5">Applications</h1>
-                <div class="row">
-                    <% applications.forEach(application => { %>
-                        <div class="card text-bg-dark bordered border-3 mb-3 col-md-5 me-auto ms-auto">
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="card-body">
-                                        <h3 class="card-title">Student Name: <%= application.Student.studentName %></h3>
-                                        <h5 class="card-title">Announcement Name: <%= application.Announcement.announcementName %></h5>
-                                        <button class="btn btn-success" onclick="updateApplication('<%= application.id %>', true)">Approve</button>
-                                        <button class="btn btn-danger" onclick="updateApplication('<%= application.id %>', false)">Reject</button>
-                                        <hr>
-                                    </div>
-                                </div>
+
+    <div class="container-apl">
+        <div class="content-apl">
+            <div class="students-container row row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-5 g-4">
+
+                <% applications.forEach(application => { %>
+                    <div class="col">
+						<button class="as" onclick="window.location.href='/admin/applications/:<%= application.id %>'">
+                        <div class="student-card card h-100 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title"><strong><%= application.Student.username %></strong></h5>
+                                <p class="card-text"><strong>ID:</strong> <%= application.Student.id %></p>
+                                <p class="card-text"><strong>Company:</strong> <%= application.Announcement.Company.name %></p>
                             </div>
                         </div>
-                    <% }) %>
-                </div>
+						</button>
+                    </div>
+                <% }) %>
             </div>
         </div>
     </div>
-
 </body>
 </html>

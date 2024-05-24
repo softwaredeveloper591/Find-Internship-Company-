@@ -8,7 +8,7 @@ function updateAnnouncement(announcementId, isApproved) {
     .then(response => response.json())
     .then(data => {
         alert(data.message);
-        location.href = '/admin/announcementRequests';
+        location.href = '/Admin/announcementRequests';
     })
     .catch(error => {
         console.error("Error processing the request:", error);
@@ -46,10 +46,33 @@ function updateApplication(applicationId, isApproved) {
 	.then(response => response.json())
 	.then(data => {
 		alert(data.message);
-		location.reload(); // Reload the page to refresh the content
+		location.href = '/Admin/applicationRequests';
 	})
 	.catch(error => {
 		console.error("Error processing the request:", error);
 		alert("An error occurred. Please try again later.");
 	});
+}
+
+async function downloadButton(applicationId, fileType) {
+	try {
+		const response = await fetch(`/admin/applications/download/${applicationId}/${fileType}`);
+		if (!response.ok) {
+			throw new Error('Failed to download file');
+		}
+
+		const blob = await response.blob();
+		const contentDispositionHeader = response.headers.get('Content-Disposition');
+		const filename = contentDispositionHeader.split('filename=')[1].replace(/"/g, '');
+		const url = window.URL.createObjectURL(blob);
+
+		const link = document.createElement('a');
+		link.href = url;
+		link.setAttribute('download', filename);
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+	} catch (error) {
+		console.error('Error downloading file:', error);
+	}
 }

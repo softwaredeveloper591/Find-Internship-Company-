@@ -11,6 +11,7 @@ const fs = require('fs');
 const multer= require("multer");
 const { error } = require("console");
 const upload = multer();
+const AdmZip = require("adm-zip");
 
 const auth = require("../middleware/auth");  
 const checkUserRole= require("../middleware/checkUserRole");
@@ -86,7 +87,7 @@ router.get("/company/applications",[auth,checkUserRole("company")],async functio
 				},
 				{
 					model: Student_model,
-					attributes: ['username']
+					attributes: ['username', 'id']
 				}
 			]
         });
@@ -223,11 +224,6 @@ router.put("/company/applications/:applicationId",[auth,checkUserRole("company")
 				{
                 	model: Announcement_model,
 					attributes: ['announcementName']
-				},
-				{
-					model: Document_model,
-					attributes: ['fileType'],
-					where: { fileType: "Application Form" } 
 				}
 			]
         });
