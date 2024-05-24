@@ -9,8 +9,13 @@ const nodeMailer = require("nodemailer");
 const moment = require('moment-timezone');
 const fs = require('fs');
 const multer= require("multer");
-const upload = multer();
 const { error } = require("console");
+const upload = multer();
+<<<<<<< Updated upstream
+const { error } = require("console");
+=======
+const AdmZip = require("adm-zip");
+>>>>>>> Stashed changes
 
 const auth = require("../middleware/auth");  
 const checkUserRole= require("../middleware/checkUserRole");
@@ -19,6 +24,7 @@ const Announcement_model = require("../models/announcement-model");
 const Application_model = require("../models/application-model");
 const Document_model = require("../models/document-model");
 const Student_model = require("../models/student-model");
+<<<<<<< Updated upstream
 
 /*const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -31,6 +37,8 @@ const Student_model = require("../models/student-model");
 });
 
 const upload = multer({ storage: storage }).single('myPhoto');*/
+=======
+>>>>>>> Stashed changes
 
 const handleErrors = (err) => {
     console.log(err.message, err.code);
@@ -64,7 +72,7 @@ router.post('/company/announcement',upload.single('image'), [auth, checkUserRole
     const { companyId, announcementName, description, startDate, endDate } = req.body;
 	const file = req.file;
   	const image = file.buffer;
-    //const imagePath = req.file ? `/uploads/${req.file.filename}` : '';
+
     try {
         const startDateInTurkey = moment.tz(startDate, 'Europe/Istanbul').startOf('day').toDate();
         const endDateInTurkey = moment.tz(endDate, 'Europe/Istanbul').endOf('day').toDate();
@@ -114,6 +122,110 @@ router.get("/company/applications",[auth,checkUserRole("company")],async functio
     }
 });
 
+router.get("/company/applications/:applicationId",[auth,checkUserRole("company")],async function(req,res){
+    try {
+        const company = await Company_model.findOne({ where: { id: req.user.id } });
+        const application = await Application_model.findOne({
+			where: {
+				isApprovedByCompany: null,
+			},
+            include: [
+				{
+                	model: Announcement_model,
+                	where: { companyId: company.id },
+					attributes: ['announcementName']
+				},
+				{
+					model: Student_model,
+					attributes: ['username']
+				}
+			]
+        });
+
+        res.render("Company/innerApplication", {
+            usertype: "company",
+            dataValues: company.dataValues,
+            application
+        });
+    } catch (err) {
+        console.error("Error fetching applications:", err);
+        res.status(500).send("Error fetching applications.");
+    }
+});
+
+router.post("/company/applications/:applicationId/fillApplicationForm",[auth,checkUserRole("company")],async function(req,res){
+    try {
+
+		let { internStartDate, internEndDate, internDuration, dutyAndTitle, y1, n1, y2, n2, days, y3, n3 } = req.body;
+		console.log(internStartDate, internEndDate, internDuration, dutyAndTitle);
+
+		const applicationId = req.params.applicationId;
+
+		const document = await Document_model.findOne({
+            where: { applicationId },
+            include: {
+                model: Application_model,
+                include: {
+                    model: Announcement_model,
+                    include: {
+                        model: Company_model
+                    }
+                }
+            }
+        });
+
+		const binaryData = document.data;
+		const zip = new AdmZip(binaryData);
+		let docxTemplate = zip.readAsText("word/document.xml");
+
+		if (typeof y1 === undefined) {
+			y1 = "";
+		}
+		else {
+			n1 = "";
+		}
+
+		if (typeof y2 === undefined) {
+			y2 = "";
+			days = "";
+		}
+		else {
+			n2 = "";
+		}
+
+		if (typeof y3 === undefined) {
+			y3 = "";
+		}
+		else {
+			n3 = "";
+		}
+
+		docxTemplate = docxTemplate
+            .replace(/«companyName»/g, document.Application.Announcement.Company.name)
+            .replace(/«address»/g, document.Application.Announcement.Company.address)
+			.replace(/«internStartDate»/g, internStartDate)
+			.replace(/«internEndDate»/g, internEndDate)
+			.replace(/«internDuration»/g, internDuration)
+			.replace(/«representativeName»/g, document.Application.Announcement.Company.username)
+			.replace(/«dutyAndTitle»/g, dutyAndTitle)
+			.replace(/«y1»/g, y1)
+			.replace(/«n1»/g, n1)
+			.replace(/«y2»/g, y2)
+			.replace(/«n2»/g, n2)
+			.replace(/«y3»/g, y3)
+			.replace(/«n3»/g, n3)
+			.replace(/«days»/g, days);
+
+		zip.updateFile("word/document.xml", Buffer.from(docxTemplate, "utf-8"));
+		const updatedDocxBuffer = zip.toBuffer();
+		await Document_model.update({ data: updatedDocxBuffer }, { where: { id: document.id } });
+		
+    } catch (err) {
+        console.error("Error fetching applications:", err);
+        res.status(500).send("Error fetching applications.");
+    }
+});
+
 router.put("/company/applications/:applicationId",[auth,checkUserRole("company")],async function(req,res){
     try {
 		const applicationId = req.params.applicationId;
@@ -131,6 +243,11 @@ router.put("/company/applications/:applicationId",[auth,checkUserRole("company")
 				{
                 	model: Announcement_model,
 					attributes: ['announcementName']
+				},
+				{
+					model: Document_model,
+					attributes: ['fileType'],
+					where: { fileType: "Application Form" } 
 				}
 			]
         });
@@ -187,7 +304,6 @@ router.get("/company/announcements/download/:applicationId/:fileType",[auth,chec
     res.setHeader('Content-Type', contentType);
     res.send(binaryData);
   });
-
 
 router.get("/company",[auth,checkUserRole("company")],async function(req,res){
     let company = await Company_model.findOne({ where: {id: req.user.id} });

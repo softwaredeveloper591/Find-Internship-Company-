@@ -95,7 +95,6 @@ router.get("/student/opportunities", [auth, checkUserRole("student")], async fun
             ]
         });
 
-        // Format the endDate for each announcement
         const formattedAnnouncements = announcements.map(announcement => ({
             ...announcement.dataValues,
             formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD MM YYYY'),
@@ -162,7 +161,6 @@ router.post("/student/opportunities/:opportunityId",upload.single('CV'),[auth,ch
   	const { user_phone, relative_phone } = req.body;
 
     const templatePath = path.join(__dirname, '../Pictures', 'ApplicationForm.docx');
-    
 
     const createFilledDocument = async () => {
         const zip = new AdmZip(templatePath);
