@@ -24,7 +24,7 @@
         	<div class="content-2" id="content">
         	    	<% announcements.forEach(announcement => { %>
         	    	    <div class="card">
-        	    	        <img src="<%= announcement.imageBase64 %>" alt="Opportunity Logo">
+        	    	        <img src="<%= announcement.image %>" alt="Opportunity Logo">
         	    	        <div class="card-body">
         	    	            <p class="card-title"><%= announcement.Company.name %></p>
         	    	            <p class="card-text"><%= announcement.announcementName %></p>

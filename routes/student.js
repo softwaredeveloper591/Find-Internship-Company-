@@ -98,7 +98,7 @@ router.get("/student/opportunities", [auth, checkUserRole("student")], async fun
         const formattedAnnouncements = announcements.map(announcement => ({
             ...announcement.dataValues,
             formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD MM YYYY'),
-			imageBase64: `data:image/png;base64,${announcement.image.toString('base64')}`
+			image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
         }));
 
         res.render("Student/opportunities", {
@@ -135,7 +135,7 @@ router.get("/student/opportunities/:opportunityId",[auth,checkUserRole("student"
 
 		const formattedAnnouncement = {
 			...announcement.dataValues,
-			imageBase64: `data:image/png;base64,${announcement.image.toString('base64')}`
+			image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
 		};
 
         res.render("Student/apply", {

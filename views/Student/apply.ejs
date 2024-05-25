@@ -5,15 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Apply Page</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-        integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="/apply.css">
 </head>
 
 <body>
-    <header>
+    <header>    
         <%- include('../partials/nav') %>
+        <link rel="stylesheet" href="/apply.css">
         <div id="sidebar" class="sidebar">
             <a href="/student" class="order"><button><i class="fa-solid fa-house"></i>Home</button></a>
             <a href="/student/opportunities" class="order"><button>Opportunities</button></a>
@@ -22,112 +19,47 @@
         </div>
     </header>
 
-    <div class="container">
-		<% if (announcement !== null) { %>
-        	<div class="company-info">
-        	    <img src="<%= announcement.imageBase64 %>" alt="Announcement Image">
-        	    <div class="details">
-        	        <h2><%= announcement.Company.name %></h2>
-        	        <h3><%= announcement.announcementName %></h3>
-        	        <p><%= announcement.description %></p>
-        	    </div>
-        	</div>
-        	<div id="myModal" class="modal-student">
-        	    <div class="modal-student-content">
-        	        <span class="close2">&times;</span>
-        	        <p id="modal-message">Please fill all parts.</p>
-        	    </div>
-        	</div>
-        	<div class="input-row">
-			
-        	    <form class="input-form" id="applyForm" method="POST" action="/student/opportunities/:<%= announcement.id %>" enctype="multipart/form-data">
-					<div class="file-upload">
-						<div class="upload-box">
-							<input type="file" id="CV" name="CV" accept=".pdf" style="display: none;" required>
-							<label class="file-icon" for="CV" style="background-image: url('/resume.jpg');"
-								data-filename="Cv"></label>
-						</div>
-					</div>
-        	        <div class="input-group">
-        	            <input type="tel" id="telefon" name="user_phone" placeholder="(05_)" required>
-        	        </div>
-        	        <div class="input-group">
-        	            <input type="tel" id="yakın-telefon" name="relative_phone" placeholder="(05_)" required>
-        	        </div>
-        	        <button class="apply-btn" type="submit">Apply</button>
-        	    </form>
-        	</div>
-		<% } else { %>
-			<h2>No information found about this announcement.</h2>
-		<% } %>
+    <div class="container-apply">
+        <% if (announcement !== null) { %>
+            <div class="content-apply">
+                <div class="details-container">
+                    <div class="image-container">
+                        <img src="<%= announcement.image %>" class="card-img-top fixed-size-img" alt="Announcement Image">
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            Submit Your Details
+                        </div>
+                        <div class="card-body">
+                            <form class="input-form" id="applyForm" method="POST" action="/student/opportunities/:<%= announcement.id %>" enctype="multipart/form-data">
+                                <div class="mb-3">
+                                    <label for="CV" class="form-label">Upload CV</label>
+                                    <input type="file" class="form-control" id="CV" name="CV" accept=".pdf,.doc,.docx" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="studentNumber" class="form-label">Student's Phone Number</label>
+                                    <input type="text" class="form-control" id="user_phone" name="user_phone" pattern="^0[5][0-9]{9}$" maxlength="11" placeholder="05XXXXXXXXX" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="relativeNumber" class="form-label">Relative's Phone Number</label>
+                                    <input type="text" class="form-control" id="relative_phone" name="relative_phone" pattern="^0[5][0-9]{9}$" maxlength="11" placeholder="05XXXXXXXXX" required>
+                                </div>
+                                <button type="submit" class="sbt-button">Submit</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="details-container-2">
+                    <h2 class="card-subtitle mb-2"><%= announcement.Company.name %></h2>
+                    <h4 class="card-subtitle mb-2 text-muted"><%= announcement.announcementName %></h4>
+                    <br>
+                    <h5 class="card-subtitle mb-2">Description:</h5>
+                    <p class="card-text"><%= announcement.description %></p>
+                </div>
+            </div>
+        <% } else { %>
+            <h2>No information found about this announcement.</h2>
+        <% } %>
     </div>
-
-    <script>
-        function showModal(message) {
-            var modal = document.getElementById("myModal");
-            var modalContent = document.querySelector(".modal-student-content");
-            var modalMessage = document.getElementById("modal-message");
-            var okBtn = document.createElement("button");
-
-            modalMessage.textContent = message;
-            modal.style.display = "block";
-
-            // Remove the close button
-            var closeBtn = modalContent.querySelector(".close2");
-            if (closeBtn) {
-                modalContent.removeChild(closeBtn);
-            }
-
-            // Create and add the "OK" button
-            okBtn.classList.add("ok-btn");
-            okBtn.textContent = "OK";
-            okBtn.onclick = function() {
-                modal.style.display = "none";
-            };
-            modalContent.appendChild(okBtn);
-
-            // Close the modal when clicking outside of it
-            window.onclick = function (event) {
-                if (event.target == modal) {
-                    modal.style.display = "none";
-                }
-            };
-        }
-
-        function isValidTCKimlikNo(value) {
-            return /^\d{11}$/.test(value);
-        }
-
-        function isValidPhoneNumber(value) {
-            return /^\d{11}$/.test(value);
-        }
-
-        document.getElementById('applyForm').onsubmit = function (e) {
-            const tcKimlik = document.getElementById('tc-kimlik').value;
-            const telefon = document.getElementById('telefon').value;
-            const yakinTelefon = document.getElementById('yakın-telefon').value;
-
-            if (!isValidTCKimlikNo(tcKimlik)) {
-                showModal('TC ID No must be 11 digits and only contain numbers.');
-                e.preventDefault();
-                return false;
-            }
-
-            if (!isValidPhoneNumber(telefon)) {
-                showModal('Phone No must be 11 digits and only contain numbers.');
-                e.preventDefault();
-                return false;
-            }
-
-            if (!isValidPhoneNumber(yakinTelefon)) {
-                showModal('Second Phone No must be 11 digits and only contain numbers.');
-                e.preventDefault();
-                return false;
-            }
-
-            return true;
-        };
-    </script>
 </body>
-
 </html>
