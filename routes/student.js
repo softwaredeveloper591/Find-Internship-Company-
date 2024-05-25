@@ -27,6 +27,36 @@ const Announcement_model = require("../models/announcement-model");
 const Document_model = require("../models/document-model");
 const Application_model = require("../models/application-model");
 
+let totalAnnouncementsCount = 0;
+
+async function updateTotalAnnouncementsCount() {
+    try {
+        totalAnnouncementsCount = await Announcement_model.count( 
+			{ 
+				where: {
+					isActive: true,
+					startDate: {
+						[Sequelize.Op.lte]: now // Ensure the announcement has started
+					},
+					id: {
+						[Op.notIn]: Sequelize.literal(`(
+							SELECT announcementId
+							FROM application
+							WHERE studentId = ${student.id}
+						)`)
+					}
+				}
+			} 
+		);
+    } catch (error) {
+        console.error('Failed to fetch total applications count:', error);
+    }
+}
+
+router.use(async (req, res, next) => {
+    await updateTotalAnnouncementsCount();
+    next();
+});
 
 const handleErrors = (err) => {
   console.log(err.message, err.code);
@@ -65,7 +95,11 @@ const handleErrors = (err) => {
 
 router.get("/student",[auth,checkUserRole("student")],async function(req,res){
     const student = await Student_model.findOne({ where: {id: req.user.id} });
-    res.render("Student/student",{ usertype:"student", dataValues:student.dataValues});
+    res.render("Student/student",{ 
+		usertype:"student", 
+		dataValues:student.dataValues,
+		totalAnnouncementsCount
+	});
 })
 
 router.get("/student/opportunities", [auth, checkUserRole("student")], async function(req, res) {
@@ -241,7 +275,8 @@ router.get("/student/applications",[auth,checkUserRole("student")],async functio
 		res.render("Student/applications", {
 			usertype: "student",
 			dataValues: student.dataValues,
-			applications
+			applications,
+			totalAnnouncementsCount
 		});
     }
 	catch (err) {

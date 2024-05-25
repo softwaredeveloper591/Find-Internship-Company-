@@ -21,6 +21,47 @@ const Application_model = require("../models/application-model");
 const Document_model = require("../models/document-model");
 const Student_model = require("../models/student-model");
 
+let totalApplicationsCount = 0;
+let totalInternshipsCount = 0;
+
+async function updateTotalApplicationsCount() {
+    try {
+        totalApplicationsCount = await Application_model.count( 
+			{ 
+				where: {
+					isApprovedByCompany: null	
+				} 
+			} 
+		);
+    } catch (error) {
+        console.error('Failed to fetch total applications count:', error);
+    }
+}
+
+router.use(async (req, res, next) => {
+    await updateTotalApplicationsCount();
+    next();
+});
+
+async function updateTotalInternshipsCount() {
+    try {
+        totalInternshipsCount = await Application_model.count( 
+			{ 
+				where: {
+					isSentBySecretary: true	
+				} 
+			} 
+		);
+    } catch (error) {
+        console.error('Failed to fetch total applications count:', error);
+    }
+}
+
+router.use(async (req, res, next) => {
+    await updateTotalInternshipsCount();
+    next();
+});
+
 const handleErrors = (err) => {
     console.log(err.message, err.code);
     let errors = { duplicate: '', email: '', password: '', confirmPassword: '' };
@@ -46,7 +87,11 @@ const handleErrors = (err) => {
 
 router.get("/company/announcement",[auth,checkUserRole("company")], async function(req,res){
     let company = await Company_model.findOne({ where: {id: req.user.id} });
-    res.render("Company/companyShareOpportunity",{ usertype:"company", dataValues:company.dataValues});
+    res.render("Company/companyShareOpportunity",{ 
+		usertype:"company", 
+		dataValues:company.dataValues,
+		totalInternshipsCount
+	});
 });
 
 router.post('/company/announcement',upload.single('image'), [auth, checkUserRole('company')],async function(req,res){
@@ -98,7 +143,8 @@ router.get("/company/applications",[auth,checkUserRole("company")],async functio
         res.render("Company/applications", {
             usertype: "company",
             dataValues: company.dataValues,
-            applications
+            applications,
+			totalInternshipsCount
         });
     } catch (err) {
         console.error("Error fetching applications:", err);
@@ -129,7 +175,8 @@ router.get("/company/internships",[auth,checkUserRole("company")],async function
         res.render("Company/internships", {
             usertype: "company",
             dataValues: company.dataValues,
-            applications
+            applications,
+			totalApplicationsCount
         });
     } catch (err) {
         console.error("Error fetching applications:", err);
@@ -165,7 +212,8 @@ router.get("/company/applications/:applicationId",[auth,checkUserRole("company")
             usertype: "company",
             dataValues: company.dataValues,
             application,
-            document
+            document,
+			totalInternshipsCount
         });
     } catch (err) {
         console.error("Error fetching applications:", err);
@@ -355,7 +403,13 @@ router.get("/company/announcements/download/:applicationId/:fileType",[auth,chec
 
 router.get("/company",[auth,checkUserRole("company")],async function(req,res){
     let company = await Company_model.findOne({ where: {id: req.user.id} });
-    res.render("Company/company",{ usertype:"company", dataValues:company.dataValues, action: req.query.action});
+    res.render("Company/company",{ 
+		usertype:"company", 
+		dataValues:company.dataValues, 
+		action: req.query.action,
+		totalInternshipsCount,
+		totalApplicationsCount
+	});
 });
 
 router.post("/signup/company",async function(req,res){
