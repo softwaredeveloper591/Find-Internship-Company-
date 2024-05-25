@@ -209,7 +209,7 @@ router.post("/company/applications/:applicationId/fillApplicationForm",[auth,che
 		else {
 			y3 = "", n3 = "X";
 		}
-
+        console.log("application form is taken");
 		docxTemplate = docxTemplate
             .replace(/«companyName»/g, document.Application.Announcement.Company.name)
             .replace(/«address»/g, document.Application.Announcement.Company.address)
@@ -226,6 +226,7 @@ router.post("/company/applications/:applicationId/fillApplicationForm",[auth,che
 			.replace(/«n3»/g, n3)
 			.replace(/«days»/g, days);
 
+        console.log("dada");
 		zip.updateFile("word/document.xml", Buffer.from(docxTemplate, "utf-8"));
 		const updatedDocxBuffer = zip.toBuffer();
 		const updatedApplicationForm = await Document_model.findOne({where: {applicationId, fileType: "Updated Application Form"}});
@@ -241,6 +242,7 @@ router.post("/company/applications/:applicationId/fillApplicationForm",[auth,che
 		}
 		else {
 			await Document_model.update({ data: updatedDocxBuffer }, { where: { applicationId, fileType: "Updated Application Form" } });
+            res.send("you are okay");
 		}
 		
     } catch (err) {
@@ -311,9 +313,12 @@ router.get("/company/announcements/download/:applicationId/:fileType",[auth,chec
     const applicationId = req.params.applicationId;
     const fileType = req.params.fileType;
     const takenDocument = await Document_model.findOne({where:{applicationId:applicationId, fileType:fileType}});
+
     if(!takenDocument){
+        console.log("updated application form yok.");
         return res.status(400).json({ error: "You need to fill the form before downloading the application form." });
     }
+    console.log("form var");
     let filename= takenDocument.dataValues.name;
     let binaryData= takenDocument.dataValues.data;
     let contentType = 'application/octet-stream'; // Default content type

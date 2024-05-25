@@ -98,10 +98,10 @@
                         id="download-button">Download Application Form</button>
                     <div class="upload">
                         <div class="file-name" id="file-name"></div>
-                        <button type="button" id="upload-button">Upload Application Form</button>
+                        <button type="button" id="upload-button" style="visibility: hidden;">Upload Application Form</button>
                         <input type="file" id="upload-file" accept=".pdf">
                     </div>
-                    <button type="submit" id="submit-button" style="margin-left: 160px;">Submit the form</button>
+                    <button type="submit" id="submit-button" style="margin-left: 160px; visibility: hidden;">Submit the form</button>
                 </div>
             </div>
         </form>
@@ -110,9 +110,19 @@
     <script>
         const applicationForm = document.getElementById('applicationForm');
 
-        applicationForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+        // applicationForm.addEventListener('submit', async (e) => {
+        //     e.preventDefault();
 
+            
+
+        //     try {
+                
+        //     } catch (err) {
+        //         console.error('Failed to communicate with the server:', err);
+        //     }
+        // });
+
+        async function downloadButton(applicationId, fileType) {
             const internStartDate = applicationForm.internStartDate.value;
             const internEndDate = applicationForm.internEndDate.value;
             const internDuration = applicationForm.internDuration.value;
@@ -120,18 +130,39 @@
             const workOnSaturday = applicationForm.workOnSaturday.value;
             const workOnHoliday = applicationForm.workOnHoliday.value;
             const sgk = applicationForm.sgk.value;
+        
+            try {   
 
-            try {
                 const res = await fetch('/company/applications/<%= application.id %>/fillApplicationForm', {
                     method: 'POST',
                     body: JSON.stringify({ internStartDate, internEndDate, internDuration, dutyAndTitle, workOnSaturday, workOnHoliday, sgk }),
                     headers: { 'Content-Type': 'application/json' }
                 });
-                const data = await res.json();
-            } catch (err) {
-                console.error('Failed to communicate with the server:', err);
+                console.log('First fetch successful:');
+                const response = await fetch(`/company/announcements/download/${applicationId}/${fileType}`);
+                if (!response.ok) {
+                    throw new Error('Failed to download file');
+                }
+                console.log("dosya generate edildi.")
+                const blob = await response.blob();
+                const contentDispositionHeader = response.headers.get('Content-Disposition');
+                const filename = contentDispositionHeader.split('filename=')[1].replace(/"/g, '');
+                const url = window.URL.createObjectURL(blob);
+
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', filename);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                const uploadbutton = document.getElementById('upload-button');
+                uploadbutton.style.visibility='visible';
+                const submitbutton = document.getElementById('submit-button');
+                submitbutton.style.visibility='visible';
+            } catch (error) {
+                console.error('Error downloading file:', error);
             }
-        });
+        }
 
         async function fetchPdfForPreview(applicationId, fileType) {
             try {
