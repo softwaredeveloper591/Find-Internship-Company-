@@ -51,7 +51,7 @@ router.get("/company/announcement",[auth,checkUserRole("company")], async functi
 
 router.post('/company/announcement',upload.single('image'), [auth, checkUserRole('company')],async function(req,res){
     const { companyId, announcementName, description, startDate, endDate } = req.body;
-	const image = null;
+	let image = null;
 	const file = req.file;
 	if (file) {
 		image = file.buffer;
