@@ -1,6 +1,6 @@
 const mysql = require("mysql2");
 const Sequlize = require("sequelize");
-const sequelize= new Sequlize("internship","root","B1rn0Z4!",{
+const sequelize= new Sequlize("internship","root","mehmetanl!",{
     host: "localhost",
 	dialect: "mysql",
     logging: false

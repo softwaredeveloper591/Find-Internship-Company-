@@ -126,17 +126,38 @@ router.get("/company/applications/:applicationId",[auth,checkUserRole("company")
 				}
 			]
         });
+        const document = await Document_model.findOne({
+			where: { applicationId, fileType: "CV" }
+		});
 
         res.render("Company/innerInternshipApplication", {
             usertype: "company",
             dataValues: company.dataValues,
-            application
+            application,
+            document
         });
+        console.log(document);
     } catch (err) {
         console.error("Error fetching applications:", err);
         res.status(500).send("Error fetching applications.");
     }
 });
+
+router.get('/serveFile/:id', [auth, checkUserRole("company")], async (req, res) => {
+    try {
+      const file = await Document_model.findByPk(req.params.id);
+      if (file) {
+        res.setHeader('Content-Type', 'application/pdf');
+        res.send(file.data);
+      } else {
+        res.status(404).send('File not found');
+      }
+    } catch (error) {
+      console.error('Error serving file:', error);
+      res.status(500).send('Error serving file.');
+    }
+  });
+  
 
 router.post("/company/applications/:applicationId/fillApplicationForm",[auth,checkUserRole("company")],async function(req,res){
     try {

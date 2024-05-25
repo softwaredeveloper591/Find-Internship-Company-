@@ -6,33 +6,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Internship Announce Page</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script> 
-    <link rel="stylesheet" href="/companyShareOpportunity.css">
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>
     <link rel="stylesheet" href="/popupModel.css">
 </head>
 
 <body>
     <header>
         <%- include('../partials/nav') %>
-        <div id="sidebar" class="sidebar">
-            <a href="/company" class="order"><button ><i class="fa-solid fa-house"></i>Home</button></a>
-            <a href="/company/announcement" class="order"><button style="background-color: rgb(217, 4, 4);">Share Opportunity</button></a>
-            <a href="/company/applications" class="order"><button >Applications</button></a>
-        </div>
+            <link rel="stylesheet" href="/companyShareOpportunity.css">
+            <div id="sidebar" class="sidebar">
+                <a href="/company" class="order"><button><i class="fa-solid fa-house"></i>Home</button></a>
+                <a href="/company/announcement" class="order"><button style="background-color: rgb(217, 4, 4);">Share
+                        Opportunity</button></a>
+                <a href="/company/applications" class="order"><button>Applications</button></a>
+            </div>
     </header>
 
+
     <div class="container-company">
-        <div class="uniform">
-            <form method="POST" action="/company/announcement" enctype="multipart/form-data">
-                <input type="hidden" name="companyId" value="<%= dataValues.id %>">
-                <div class="ground">
-                    <div class="image-upload-container">
-                        <div class="dashed-rectangle">Upload image (Optional)</div>
-                        <img id="uploadPreview" alt="Image Preview" class="file-upload-img" />
-                        <span><i class="fa-solid fa-image p-1"></i></span>
-                        <input id="image" name="image" type="file" name="myPhoto" onchange="PreviewImage();" />
-                    </div>
-                    <button type="button" onclick="removeImage()" class="remove-button"><i class="fa-solid fa-trash p-1"></i></button>
+        <form method="POST" action="/company/announcement" enctype="multipart/form-data" class="uniform">
+            <input type="hidden" name="companyId" value="<%= dataValues.id %>">
+            <div class="details">
+                <div class="image-upload-container">
+                    <div class="dashed-rectangle">Upload image (Optional)</div>
+                    <img id="uploadPreview" alt="Image Preview" class="file-upload-img" />
+                    <label for="image" class="upload-button"><i class="fa-solid fa-image p-1"></i></label>
+                    <input id="image" name="image" type="file" name="myPhoto" onchange="PreviewImage();" />
+                    <button type="button" onclick="removeImage()" class="remove-button"><i
+                            class="fa-solid fa-trash p-1"></i></button>
                 </div>
                 <div id="myModal" class="modal">
                     <div class="modal-content">
@@ -40,20 +42,27 @@
                         <p id="modalMessage">Please select a file.</p>
                     </div>
                 </div>
-                <div class="details">
-                    <label>Title of the announcement:</label>
-                    <textarea id="announcementName" name="announcementName" class="form-control mb-3" rows="1" required></textarea>
-                    <label>Details about the internship opportunity:</label>
-                    <textarea class="form-control mb-3" id="description" name="description" rows="4" required></textarea>
+                <label for="announcementName" style="margin-top: 35px;">Title of the announcement:</label>
+                <textarea id="announcementName" name="announcementName" class="form-control" rows="1"
+                    required></textarea>
+
+                <label for="description">Details about the internship opportunity:</label>
+                <textarea id="description" name="description" class="form-control" rows="4" required></textarea>
+
+                <div class="dates-div">
                     <label for="startDate">Start Date:</label>
-                    <input type="date" class="form-control" id="startDate" name="startDate" required>
+                    <input type="date" id="startDate" name="startDate" class="form-control" required>
+
                     <label for="endDate">End Date:</label>
-                    <input type="date" class="form-control" id="endDate" name="endDate" required>
-                    <button type="submit" class="publish">Publish</button>
+                    <input type="date" id="endDate" name="endDate" class="form-control" required>
                 </div>
-            </form>
-        </div>
+
+                <button type="submit" class="publish">Publish</button>
+            </div>
+        </form>
     </div>
+
+
 
     <script>
         const modal = document.getElementById('myModal');
