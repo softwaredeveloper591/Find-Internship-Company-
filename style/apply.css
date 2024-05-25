@@ -13,7 +13,7 @@ body, html {
     width: calc(100% - 180px);
     height: calc(100vh - 110px);
     padding: 40px;
-    top: 120px;
+    top: 140px;
     margin-left: 180px;
     overflow-y: auto;
 }
@@ -74,6 +74,18 @@ body, html {
     font-weight: bold;
 }
 
+.card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.card-text {
+    margin-top: 10px; /* Add this line */
+    word-wrap: break-word; /* Ensure long words break correctly */
+}
+
 .image-container {
     display: flex;
     gap: 10px;
@@ -93,5 +105,25 @@ body, html {
 }
 
 .sbt-button:hover {
-    background-color:  rgb(217, 4, 4);
+    background-color:  rgb(217, 4, 4);
+}
+
+.upload-file, #studentFile {
+    display: flex;
+    position: relative;
+    align-items: center;
+    justify-content: center; /* Center horizontally */
+    text-align: center; /* Center text */
+    gap: 10px;
+    color: #bf1b1b;
+    cursor: pointer;
+    padding: 10px 20px;
+    border: 2px solid #bf1b1b;
+    border-radius: 4px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.upload-file:hover, #studentFile:hover {
+    color: #ffffff; /* Change text color to white */
+    background-color: #bf1b1b; /* Change background color to red */
 }

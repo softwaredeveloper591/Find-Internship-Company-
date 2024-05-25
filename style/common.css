@@ -18,7 +18,7 @@ header {
     position: fixed;
     width: 100%;
     z-index: 1000;
-    height: 110px;
+    height: 140px;
     background: -webkit-linear-gradient(left, darkred, #bf1b1b, #bf1b1b, darkred);
     display: flex;
     align-items: center;
@@ -87,17 +87,19 @@ header {
     color: #ffffff;
     margin-top: 10px;
     margin-right: 20px; /* Adds margin for spacing around the text */
+    position: absolute;
+    left: 45px;
 }
 
 .top-left-logo { /* Iyte logo specifications */
     height: 100px;
-    margin-left: 10%;
-    margin-right: 30px;
     z-index: 1000; /* Ensures the logo stays above other content */
 }
 
 .logo {
     z-index: 1000; /* Ensures the logo stays above other content */
+    margin-left: 25px;
+    width: 140px;
 }
 
 .sidebar {
@@ -105,7 +107,7 @@ header {
     width: 180px;
     position: fixed; /* Fix the sidebar's position */
     z-index: 1;
-    top: 110px; /* Adjust this value to match the header's height */
+    top: 140px; /* Adjust this value to match the header's height */
     left: 0;
     background: -webkit-linear-gradient(top, darkred, #bf1b1b, #bf1b1b, darkred);
     overflow-x: hidden; /* Prevent horizontal overflow */

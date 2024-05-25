@@ -5,74 +5,122 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Apply Page</title>
+    
 </head>
 
 <body>
     <header>    
         <%- include('../partials/nav') %>
-        <link rel="stylesheet" href="/apply.css">
         <div id="sidebar" class="sidebar">
             <a href="/student" class="order"><button><i class="fa-solid fa-house"></i>Home</button></a>
             <a href="/student/opportunities" class="order"><button>Opportunities</button></a>
             <a href="/student/applications" class="order"><button>Applications</button></a>
             <a href="/student/internships" class="order"><button>Internships</button></a>
         </div>
+        <link rel="stylesheet" href="/apply.css">
     </header>
 
     <div class="container-apply">
         <% if (announcement !== null) { %>
-            <div class="content-apply">
-                <div class="details-container">
-                    <div class="image-container">
-                        <img src="<%= announcement.image %>" class="card-img-top fixed-size-img" alt="Announcement Image">
-                    </div>
-                    <div class="card">
-                        <div class="card-header">
-                            Submit Your Details
+            <% if (announcement.image !== null) { %>
+                <div class="content-apply">
+                    <div class="details-container">
+                        <div class="image-container">
+                            <img src="<%= announcement.image %>" class="card-img-top fixed-size-img" alt="Announcement Image">
                         </div>
-                        <div class="card-body">
-                            <form class="input-form" id="applyForm" method="POST" action="/student/opportunities/:<%= announcement.id %>" enctype="multipart/form-data">
-                                <div class="mb-3">
-                                    <label for="CV" class="form-label">Upload CV</label>
-                                    <input type="file" class="form-control" id="CV" name="CV" accept=".pdf,.doc,.docx" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="studentNumber" class="form-label">Student's Phone Number</label>
-                                    <input type="text" class="form-control" id="user_phone" name="user_phone" pattern="^0[5][0-9]{9}$" maxlength="11" placeholder="05XXXXXXXXX" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="relativeNumber" class="form-label">Relative's Phone Number</label>
-                                    <input type="text" class="form-control" id="relative_phone" name="relative_phone" pattern="^0[5][0-9]{9}$" maxlength="11" placeholder="05XXXXXXXXX" required>
-                                </div>
-                                <button type="submit" class="sbt-button">Submit</button>
-                            </form>
+                        <div class="card">
+                            <div class="card-header">
+                                Submit Your Details
+                            </div>
+                            <div class="card-body">
+                                <form class="input-form" id="applyForm" method="POST" action="/student/opportunities/:<%= announcement.id %>" enctype="multipart/form-data">
+                                    <div class="upload-file" id="custom-upload">
+                                        <i class="fa-solid fa-file-pdf"></i>
+                                        Upload Employment Certificate<i class="fa-solid fa-upload"></i>
+                                    </div>
+                                    <input type="file" name="studentFile" class="studentFile" accept=".pdf,.docx" style="display: none;">
+
+                                    <div class="mb-3">
+                                        <label for="studentNumber" class="form-label">Student's Phone Number</label>
+                                        <input type="text" class="form-control" id="user_phone" name="user_phone" pattern="^0[5][0-9]{9}$" maxlength="11" placeholder="05XXXXXXXXX" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="relativeNumber" class="form-label">Relative's Phone Number</label>
+                                        <input type="text" class="form-control" id="relative_phone" name="relative_phone" pattern="^0[5][0-9]{9}$" maxlength="11" placeholder="05XXXXXXXXX" required>
+                                    </div>
+                                    <button type="submit" class="sbt-button">Submit</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="details-container-2">
+                        <h2 class="card-subtitle mb-2"><%= announcement.Company.name %></h2>
+                        <h4 class="card-subtitle mb-2 text-muted"><%= announcement.announcementName %></h4>
+                        <br>
+                        <h5 class="card-subtitle mb-2">Description:</h5>
+                        <p class="card-text"><%= announcement.description %></p>
+                    </div>
+                </div>
+            <% } else { %>
+                <div class="content-apply">
+                    <div class="details-container-2" style="align-items: flex-start; display: flex; justify-content: space-between;">
+                        <div class="content-else">
+                            <h2 class="card-subtitle mb-2"><%= announcement.Company.name %></h2>
+                            <h4 class="card-subtitle mb-2 text-muted"><%= announcement.announcementName %></h4>
+                            <br>
+                            <h5 class="card-subtitle mb-2">Description:</h5>
+                            <p class="card-text"><%= announcement.description %></p>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                Submit Your Details
+                            </div>
+                            <div class="card-body">
+                                <form class="input-form" id="applyForm" method="POST" action="/student/opportunities/:<%= announcement.id %>" enctype="multipart/form-data">
+                                    <div class="upload-file" id="custom-upload">
+                                        <i class="fa-solid fa-file-pdf"></i>
+                                        Upload Employment Certificate<i class="fa-solid fa-upload"></i>
+                                    </div>
+                                    <input type="file" name="studentFile" class="studentFile" accept=".pdf,.docx" style="display: none;">
+
+                                    <div class="mb-3">
+                                        <label for="studentNumber" class="form-label">Student's Phone Number</label>
+                                        <input type="text" class="form-control" id="user_phone" name="user_phone" pattern="^0[5][0-9]{9}$" maxlength="11" placeholder="05XXXXXXXXX" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="relativeNumber" class="form-label">Relative's Phone Number</label>
+                                        <input type="text" class="form-control" id="relative_phone" name="relative_phone" pattern="^0[5][0-9]{9}$" maxlength="11" placeholder="05XXXXXXXXX" required>
+                                    </div>
+                                    <button type="submit" class="sbt-button">Submit</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="details-container-2">
-                    <h2 class="card-subtitle mb-2"><%= announcement.Company.name %></h2>
-                    <h4 class="card-subtitle mb-2 text-muted"><%= announcement.announcementName %></h4>
-                    <br>
-                    <h5 class="card-subtitle mb-2">Description:</h5>
-                    <p class="card-text"><%= announcement.description %></p>
-                </div>
-            </div>
+            <% } %>
         <% } else { %>
             <h2>No information found about this announcement.</h2>
         <% } %>
     </div>
 
     <script>
-        document.getElementById('CV').addEventListener('change', function(event) {
-            var fileInput = event.target;
-            var filePath = fileInput.value;
-            var allowedExtensions = /(\.pdf)$/i;
-    
-            if (!allowedExtensions.exec(filePath)) {
-                alert('Please select a PDF file');
-                fileInput.value = '';  // Seçilen dosyayı temizle
-            }
+        document.querySelectorAll('.upload-file').forEach((uploadDiv, index) => {
+            uploadDiv.addEventListener('click', function() {
+                const fileInput = document.querySelectorAll('.studentFile')[index];
+                fileInput.required = true;
+                fileInput.click();
+            });
+        });
+
+        document.querySelectorAll('.studentFile').forEach((fileInput, index) => {
+            fileInput.addEventListener('change', function() {
+                const fileName = this.files[0].name;
+                const customUploadDiv = document.querySelectorAll('.upload-file')[index];
+                customUploadDiv.innerHTML = '<i class="fa-solid fa-file"></i> ' + fileName;
+                customUploadDiv.style.border = '2px solid #bf1b1b';
+            });
         });
     </script>
+
 </body>
 </html>

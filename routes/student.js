@@ -29,7 +29,8 @@ const Application_model = require("../models/application-model");
 
 let totalAnnouncementsCount = 0;
 
-async function updateTotalAnnouncementsCount() {
+async function updateTotalAnnouncementsCount(id) {
+	const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
     try {
         totalAnnouncementsCount = await Announcement_model.count( 
 			{ 
@@ -42,7 +43,7 @@ async function updateTotalAnnouncementsCount() {
 						[Op.notIn]: Sequelize.literal(`(
 							SELECT announcementId
 							FROM application
-							WHERE studentId = ${student.id}
+							WHERE studentId = ${id}
 						)`)
 					}
 				}
@@ -53,8 +54,8 @@ async function updateTotalAnnouncementsCount() {
     }
 }
 
-router.use(async (req, res, next) => {
-    await updateTotalAnnouncementsCount();
+router.use([auth,checkUserRole("student")],async function(req, res, next){
+    await updateTotalAnnouncementsCount(req.user.id);
     next();
 });
 
