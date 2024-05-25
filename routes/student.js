@@ -27,7 +27,7 @@ const Announcement_model = require("../models/announcement-model");
 const Document_model = require("../models/document-model");
 const Application_model = require("../models/application-model");
 
-let totalAnnouncementsCount = 0;
+/*let totalAnnouncementsCount = 0;
 
 async function updateTotalAnnouncementsCount(id) {
 	const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
@@ -57,7 +57,7 @@ async function updateTotalAnnouncementsCount(id) {
 router.use([auth,checkUserRole("student")],async function(req, res, next){
     await updateTotalAnnouncementsCount(req.user.id);
     next();
-});
+});*/
 
 const handleErrors = (err) => {
   console.log(err.message, err.code);
