@@ -76,9 +76,16 @@ header {
     margin-right: 50px;
 }
 
+.website-name{
+    font-weight: bold;
+    color: #fff;
+    margin-right: 10%;
+}
+
 .text_navbar {
     font-weight: bold;
     color: #ffffff;
+    margin-top: 10px;
     margin-right: 20px; /* Adds margin for spacing around the text */
 }
 
