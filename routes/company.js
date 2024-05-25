@@ -106,6 +106,37 @@ router.get("/company/applications",[auth,checkUserRole("company")],async functio
     }
 });
 
+router.get("/company/internships",[auth,checkUserRole("company")],async function(req,res){
+    try {
+        const company = await Company_model.findOne({ where: { id: req.user.id } });
+        const applications = await Application_model.findAll({
+			where: {
+				isSentBySecretary: true,
+			},
+            include: [
+				{
+                	model: Announcement_model,
+                	where: { companyId: company.id },
+					attributes: ['announcementName']
+				},
+				{
+					model: Student_model,
+					attributes: ['username', 'id']
+				}
+			]
+        });
+
+        res.render("Company/internships", {
+            usertype: "company",
+            dataValues: company.dataValues,
+            applications
+        });
+    } catch (err) {
+        console.error("Error fetching applications:", err);
+        res.status(500).send("Error fetching applications.");
+    }
+});
+
 router.get("/company/applications/:applicationId",[auth,checkUserRole("company")],async function(req,res){
     try {
         const company = await Company_model.findOne({ where: { id: req.user.id } });

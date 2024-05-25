@@ -51,7 +51,6 @@ router.get("/secretary", [auth, checkUserRole("secretary")], async function (req
 
 router.get("/secretary/applications/download/:applicationId/:fileType",[auth,checkUserRole("secretary")],async function(req,res){
     const applicationId = req.params.applicationId;
-	console.log(applicationId);
     const fileType = req.params.fileType;
     const takenDocument = await Document_model.findOne({where:{applicationId:applicationId, fileType:fileType}});
     if(!takenDocument){
@@ -117,10 +116,8 @@ router.post("/secretary/applications/:applicationId",upload.single('studentFile'
 			html: emailBody
 	   	});*/
 
-		console.log(application);
 		application.isSentBySecretary = true;
 		await application.save();
-		console.log(applicationId);
 
 		res.redirect("/secretary");
   	}  catch (error) {
