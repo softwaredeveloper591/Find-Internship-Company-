@@ -31,7 +31,7 @@
             </div>
             <div class="action-buttons">
                 <button class="accept" id="accept-button">ACCEPT</button>
-                <button class="reject">REJECT</button>
+                <button class="reject" onclick="updateApplication('<%= application.id %>', false)">REJECT</button>
             </div>
         </div>
         <form method="post" id="applicationForm">
@@ -100,7 +100,7 @@
                         <button type="button" id="upload-button">Upload Application Form</button>
                         <input type="file" id="upload-file" accept=".pdf">
                     </div>
-                    <button type="submit" id="submit-button" style="margin-left: 160px;">Submit the form</button>
+                    <button type="submit" id="submit-button" style="margin-left: 160px;" onclick="updateApplication('<%= application.id %>', true)">Submit the form</button>
                 </div>
             </div>
         </form>
@@ -184,7 +184,7 @@
 
                 const data = await response.json();
                 alert(data.message);
-                location.reload(); // Reload the page to refresh the content
+                window.location.href = "/company/applications";
             } catch (error) {
                 console.error("Error processing the request:", error);
                 alert("An error occurred. Please try again later.");
