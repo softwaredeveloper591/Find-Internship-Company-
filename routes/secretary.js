@@ -78,7 +78,12 @@ router.post("/secretary/applications/:applicationId",upload.single('studentFile'
 				model: Student_model
 			},
 			{
-				model: Announcement_model
+				model: Announcement_model, 
+				include: [
+					{
+						model: Company_model
+					}	
+				]
 			}
 		]
 	})
@@ -97,8 +102,8 @@ router.post("/secretary/applications/:applicationId",upload.single('studentFile'
    		  	username: application.Student.username
    		});
 
-		/*const emailBody = `Hello ${application.Student.username},<br><br>
-		Your application titled "${application.Announcement.announcementName}" has been ${isApproved ? "approved by admin" : "rejected by company and will be removed from our system"}.<br><br>
+		const emailBody = `Hello ${application.Announcement.Company.username},<br><br>
+		The SSI certificate of the student named ${application.Student.username} has been sent to you. You can download it from the system.<br><br>
 		Best Regards,<br>Admin Team`;
 
 	   	const transporter = nodeMailer.createTransport({
@@ -111,10 +116,10 @@ router.post("/secretary/applications/:applicationId",upload.single('studentFile'
 
 	   	await transporter.sendMail({
 			from: '"Buket Erşahin" <enesbilalbabaturalpro06@gmail.com>',
-			to: application.Student.email,
+			to: application.Announcement.Company.email,
 			subject: emailSubject,
 			html: emailBody
-	   	});*/
+	   	});
 
 		application.status = 3;
 		application.isSentBySecretary = true;
