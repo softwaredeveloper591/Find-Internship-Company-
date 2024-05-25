@@ -20,7 +20,8 @@ router.get("/secretary", [auth, checkUserRole("secretary")], async function (req
 		const applications = await Application_model.findAll({
 			where: {
 				isApprovedByCompany: true,
-				isApprovedByDIC: true			
+				isApprovedByDIC: true,
+				isSentBySecretary: false			
 			},
             include: [
 				{
@@ -50,6 +51,7 @@ router.get("/secretary", [auth, checkUserRole("secretary")], async function (req
 
 router.get("/secretary/applications/download/:applicationId/:fileType",[auth,checkUserRole("secretary")],async function(req,res){
     const applicationId = req.params.applicationId;
+	console.log(applicationId);
     const fileType = req.params.fileType;
     const takenDocument = await Document_model.findOne({where:{applicationId:applicationId, fileType:fileType}});
     if(!takenDocument){
@@ -75,6 +77,9 @@ router.post("/secretary/applications/:applicationId",upload.single('studentFile'
 		include: [
 			{
 				model: Student_model
+			},
+			{
+				model: Announcement_model
 			}
 		]
 	})
@@ -92,6 +97,30 @@ router.post("/secretary/applications/:applicationId",upload.single('studentFile'
    		  	fileType,
    		  	username: application.Student.username
    		});
+
+		/*const emailBody = `Hello ${application.Student.username},<br><br>
+		Your application titled "${application.Announcement.announcementName}" has been ${isApproved ? "approved by admin" : "rejected by company and will be removed from our system"}.<br><br>
+		Best Regards,<br>Admin Team`;
+
+	   	const transporter = nodeMailer.createTransport({
+			service: 'gmail',
+			auth: {
+			   	user: 'enesbilalbabaturalpro06@gmail.com',
+			   	pass: 'elde beun xhtc btxu'
+			}
+	   	});
+
+	   	await transporter.sendMail({
+			from: '"Buket Erşahin" <enesbilalbabaturalpro06@gmail.com>',
+			to: application.Student.email,
+			subject: emailSubject,
+			html: emailBody
+	   	});*/
+
+		console.log(application);
+		application.isSentBySecretary = true;
+		await application.save();
+		console.log(applicationId);
 
 		res.redirect("/secretary");
   	}  catch (error) {

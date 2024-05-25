@@ -38,10 +38,11 @@ function updateCompanyRequest(companyId, isApproved) {
 }
 
 function updateApplication(applicationId, isApproved) {
+	const feedback = document.getElementById('feedback').value;
 	fetch(`/admin/applications/${applicationId}`, {
 		method: "PUT",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ isApproved })
+		body: JSON.stringify({ isApproved, feedback })
 	})
 	.then(response => response.json())
 	.then(data => {

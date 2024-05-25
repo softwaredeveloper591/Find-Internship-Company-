@@ -36,6 +36,10 @@
                     </div>
 					</button>
                     <br>
+						<div class="mb-3">
+							<label for="CV" class="form-label">Upload CV</label>
+							<input type="file" class="form-control" id="CV" name="CV" accept=".pdf,.doc,.docx" required>
+						</div>
                         <button class="btn btn-success" onclick="updateApplication('<%= application.id %>', true)">Send to secretary</button>
                 </div>
             </div>

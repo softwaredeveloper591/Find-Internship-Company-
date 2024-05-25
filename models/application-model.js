@@ -27,7 +27,11 @@ const Application = sequelize.define('Application', {
     isApprovedByDIC: {
       type: DataTypes.BOOLEAN,
       defaultValue: null
-    }
+    },
+	isSentBySecretary: {
+		type: DataTypes.BOOLEAN,
+		defaultValue: false
+	}
   }, {
     tableName: 'application',
     timestamps: false

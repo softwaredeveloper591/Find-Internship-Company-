@@ -4,6 +4,8 @@ const nodeMailer = require("nodemailer");
 const cron = require('node-cron');
 const { Sequelize } = require('sequelize');
 const moment = require('moment-timezone');
+const multer= require("multer");
+const upload = multer();
 
 const auth = require("../middleware/auth"); 
 const checkUserRole= require("../middleware/checkUserRole")
@@ -214,7 +216,7 @@ router.put("/admin/announcement/:announcementId", [auth, checkUserRole("admin")]
 
         const emailSubject = isApproved ? 'Announcement Approved' : 'Announcement Rejected';
         const emailBody = `Hello ${announcement.Company.username},<br><br>
-            Your announcement titled "${announcement.announcementName}" has been ${isApproved ? "approved" : `rejected and will be removed from our system. <br><br> ${feedback ? `Feedback: <br> ${feedback}` : ""}`}. <br><br>
+            Your announcement titled "${announcement.announcementName}" has been ${isApproved ? "approved" : `rejected and will be removed from our system. <br><br> ${feedback ? `Feedback: <br> ${feedback}.` : ""}`} <br><br>
             Best Regards,<br>Admin Team`;
 
         const transporter = nodeMailer.createTransport({
@@ -399,10 +401,15 @@ router.get("/admin/applications/download/:applicationId/:fileType",[auth,checkUs
     res.send(binaryData);
 });
 
-router.put("/admin/applications/:applicationId",[auth,checkUserRole("admin")],async function(req,res){
+router.put("/admin/applications/:applicationId",upload.single('Updated Application Form'),[auth,checkUserRole("admin")],async function(req,res){
     try {
 		const applicationId = req.params.applicationId;
-		const isApproved = req.body.isApproved; 
+  		const file = req.file;
+  		const binaryData = file.buffer;
+
+		await Document_model.update({ data: binaryData }, { where: { applicationId, fileType: "Updated Application Form" } });
+
+		const { isApproved, feedback } = req.body; 
 
 		const application = await Application_model.findOne({
 			where: {
@@ -415,15 +422,20 @@ router.put("/admin/applications/:applicationId",[auth,checkUserRole("admin")],as
 				},
 				{
                 	model: Announcement_model,
+					include: [
+						{
+							model: Company_model
+						}
+					],
 					attributes: ['announcementName']
 				}
 			]
         });
 
 		const emailSubject = isApproved ? 'Application Approved' : 'Application Rejected';
-        const emailBody = `Hello ${application.Student.username},<br><br>
-            Your application titled "${application.Announcement.announcementName}" has been ${isApproved ? "approved by admin" : "rejected by company and will be removed from our system"}.<br><br>
-            Best Regards,<br>Admin Team`;
+		const emailBody = `Hello ${application.Announcement.Company.username},<br><br>
+			Your application titled "${application.Announcement.announcementName}" has been ${isApproved ? "approved" : `rejected and will be removed from our system. <br><br> ${feedback ? `Feedback: <br> ${feedback}.` : ""}`} <br><br>
+			Best Regards,<br>Admin Team`;
 
 		const transporter = nodeMailer.createTransport({
             service: 'gmail',
@@ -435,7 +447,7 @@ router.put("/admin/applications/:applicationId",[auth,checkUserRole("admin")],as
 
         await transporter.sendMail({
             from: '"Buket Erşahin" <enesbilalbabaturalpro06@gmail.com>',
-            to: application.Student.email,
+            to: application.Announcement.Company.email,
             subject: emailSubject,
             html: emailBody
         });
