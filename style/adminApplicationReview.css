@@ -136,3 +136,20 @@ textarea.input-feedback {
 	border: none;
 	background-color: transparent;
 }
+
+.upload-file {
+    display: flex;
+    position: relative;
+    align-items: center;
+    gap: 10px;
+    color: #43a047;
+    cursor: pointer;
+    padding: 10px 20px;
+    border: 2px solid #43a047;
+    border-radius: 4px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+.upload-file:hover {
+    background-color: #43a047;
+    color: #ffffff;
+}

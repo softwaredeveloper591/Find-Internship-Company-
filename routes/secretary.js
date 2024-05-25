@@ -44,8 +44,8 @@ router.get("/secretary", [auth, checkUserRole("secretary")], async function (req
 			applications
         });
     } catch (err) {
-        console.error("Error loading admin dashboard:", err);
-        res.status(500).send("Error loading admin dashboard.");
+        console.error("Error loading secretary dashboard:", err);
+        res.status(500).send("Error loading secretary dashboard.");
     }
 });
 

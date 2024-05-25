@@ -401,7 +401,7 @@ router.get("/admin/applications/download/:applicationId/:fileType",[auth,checkUs
     res.send(binaryData);
 });
 
-router.put("/admin/applications/:applicationId",upload.single('Updated Application Form'),[auth,checkUserRole("admin")],async function(req,res){
+router.put("/admin/applications/:applicationId",upload.single('studentFile'),[auth,checkUserRole("admin")],async function(req,res){
     try {
 		const applicationId = req.params.applicationId;
   		const file = req.file;
