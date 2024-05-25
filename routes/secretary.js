@@ -116,6 +116,7 @@ router.post("/secretary/applications/:applicationId",upload.single('studentFile'
 			html: emailBody
 	   	});*/
 
+		application.status = 3;
 		application.isSentBySecretary = true;
 		await application.save();
 
