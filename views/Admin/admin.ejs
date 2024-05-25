@@ -5,31 +5,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
-	<script src="/admin_functions.js"></script>
+    <script src="/admin_functions.js"></script>
+    
 </head>
 
 <body>
     <header>
         <%- include('../partials/nav') %>
-        <div id="sidebar" class="sidebar">
-            <a href="/admin/announcementRequests" class="order"><button ><i class="fa-solid fa-house"></i>Announcement Requests <%= totalAnnouncementsCount %></button></a>
-            <a href="/admin/companyRequests" class="order"><button>Company Requests</button></a>
-            <a href="/admin/applicationRequests"  class="order"><button>Application Requests</button></a>
-        </div>
+            <div id="sidebar" class="sidebar">
+                <a href="/admin/announcementRequests" class="order">
+                    <button><i class="fa-solid fa-house"></i>Announcement Requests </button>
+                </a>
+                <a href="/admin/companyRequests" class="order"><button>Company Requests</button></a>
+                <a href="/admin/applicationRequests" class="order"><button>Application Requests</button></a>
+            </div>
     </header>
 
     <div class="container mt-3">
-		<div class="row">
-			<!-- Sidebar Menu -->
-			<div class="col-md-3">
-			</div>
-	
-			<!-- Main Content Area -->
-			<div class="col-md-9" id="contentArea">
-				<!-- Content will be loaded dynamically here -->
-			</div>
-		</div>
-	</div>
+        <div class="row">
+            <!-- Sidebar Menu -->
+            <div class="col-md-3">
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="col-md-9" id="contentArea">
+                <!-- Content will be loaded dynamically here -->
+            </div>
+        </div>
+    </div>
 
 </body>
 

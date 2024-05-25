@@ -4,7 +4,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Student Home Page</title>
+    <style>
+        table {
+            margin-top: 40px;
+            margin-left: 200px;
+            width: 80%;
+            border-collapse: collapse;
+            background-color: #f1f1f1;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+            text-align: left;
+        }
+        td {
+            vertical-align: top;
+        }
+    </style>
 </head>
 
 <body>
@@ -12,13 +32,60 @@
     <header>
         <%- include('../partials/nav') %>
         <div id="sidebar" class="sidebar">
-            <a href="/student" class="order"><button style="background-color: rgb(217, 4, 4);"><i class="fa-solid fa-house"></i>Home</button></a>
+            <a href="/student" class="order"><button style="background-color: rgb(217, 4, 4);">HOME</button></a>
             <a href="/student/opportunities" class="order"><button >Opportunities</button></a>
             <a href="/student/applications" class="order"><button >Applications</button></a>
 			<a href="/student/applications" class="order"><button>Internships</button></a>
         </div>
     </header>
     
+    <h2 style="margin-top: 120px; margin-left: 200px;">YAZ STAJI KURALLARI:</h2>
+    <table>
+        <tr>
+            <th></th>
+            <th>Açıklama</th>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>İYTE Mühendislik Fakültesine bağlı Mühendislik Bölümlerinin öğrencileri Mühendislik (B.S.) derecesine hak kazanabilmeleri için gerekli ders ve laboratuvar çalışmalarını tamamlamaları yanında Endüstrideki kuruluşlarda yaz stajı da yapmak zorundadır.</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>Stajların yapılacağı yıllar, süreleri, hangi konuları kapsayacağı, her konunun ne sürede olacağı ne tür işyerlerinde yapılacağı bölümlerce saptanır.</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td>Her bölümün en az bir öğretim üyesini içeren bir “Staj Komitesi” vardır. Bu Komite bölümle ilgili işlerini Bölüm Başkanlığına karşı sorumlu olarak yürütür. Komitenin üyeleri Bölüm Başkanlığınca seçilir.</td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td>Mühendislik Fakültesinin, gerektiğinde toplanan bir “Fakülte Staj Komitesi” vardır. Bu komite yaz stajı olan her bölümden birer temsilcinin katılmasıyla oluşur. Dekan Başkanlığında toplanır ve staj uygulamalarının bölümlerce ortak kurallara göre yürütülmesini sağlar.</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td>Öğrenciler staj yapacakları yer ile ilgili bilgileri, staja başlamadan önce Bölüm Staj Komitesine sunmaları ve komitenin onayını almaları gerekir.</td>
+        </tr>
+        <tr>
+            <td>6</td>
+            <td>Staja başlayacak her öğrenci bir “Staj Rehberi” edinir. Bu rehbere Teams CENG400 kanalı üzerinden erişilebilir ve içinde staj ile ilgili bilgilerle gerekli formlar verilmiştir. Öğrenci, staj süresinde, programa göre yürüttüğü çalışmalarını günü gününe not eder ve bunlardan staj raporunu “Yaz Stajı Raporu Formatı”na göre hazırlarken yararlanır. Öğrenci, staj raporunu stajı takip eden dönemde add/drop’ un sonuna kadar Staj Komisyon Başkanı’na sunar. Bu tarihe kadar raporlarını vermeyen öğrencilerin stajları yapılmamış sayılır. Bölümler bu rapor dışında stajları ile ilgili başka bilgileri kapsayan belgeleri de isteyebilir. Stajını başarı ile tamamlayan öğrencilerin staj raporlarını öğrencilere geri verip vermeme bölüm kurallarının kararına bağlıdır.</td>
+        </tr>
+        <tr>
+            <td>7</td>
+            <td>Raporunu istenen formata uygun olarak yazmayan öğrenciden, Bölüm Staj Komisyonu tarafından stajın kurallarına uygun olarak yapıldığı saptanır ise, raporun iki hafta içinde, istenilen formata uygun duruma getirmesi istenir. İstenilen raporu bu süre içinde getirmeyen veya raporları red edilen öğrenciler stajlarını tekrarlamak zorundadır.</td>
+        </tr>
+        <tr>
+            <td>8</td>
+            <td>Her öğrenci staja başlarken, bu rehber içindeki “GİZLİ” yazılı staj başarı belgelerini işyerine vermek zorundadır. Staj sonunda bu formlardan biri, işyerince, Bölüm Staj Komitesine eposta olarak yollanır. Bunu sağlamak öğrencinin sorumluluğundadır. Diğer form ise işyerince saklanır.</td>
+        </tr>
+        <tr>
+            <td>9</td>
+            <td>Başarı belgesinde değerlendirmede öğrencinin staj yaptığı Bölümlerden almış olduğu başarı notlarının ortalaması en az “C” olmalıdır. Başarı notu ortalaması “C”nin altında veya herhangi bir bölümde devam durumu “F” olan öğrencinin bu stajı yeniden yapması zorunludur.</td>
+        </tr>
+        <tr>
+            <td>10</td>
+            <td>Staj belgeleri incelendikten sonra verilen staj notları ilgili bölümlerce Öğrenci İşleri Dairesi Başkanlığına gönderilerek öğrencilerin dosyalarına işlenir.</td>
+        </tr>
+    </table>
 
 </body>
 
