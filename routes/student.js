@@ -99,7 +99,7 @@ router.get("/student",[auth,checkUserRole("student")],async function(req,res){
     res.render("Student/student",{ 
 		usertype:"student", 
 		dataValues:student.dataValues,
-		totalAnnouncementsCount
+		//totalAnnouncementsCount
 	});
 })
 
@@ -277,7 +277,7 @@ router.get("/student/applications",[auth,checkUserRole("student")],async functio
 			usertype: "student",
 			dataValues: student.dataValues,
 			applications,
-			totalAnnouncementsCount
+			//totalAnnouncementsCount
 		});
     }
 	catch (err) {
