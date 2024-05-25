@@ -141,11 +141,11 @@ router.get("/admin/announcementRequests", [auth, checkUserRole("admin")], async 
 		})
 
 		const announcementsWithImages = announcements.map(announcement => {
-            return {
-                ...announcement.dataValues,
-				imageBase64: `data:image/png;base64,${announcement.image.toString('base64')}`
-            };
-        });
+			return {
+			  ...announcement.dataValues,
+			  image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
+			};
+		});
 
 		res.render("Admin/announcementRequests", {
 			usertype: "admin",
@@ -179,7 +179,7 @@ router.get("/admin/announcement/:announcementId", [auth, checkUserRole("admin")]
         ...announcement.dataValues,
         formattedStartDate: moment(announcement.startDate).tz('Europe/Istanbul').format('DD/MM/YYYY'),
         formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD/MM/YYYY'),
-		imageBase64: `data:image/png;base64,${announcement.image.toString('base64')}`
+		image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
     };
 
     res.render("Admin/innerAnnouncement", {
@@ -397,7 +397,7 @@ router.get("/admin/applications/download/:applicationId/:fileType",[auth,checkUs
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Type', contentType);
     res.send(binaryData);
-  });
+});
 
 router.put("/admin/applications/:applicationId",[auth,checkUserRole("admin")],async function(req,res){
     try {

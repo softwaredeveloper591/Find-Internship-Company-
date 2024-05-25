@@ -7,6 +7,7 @@ const nodeMailer = require("nodemailer");
 const Student_model= require("../models/student-model");
 const Admin_model= require("../models/admin-model");
 const Company_model= require("../models/company-model");
+const Secretary_model = require("../models/secretary-model");
 
 async function findUserByEmail(email) {
 	let user = null;
@@ -15,10 +16,14 @@ async function findUserByEmail(email) {
     const parts = mail.split("@");
     const domain = parts[1]; 
 
-    if (domain === "iyte.edu.tr") {
+    if (email === "buketoksuzoglu@iyte.edu.tr") {
       	user = await Admin_model.findOne({ where: { email } });
 		userType = "admin";
     }
+	else if(domain === "iyte.edu.tr") {
+		user = await Secretary_model.findOne({ where: { email } });
+		userType = "secretary";
+	}
 	else if (domain === "std.iyte.edu.tr") {
 		user = await Student_model.findOne({ where: { email } });
 		userType = "student";
@@ -29,15 +34,6 @@ async function findUserByEmail(email) {
 	}
 
 	if(user) return { user, userType };
-
-    /*let user = await Admin_model.findOne({ where: { email } });
-    if (user) return { user , userType: 'admin' };
-
-    user = await Student_model.findOne({ where: { email } });
-    if (user) return { user , userType: 'student' };
-
-    user = await Company_model.findOne({ where: { email } });
-    if (user) return { user , userType: 'company' };*/
 
     return null;
 }

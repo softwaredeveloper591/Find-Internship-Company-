@@ -51,9 +51,12 @@ router.get("/company/announcement",[auth,checkUserRole("company")], async functi
 
 router.post('/company/announcement',upload.single('image'), [auth, checkUserRole('company')],async function(req,res){
     const { companyId, announcementName, description, startDate, endDate } = req.body;
+	const image = null;
 	const file = req.file;
-  	const image = file.buffer;
-
+	if (file) {
+		image = file.buffer;
+	}
+  	
     try {
         const startDateInTurkey = moment.tz(startDate, 'Europe/Istanbul').startOf('day').toDate();
         const endDateInTurkey = moment.tz(endDate, 'Europe/Istanbul').endOf('day').toDate();

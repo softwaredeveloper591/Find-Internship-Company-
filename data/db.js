@@ -1,11 +1,10 @@
 const mysql = require("mysql2");
 const Sequlize = require("sequelize");
-const sequelize= new Sequlize('mysql://hpkp6jw607pp5buy:d7561shgxf487p1k@w1kr9ijlozl9l79i.chr7pe7iynqr.eu-west-1.rds.amazonaws.com:3306/e5asdqjuwe3vye7k',
-{
-    dialect: "mysql",
+const sequelize= new Sequlize("internship","root","B1rn0Z4!",{
+    host: "localhost",
+	dialect: "mysql",
     logging: false
 });
-
 
 async function conntect() {
     try {

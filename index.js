@@ -19,11 +19,12 @@ const routerStudent=require("./routes/student");
 const routerCompany=require("./routes/company");
 const routerAdmin=require("./routes/admin");
 const routerUser=require("./routes/user");
+const routerSecretary = require("./routes/secretary");
 
 app.use(routerAdmin);
 app.use(routerCompany);
 app.use(routerStudent);
 app.use(routerUser);
-
+app.use(routerSecretary);
 
 app.listen(3000);
