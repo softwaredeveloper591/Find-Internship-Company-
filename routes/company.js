@@ -319,7 +319,8 @@ router.post("/company/applications/:applicationId/fillApplicationForm",[auth,che
 		}
 		else {
 			await Document_model.update({ data: updatedDocxBuffer }, { where: { applicationId, fileType: "Updated Application Form" } });
-		}
+            res.send("you are okay");
+        }
 		
     } catch (err) {
         console.error("Error fetching applications:", err);
