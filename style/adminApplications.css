@@ -19,17 +19,24 @@
     flex-wrap: wrap;
 }
 
+.sidebar .order {
+    position: relative;
+    display: block; /* Ensure the anchor tag takes up the full width */
+    margin-bottom: 10px; /* Space between links */
+}
+
 .sidebar .order .badge {
     position: absolute;
-    top: 57px;
-    right: 1px;
+    top: -15px;  /* Adjust as needed */
+    right: 0px;  /* Adjust as needed */
     background-color: rgb(232, 25, 25);
     color: white;
     border: 1px solid darkred;
-    border-radius: 40%;
-    padding: 8px 8px;
+    border-radius: 50%; /* Changed to 50% for perfect circle */
+    padding: 5px 8px;
     font-size: 15px;
     box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.2);
+    z-index: 1;
     transition: transform 0.3s ease, background-color 0.3s ease;
 }
 

@@ -10,9 +10,15 @@
     <header>
         <%- include('../partials/nav') %>
         <div id="sidebar" class="sidebar">
-            <a href="/admin/announcementRequests" class="order"><button>Announcement Requests <%= totalAnnouncementsCount %></button></a>
+            <a href="/admin/announcementRequests" class="order"><button>Announcement Requests</button>
+                <% if (totalAnnouncementsCount > 0) { %>
+                    <span class="badge"><%= totalAnnouncementsCount %></span>
+                <% } %>
+            </a>
             <a href="/admin/companyRequests" class="order"><button >Company Requests</button></a>
-            <a href="/admin/applicationRequests" class="order"><button style="background-color: rgb(217, 4, 4);">Application Requests</button></a>
+            <a href="/admin/applicationRequests" class="order">
+                <button style="background-color: rgb(217, 4, 4);">Application Requests</button>
+            </a>
         </div>
     </header>
 

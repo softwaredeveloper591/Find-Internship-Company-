@@ -5,57 +5,106 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Company Requests</title>
-	<script src="/admin_functions.js"></script>	
+    <script src="/admin_functions.js"></script>
+    <style>
+        .sidebar .order {
+            position: relative;
+            display: block;
+            /* Ensure the anchor tag takes up the full width */
+            margin-bottom: 10px;
+            /* Space between links */
+        }
+
+        .sidebar .order .badge {
+            position: absolute;
+            top: -15px;
+            /* Adjust as needed */
+            right: 0px;
+            /* Adjust as needed */
+            background-color: rgb(232, 25, 25);
+            color: white;
+            border: 1px solid darkred;
+            border-radius: 50%;
+            /* Changed to 50% for perfect circle */
+            padding: 5px 8px;
+            font-size: 15px;
+            box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+    </style>
 </head>
 
 <body>
     <header>
         <%- include('../partials/nav') %>
-        <div id="sidebar" class="sidebar">
-            <a href="/admin/announcementRequests" class="order"><button >Announcement Requests <%= totalAnnouncementsCount %></button></a>
-            <a href="/admin/companyRequests" class="order"><button style="background-color: rgb(217, 4, 4);">Company Requests</button></a>
-            <a href="/admin/applicationRequests"  class="order"><button>Application Requests</button></a>
-        </div>
+            <div id="sidebar" class="sidebar">
+                <a href="/admin/announcementRequests" class="order">
+                    <button>Announcement Requests</button>
+                    <% if (totalAnnouncementsCount > 0) { %>
+                        <span class="badge"><%= totalAnnouncementsCount %></span>
+                    <% } %>
+                </a>
+                <a href="/admin/companyRequests" class="order"><button style="background-color: rgb(217, 4, 4);">Company
+                        Requests</button></a>
+                <a href="/admin/applicationRequests" class="order">
+                    <button>Application Requests</button>
+                    <% if (totalAnnouncementsCount > 0) { %>
+                        <span class="badge"><%= totalAnnouncementsCount %></span>
+                    <% } %>
+                </a>
+            </div>
     </header>
     <div class="container mt-3">
-		<div class="row">
-			<div class="col-md-1 ">
-			</div>
-			<div class="col-md-9">
-				<h1 class="h3 mb-3">Pending Company Registration Requests</h1>
-        <table class="table table-striped table-bordered">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Address</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (typeof companies !== 'undefined' && companies.length > 0) { %>
-                    <% companies.forEach(company => { %>
+        <div class="row">
+            <div class="col-md-1 ">
+            </div>
+            <div class="col-md-9">
+                <h1 class="h3 mb-3">Pending Company Registration Requests</h1>
+                <table class="table table-striped table-bordered">
+                    <thead>
                         <tr>
-                            <td><%= company.name %></td>
-                            <td><%= company.username %></td>
-                            <td><%= company.email %></td>
-                            <td><%= company.address %></td>
-                            <td>
-                                <button class="btn btn-success" onclick="updateCompanyRequest('<%= company.id %>', true)">Approve</button>
-                                <button class="btn btn-danger" onclick="updateCompanyRequest('<%= company.id %>', false)">Reject</button>
-                            </td>
+                            <th>Name</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Address</th>
+                            <th>Action</th>
                         </tr>
-                    <% }); %>
-                <% } else { %>
-                    <tr>
-                        <td colspan="5" class="text-center">No pending registration requests found.</td>
-                    </tr>
-                <% } %>
-            </tbody>
-        </table>
-			</div>
-		</div>   
+                    </thead>
+                    <tbody>
+                        <% if (typeof companies !=='undefined' && companies.length> 0) { %>
+                            <% companies.forEach(company=> { %>
+                                <tr>
+                                    <td>
+                                        <%= company.name %>
+                                    </td>
+                                    <td>
+                                        <%= company.username %>
+                                    </td>
+                                    <td>
+                                        <%= company.email %>
+                                    </td>
+                                    <td>
+                                        <%= company.address %>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-success"
+                                            onclick="updateCompanyRequest('<%= company.id %>', true)">Approve</button>
+                                        <button class="btn btn-danger"
+                                            onclick="updateCompanyRequest('<%= company.id %>', false)">Reject</button>
+                                    </td>
+                                </tr>
+                                <% }); %>
+                                <% } else { %>
+                                        <tr>
+                                            <td colspan="5" class="text-center" style="margin-top: 70px;">No pending
+                                                registration requests found.</td>
+                                        </tr>
+                                <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
 </body>
