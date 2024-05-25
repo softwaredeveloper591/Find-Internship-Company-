@@ -12,14 +12,9 @@
     <header>
         <%- include('../partials/nav') %>
         <div id="sidebar" class="sidebar">
-            <a href="/admin/announcementRequests" class="order">
-                <button style="background-color: rgb(217, 4, 4);">Announcement Requests </button>
-                <span class="badge">
-                    <%= announcements.length %>
-                </span>
-            </a>
-            <a href="/admin/companyRequests" class="order"><button >Company Requests</button></a>
-            <a href="/admin/applicationRequests"  class="order"><button>Application Requests <%= totalApplicationsCount %></button></a>
+            <a href="/admin/announcementRequests" class="order"><button style="background-color: rgb(217, 4, 4);">Announcement Requests </button></a>
+            <a href="/admin/companyRequests" class="order"><button >Company Requests <%= totalCompaniesCount %></button></a>
+            <a href="/admin/applicationRequests" class="order"><button>Application Requests <%= totalApplicationsCount %></button></a>
         </div>
     </header>
 	<div class="content-container">
