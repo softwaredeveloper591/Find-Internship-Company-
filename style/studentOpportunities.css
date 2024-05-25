@@ -6,6 +6,20 @@ body, html {
 }
 
 
+.sidebar .order .badge {
+    position: absolute;
+    top: 57px;
+    right: 1px;
+    background-color: rgb(232, 25, 25);
+    color: white;
+    border: 1px solid darkred;
+    border-radius: 40%;
+    padding: 8px 8px;
+    font-size: 15px;
+    box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
 .content-2 {
     position: absolute;
     top: 160px; /* Adjust according to your header height */

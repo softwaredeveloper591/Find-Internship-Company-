@@ -61,5 +61,18 @@
             <h2>No information found about this announcement.</h2>
         <% } %>
     </div>
+
+    <script>
+        document.getElementById('CV').addEventListener('change', function(event) {
+            var fileInput = event.target;
+            var filePath = fileInput.value;
+            var allowedExtensions = /(\.pdf)$/i;
+    
+            if (!allowedExtensions.exec(filePath)) {
+                alert('Please select a PDF file');
+                fileInput.value = '';  // Seçilen dosyayı temizle
+            }
+        });
+    </script>
 </body>
 </html>
