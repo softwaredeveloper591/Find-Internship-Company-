@@ -136,7 +136,6 @@ router.get("/company/applications/:applicationId",[auth,checkUserRole("company")
             application,
             document
         });
-        console.log(document);
     } catch (err) {
         console.error("Error fetching applications:", err);
         res.status(500).send("Error fetching applications.");

@@ -37,12 +37,21 @@ function updateCompanyRequest(companyId, isApproved) {
     });
 }
 
-function updateApplication(applicationId, isApproved) {
+/*function updateApplication(applicationId, isApproved) {
 	const feedback = document.getElementById('feedback').value;
+	const fileInput = document.getElementById('fileInput');
+	const file = fileInput.files[0];
+	
+	const formData = new FormData();
+	formData.append('isApproved', isApproved);
+	formData.append('feedback', feedback);
+	if (file) {
+		formData.append('file', file);
+	}
+
 	fetch(`/admin/applications/${applicationId}`, {
 		method: "PUT",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ isApproved, feedback })
+		body: formData
 	})
 	.then(response => response.json())
 	.then(data => {
@@ -53,7 +62,7 @@ function updateApplication(applicationId, isApproved) {
 		console.error("Error processing the request:", error);
 		alert("An error occurred. Please try again later.");
 	});
-}
+}*/
 
 async function downloadButton(applicationId, fileType) {
 	try {
@@ -77,3 +86,4 @@ async function downloadButton(applicationId, fileType) {
 		console.error('Error downloading file:', error);
 	}
 }
+

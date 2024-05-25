@@ -37,7 +37,6 @@
         <form method="post" id="applicationForm">
             <div class="other-documents" id="other-documents" style="display: none;">
                 <div id="additional-inputs">
-                    <input type="text" placeholder="Yetkili Unvanı">
                     <div class="date-inputs">
                         <p style="margin-top: 6px;">Staj Başlangıç Tarihi: </p>
                         <input type="date" style="font-size: 14px; width:10%; margin-left: 10px;" placeholder="Intern Start Date" id="internStartDate" name="internStartDate" required>
@@ -70,7 +69,7 @@
                     <div id="holidayWorkDays" class="question-answer" style="display: none;">
                         <p>Çalışılan Gün sayısı</p>
                         <div class="answer">
-                            <input type="number" style="width:12%; margin-left: 0px;" name="bayram-gun-sayisi"
+                            <input type="number" style="width:12%; margin-left: 0px;" name="days"
                                 placeholder="Gün sayısı">
                         </div>
                     </div>
@@ -108,6 +107,29 @@
     </div>
 
     <script>
+		async function downloadButton(applicationId, fileType) {
+			try {
+				const response = await fetch(`/admin/applications/download/${applicationId}/${fileType}`);
+				if (!response.ok) {
+					throw new Error('Failed to download file');
+				}
+			
+				const blob = await response.blob();
+				const contentDispositionHeader = response.headers.get('Content-Disposition');
+				const filename = contentDispositionHeader.split('filename=')[1].replace(/"/g, '');
+				const url = window.URL.createObjectURL(blob);
+			
+				const link = document.createElement('a');
+				link.href = url;
+				link.setAttribute('download', filename);
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
+			} catch (error) {
+				console.error('Error downloading file:', error);
+			}
+		};
+
         const applicationForm = document.getElementById('applicationForm');
 
         applicationForm.addEventListener('submit', async (e) => {
@@ -120,11 +142,12 @@
             const workOnSaturday = applicationForm.workOnSaturday.value;
             const workOnHoliday = applicationForm.workOnHoliday.value;
             const sgk = applicationForm.sgk.value;
-
+			const days = applicationForm.days.value;
+		
             try {
                 const res = await fetch('/company/applications/<%= application.id %>/fillApplicationForm', {
                     method: 'POST',
-                    body: JSON.stringify({ internStartDate, internEndDate, internDuration, dutyAndTitle, workOnSaturday, workOnHoliday, sgk }),
+                    body: JSON.stringify({ internStartDate, internEndDate, internDuration, dutyAndTitle, workOnSaturday, workOnHoliday, sgk, days }),
                     headers: { 'Content-Type': 'application/json' }
                 });
                 const data = await res.json();
