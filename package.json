@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js"
+    "start": "concurrently \"node index.js\" \"json-server --watch db.json --port 3500\""
   },
   "keywords": [],
   "author": "",
@@ -16,6 +16,7 @@
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
     "bootstrap": "^5.2.0",
+    "concurrently": "^8.2.2",
     "cookie-parser": "^1.4.6",
     "docx": "^8.5.0",
     "ejs": "^3.1.9",

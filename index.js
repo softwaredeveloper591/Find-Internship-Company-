@@ -27,4 +27,5 @@ app.use(routerStudent);
 app.use(routerUser);
 app.use(routerSecretary);
 
-app.listen(3000);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT);
