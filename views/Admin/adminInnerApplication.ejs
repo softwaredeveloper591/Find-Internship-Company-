@@ -10,6 +10,7 @@
         integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="/admin_functions.js"></script>
+	<link rel="icon" href="/İyte Logo.png">
 </head>
 <body>
     <header>
@@ -34,12 +35,12 @@
                 <div class="send-to-sec">
                     <button class="as" onclick="downloadButton('<%= application.id %>', 'Application Form')">
                         <div class="download-file">
-                            <i class="fa-solid fa-file-pdf"></i>Download Application Form<i class="fa-solid fa-download"></i>
+                            <i class="fa-solid fa-file"></i>Download Application Form<i class="fa-solid fa-download"></i>
                         </div>
                     </button>
                     <br>
                     <div class="upload-file" id="custom-upload">
-                        Upload Employment Certificate<i class="fa-solid fa-upload"></i>
+                        <i class="fa-solid fa-file"></i>Upload Application Form<i class="fa-solid fa-upload"></i>
                     </div>
                     <input type="file" id="studentFile" name="studentFile" class="studentFile" accept=".pdf,.docx" style="display: none;">
                     <button class="btn btn-success" onclick="updateApplication('<%= application.id %>', true)">Send to secretary</button>
@@ -66,6 +67,21 @@
             });
         });
 
+		document.querySelectorAll('.studentFile').forEach((fileInput, index) => {
+			fileInput.addEventListener('change', function() {
+				const fileName = this.files[0].name;
+				const extension = fileName.split('.').pop().toLowerCase();
+				if (extension !== 'pdf' && extension !== 'docx') {
+					alert('Please upload a PDF or DOCX file.');
+					this.value = ''; // Clear the file input
+				} else {
+					const customUploadDiv = document.querySelectorAll('.upload-file')[index];
+					customUploadDiv.innerHTML = '<i class="fa-solid fa-file"></i> ' + fileName;
+					customUploadDiv.style.border = '2px solid #43a047';
+				}
+			});
+		});
+
         document.querySelectorAll('.studentFile').forEach((fileInput, index) => {
             fileInput.addEventListener('change', function() {
                 const fileName = this.files[0].name;
@@ -75,31 +91,46 @@
             });
         });
 
+		document.querySelectorAll('.application-form').forEach((form, index) => {
+            form.addEventListener('submit', function(event) {
+                const fileInput = form.querySelector('.studentFile');
+                if (fileInput.files.length === 0) {
+                    event.preventDefault(); // Prevent form submission
+                    alert("Please upload a file before submitting.");
+                }
+            });
+        });
+
 		function updateApplication(applicationId, isApproved) {
 			const feedback = document.getElementById('feedback').value;
 			const fileInput = document.getElementById('studentFile');
-			const file = fileInput.files[0];
+			if((isApproved && fileInput.files.length !== 0) || !isApproved) {
+				const file = fileInput.files[0];
+				const formData = new FormData();
+				formData.append('isApproved', isApproved);
+				formData.append('feedback', feedback);
+				if (file) {
+					formData.append('studentFile', file);  // Ensure the field name matches
+				}
 
-			const formData = new FormData();
-			formData.append('isApproved', isApproved);
-			formData.append('feedback', feedback);
-			if (file) {
-				formData.append('studentFile', file);  // Ensure the field name matches
+				fetch(`/admin/applications/${applicationId}`, {
+					method: "PUT",
+					body: formData
+				})
+				.then(response => response.json())
+				.then(data => {
+					alert(data.message);
+					location.href = '/Admin/applicationRequests';
+				})
+				.catch(error => {
+					console.error("Error processing the request:", error);
+					alert("An error occurred. Please try again later.");
+				});
 			}
-
-			fetch(`/admin/applications/${applicationId}`, {
-				method: "PUT",
-				body: formData
-			})
-			.then(response => response.json())
-			.then(data => {
-				alert(data.message);
-				location.href = '/Admin/applicationRequests';
-			})
-			.catch(error => {
-				console.error("Error processing the request:", error);
-				alert("An error occurred. Please try again later.");
-			});
+			else {
+				event.preventDefault(); // Prevent form submission
+                alert("Please upload a file before submitting.");
+			}
 		}
     </script>
 </body>

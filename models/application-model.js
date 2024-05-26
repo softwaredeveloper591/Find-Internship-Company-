@@ -13,8 +13,7 @@ const Application = sequelize.define('Application', {
       allowNull: false
     },
     announcementId: {
-      type: DataTypes.INTEGER,
-      allowNull: false
+      type: DataTypes.INTEGER
     },
     status: {
       type: DataTypes.STRING(100),

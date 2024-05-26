@@ -37,33 +37,6 @@ function updateCompanyRequest(companyId, isApproved) {
     });
 }
 
-/*function updateApplication(applicationId, isApproved) {
-	const feedback = document.getElementById('feedback').value;
-	const fileInput = document.getElementById('fileInput');
-	const file = fileInput.files[0];
-	
-	const formData = new FormData();
-	formData.append('isApproved', isApproved);
-	formData.append('feedback', feedback);
-	if (file) {
-		formData.append('file', file);
-	}
-
-	fetch(`/admin/applications/${applicationId}`, {
-		method: "PUT",
-		body: formData
-	})
-	.then(response => response.json())
-	.then(data => {
-		alert(data.message);
-		location.href = '/Admin/applicationRequests';
-	})
-	.catch(error => {
-		console.error("Error processing the request:", error);
-		alert("An error occurred. Please try again later.");
-	});
-}*/
-
 async function downloadButton(applicationId, fileType) {
 	try {
 		const response = await fetch(`/admin/applications/download/${applicationId}/${fileType}`);

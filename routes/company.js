@@ -13,6 +13,7 @@ const { error } = require("console");
 const upload = multer();
 const AdmZip = require("adm-zip");
 
+
 const auth = require("../middleware/auth");  
 const checkUserRole= require("../middleware/checkUserRole");
 const Company_model= require("../models/company-model");
@@ -23,6 +24,7 @@ const Student_model = require("../models/student-model");
 
 let totalApplicationsCount = 0;
 let totalInternshipsCount = 0;
+
 
 async function updateTotalApplicationsCount() {
     try {
@@ -369,7 +371,7 @@ router.put("/company/applications/:applicationId",[auth,checkUserRole("company")
             html: emailBody
         });
 
-		if (isApproved) {
+		if (isApproved === true) {
             application.isApprovedByCompany = true;
 			application.status = 1;
             await application.save();

@@ -8,6 +8,7 @@
         integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="/studentApplications.css">
+	<link rel="icon" href="/İyte Logo.png">
 </head>
 <body>
     <header>
@@ -16,11 +17,10 @@
             <a href="/student" class="order"><button><i class="fa-solid fa-house"></i>Home</button></a>
             <a href="/student/opportunities" class="order"><button>Opportunities</button></a>
             <a href="/student/applications" class="order"><button style="background-color: rgb(217, 4, 4);">Applications</button></a>
-			<a href="/student/applications" class="order"><button>Internships</button></a>
         </div>
     </header>
     <div class="content-applications">
-		<% if (typeof applications !== 'undefined' && applications.length > 0) { %>
+		<% if (applications.length > 0) { %>
 			<% applications.forEach(application => { %>
 				<div class="content-container">
 					<div id="info-container">
@@ -60,7 +60,7 @@
 				</div>    
 			<% }) %>
 		<% } else { %>
-			<h2 style="margin-left: 120px; margin-top: 50px; width: 300px;">You haven't applied any internship yet.</h2>
+			<h2 style="margin-left: 230px; margin-top: 60px;;">You haven't applied any internship yet</h2>
 		<% } %>
 	</div>
 	

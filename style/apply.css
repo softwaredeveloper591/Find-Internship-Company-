@@ -53,6 +53,7 @@ body, html {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     border-radius: 0.375rem;
     background-color: #fff;
+    overflow: hidden; /* Change overflow property to hidden */
 }
 
 .details-container-2 h5 {
@@ -82,8 +83,9 @@ body, html {
 }
 
 .card-text {
-    margin-top: 10px; /* Add this line */
-    word-wrap: break-word; /* Ensure long words break correctly */
+    word-wrap: break-word;
+    white-space: pre-wrap; /* Add this line */
+    overflow: auto; /* Add this line */
 }
 
 .image-container {
@@ -105,15 +107,15 @@ body, html {
 }
 
 .sbt-button:hover {
-    background-color:  rgb(217, 4, 4);
+    background-color: rgb(217, 4, 4);
 }
 
 .upload-file, #studentFile {
     display: flex;
     position: relative;
     align-items: center;
-    justify-content: center; /* Center horizontally */
-    text-align: center; /* Center text */
+    justify-content: center;
+    text-align: center;
     gap: 10px;
     color: #bf1b1b;
     cursor: pointer;
@@ -121,9 +123,14 @@ body, html {
     border: 2px solid #bf1b1b;
     border-radius: 4px;
     transition: background-color 0.3s ease, color 0.3s ease;
+	margin-bottom: 15px;
 }
 
 .upload-file:hover, #studentFile:hover {
-    color: #ffffff; /* Change text color to white */
-    background-color: #bf1b1b; /* Change background color to red */
+    color: #ffffff;
+    background-color: #bf1b1b;
+}
+
+.content-else {
+	width: 70%;
 }

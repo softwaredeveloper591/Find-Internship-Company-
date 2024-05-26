@@ -22,7 +22,6 @@
 .sidebar .order {
     position: relative;
     display: block; /* Ensure the anchor tag takes up the full width */
-    margin-bottom: 10px; /* Space between links */
 }
 
 .sidebar .order .badge {
@@ -72,4 +71,10 @@
 .as {
 	border: none; 
 	background-color: transparent;
+	width: 100%;
+	height: 100%;
+}
+
+.card-body {
+	align-content: center;
 }

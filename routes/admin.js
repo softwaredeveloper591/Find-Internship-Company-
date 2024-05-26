@@ -405,11 +405,14 @@ router.put("/admin/applications/:applicationId",upload.single('studentFile'),[au
     try {
 		const applicationId = req.params.applicationId;
   		const file = req.file;
-  		const binaryData = file.buffer;
-
-		await Document_model.update({ data: binaryData }, { where: { applicationId, fileType: "Updated Application Form" } });
+		let binaryData = null;
+		if(file) {
+			binaryData = file.buffer;
+			await Document_model.update({ data: binaryData }, { where: { applicationId, fileType: "Updated Application Form" } });
+		}
 
 		const { isApproved, feedback } = req.body; 
+		console.log(isApproved);
 
 		const application = await Application_model.findOne({
 			where: {
@@ -432,9 +435,9 @@ router.put("/admin/applications/:applicationId",upload.single('studentFile'),[au
 			]
         });
 
-		const emailSubject = isApproved ? 'Application Approved' : 'Application Rejected';
+		const emailSubject = isApproved === "true" ? 'Application Approved' : 'Application Rejected';
 		const emailBody = `Hello ${application.Announcement.Company.username},<br><br>
-			Your application titled "${application.Announcement.announcementName}" has been ${isApproved ? "approved" : `rejected and will be removed from our system. <br><br> ${feedback ? `Feedback: <br> ${feedback}.` : ""}`} <br><br>
+			Your application titled "${application.Announcement.announcementName}" has been ${isApproved === "true" ? "approved" : `rejected and will be removed from our system. <br><br> ${feedback ? `Feedback: <br> ${feedback}.` : ""}`} <br><br>
 			Best Regards,<br>Admin Team`;
 
 		const transporter = nodeMailer.createTransport({
@@ -452,12 +455,14 @@ router.put("/admin/applications/:applicationId",upload.single('studentFile'),[au
             html: emailBody
         });
 
-		if (isApproved) {
+		if (isApproved === "true") {
+			console.log(isApproved,"true");
             application.isApprovedByDIC = true;
 			application.status = 2;
             await application.save();
             return res.status(200).json({ message: "Application approved." });
         } else {
+			console.log(isApproved,"false");
             application.isApprovedByDIC = false;
 			application.status = 4;
 			await application.save();

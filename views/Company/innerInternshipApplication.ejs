@@ -6,17 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Application Page</title>
     <link rel="stylesheet" href="/innerInternshipApplication.css">
+	<link rel="icon" href="/İyte Logo.png">
 </head>
 
 <body>
     <header>
         <%- include('../partials/nav') %>
-            <div id="sidebar" class="sidebar">
-                <a href="/company" class="order"><button>HOME</button></a>
-                <a href="/company/announcement" class="order"><button>Share Opportunity</button></a>
-                <a href="/company/applications" class="order"><button>Applications</button></a>
-				<a href="/company/internships" class="order"><button>Internships</button></a>
-            </div>
+        <div id="sidebar" class="sidebar">
+            <a href="/company" class="order"><button>HOME</button></a>
+            <a href="/company/announcement" class="order"><button>Share Opportunity</button></a>
+            <a href="/company/applications" class="order"><button>Applications</button></a>
+            <a href="/company/internships" class="order"><button>Internships</button></a>
+        </div>
     </header>
 
     <div class="main-content">
@@ -25,10 +26,8 @@
                 <iframe src="/serveFile/<%= document.id %>" width="100%" height="500"></iframe>
             </div>
             <div class="details">
-                <p id="student-name">Student Name: <%= application.Student.username %>
-                </p>
-                <p id="application-title">Application Title: <%= application.Announcement.announcementName %>
-                </p>
+                <p id="student-name">Student Name: <%= application.Student.username %></p>
+                <p id="application-title">Application Title: <%= application.Announcement.announcementName %></p>
             </div>
             <div class="action-buttons">
                 <button class="accept" id="accept-button">ACCEPT</button>
@@ -39,46 +38,40 @@
             <div class="other-documents" id="other-documents" style="display: none;">
                 <div id="additional-inputs">
                     <div class="date-inputs">
-                        <p style="margin-top: 6px;">Staj Başlangıç Tarihi: </p>
-                        <input type="date" style="font-size: 14px; width:10%; margin-left: 10px;" placeholder="Intern Start Date" id="internStartDate" name="internStartDate" required>
-                        <p style="margin-left: 60px; margin-top: 6px;">Staj Bitiş Tarihi: </p>
-                        <input type="date" style="font-size: 14px; width:10%; margin-left: 10px;" placeholder="Intern End Date" id="internEndDate" name="internEndDate" required>
+                        <p>Staj Başlangıç Tarihi:</p>
+                        <input type="date" id="internStartDate" name="internStartDate" required>
+                        <p>Staj Bitiş Tarihi:</p>
+                        <input type="date" id="internEndDate" name="internEndDate" required>
                     </div>
-                    <input type="text" style="font-size: 14px;" placeholder="Intern Duration (as work days)"
-                        id="internDuration" name="internDuration" required>
-                    <input type="text" style="font-size: 14px;" placeholder="Duty and Title of The Representative"
-                        id="dutyAndTitle" name="dutyAndTitle" required>
+                    <input type="text" placeholder="Intern Duration (as work days)" id="internDuration" name="internDuration" required>
+                    <input type="text" placeholder="Duty and Title of The Representative" id="dutyAndTitle" name="dutyAndTitle" required>
 
                     <div class="question-answer">
-                        <label for="workOnSaturday" style="font-size: 14px; margin-right: 91px;">Cumartesi günleri
-                            çalışıyor musunuz?</label>
-                        <select name="workOnSaturday" id="workOnSaturday" style="font-size: 14px;" required>
+                        <label for="workOnSaturday">Cumartesi günleri çalışıyor musunuz?</label>
+                        <select name="workOnSaturday" id="workOnSaturday" required>
                             <option value="yes">Yes</option>
                             <option value="no" selected>No</option>
                         </select>
                     </div>
 
                     <div class="question-answer">
-                        <label for="workOnHoliday" style="font-size: 14px; margin-right: 45px;">Resmi-Dini Bayram/Tatil,
-                            Arefe Çalışıyor mu?</label>
-                        <select name="workOnHoliday" id="workOnHoliday" style="font-size: 14px;" required>
+                        <label for="workOnHoliday">Resmi-Dini Bayram/Tatil, Arefe Çalışıyor mu?</label>
+                        <select name="workOnHoliday" id="workOnHoliday" required>
                             <option value="yes">Yes</option>
                             <option value="no" selected>No</option>
                         </select>
                     </div>
 
                     <div id="holidayWorkDays" class="question-answer" style="display: none;">
-                        <p>Çalışılan Gün sayısı</p>
-                        <div class="answer">
-                            <input type="number" style="width:12%; margin-left: 0px;" name="days"
-                                placeholder="Gün sayısı">
-                        </div>
-                    </div>
+						<p>Çalışılan Gün sayısı</p>
+						<div class="answer">
+							<input type="number" name="days" placeholder="Gün sayısı" value="0">
+						</div>
+					</div>
 
                     <div class="question-answer">
-                        <label for="sgk" style="font-size: 14px; margin-right: 122px;">Sigorta yapılmasını
-                            istemiyorum.</label>
-                        <select name="sgk" id="sgk" style="font-size: 14px;" required>
+                        <label for="sgk">Sigorta yapılmasını istemiyorum.</label>
+                        <select name="sgk" id="sgk" required>
                             <option value="yes">Yes</option>
                             <option value="no" selected>No</option>
                         </select>
@@ -86,30 +79,24 @@
 
                     <div class="file-upload">
                         <div class="upload-box">
-                            <input type="file" id="ApplicationForm" name="ApplicationForm" accept=".pdf"
-                                style="display: none;" required>
-                            <label class="file-icon" for="ApplicationForm" style="background-image: url('/resume.jpg');"
-                                data-filename="ApplicationForm"></label>
+                            <input type="file" id="ApplicationForm" name="ApplicationForm" accept=".pdf" style="display: none;" required>
+                            <label class="file-icon" for="ApplicationForm" style="background-image: url('/resume.jpg');" data-filename="ApplicationForm"></label>
                         </div>
                     </div>
-                    
 
-                    <button type="button" onclick="downloadButton('<%= application.id %>', 'Updated Application Form')"
-                        id="download-button">Download Application Form</button>
+                    <button type="button" onclick="downloadButton('<%= application.id %>', 'Updated Application Form')" id="download-button">Download Application Form</button>
                     <div class="upload">
                         <div class="file-name" id="file-name"></div>
                         <button type="button" id="upload-button" style="visibility: hidden;">Upload Application Form</button>
                         <input type="file" id="upload-file" accept=".pdf">
                     </div>
-                    <button type="submit" id="submit-button" style="margin-left: 160px; visibility: hidden;" onclick="updateApplication('<%= application.id %>', true)">Submit the form</button>
+                    <button type="submit" id="submit-button" style="visibility: hidden;" onclick="updateApplication('<%= application.id %>', true)">Submit the form</button>
                 </div>
             </div>
         </form>
     </div>
 
     <script>
-        
-
         document.getElementById('upload-file').addEventListener('input', function(event) {
             var fileInput = event.target;
             var filePath = fileInput.value;
@@ -121,12 +108,10 @@
                 fileInput.value = '';  
                 fileNameDisplay.textContent = ''; 
             } else {
-                
                 var fileName = fileInput.files[0].name;
                 fileNameDisplay.textContent = 'Selected file: ' + fileName;
             }
         });
-
 
         const applicationForm = document.getElementById('applicationForm');
 
@@ -138,59 +123,42 @@
             const workOnSaturday = applicationForm.workOnSaturday.value;
             const workOnHoliday = applicationForm.workOnHoliday.value;
             const sgk = applicationForm.sgk.value;
-            const days =applicationForm.days.value;
-        
-            try {   
+            const days = applicationForm.days.value;
 
-                const res = await fetch('/company/applications/<%= application.id %>/fillApplicationForm', {
-                    method: 'POST',
-                    body: JSON.stringify({ internStartDate, internEndDate, internDuration, dutyAndTitle, workOnSaturday, workOnHoliday, sgk, days }),
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                console.log('First fetch successful:');
-                const response = await fetch(`/company/announcements/download/${applicationId}/${fileType}`);
-                if (!response.ok) {
-                    throw new Error('Failed to download file');
-                }
-                console.log("dosya generate edildi.")
-                const blob = await response.blob();
-                const contentDispositionHeader = response.headers.get('Content-Disposition');
-                const filename = contentDispositionHeader.split('filename=')[1].replace(/"/g, '');
-                const url = window.URL.createObjectURL(blob);
+			if (!internStartDate || !internEndDate || !internDuration || !dutyAndTitle || !workOnSaturday || !workOnHoliday || !sgk){
+				alert("You need to fill the form before downloading the Application form");
+			}
+			else {
+				try {   
+					const res = await fetch('/company/applications/<%= application.id %>/fillApplicationForm', {
+						method: 'POST',
+						body: JSON.stringify({ internStartDate, internEndDate, internDuration, dutyAndTitle, workOnSaturday, workOnHoliday, sgk, days }),
+						headers: { 'Content-Type': 'application/json' }
+					});
 
-                const link = document.createElement('a');
-                link.href = url;
-                link.setAttribute('download', filename);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                const uploadbutton = document.getElementById('upload-button');
-                uploadbutton.style.visibility='visible';
-                const submitbutton = document.getElementById('submit-button');
-                submitbutton.style.visibility='visible';
-            } catch (error) {
-                console.error('Error downloading file:', error);
-            }
-        }
+					const response = await fetch(`/company/announcements/download/${applicationId}/${fileType}`);
+					if (!response.ok) {
+						throw new Error('Failed to download file');
+					}
 
-    
+					const blob = await response.blob();
+					const contentDispositionHeader = response.headers.get('Content-Disposition');
+					const filename = contentDispositionHeader.split('filename=')[1].replace(/"/g, '');
+					const url = window.URL.createObjectURL(blob);
 
-        async function fetchPdfForPreview(applicationId, fileType) {
-            try {
-                const response = await fetch(`/company/announcements/download/${applicationId}/${fileType}`);
-                if (!response.ok) {
-                    const data = await response.json();
-                    alert(data.error);
-                    return null;
-                }
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                return { url, blob, response };
-            } catch (error) {
-                console.error('Error fetching PDF:', error);
-                alert('Error fetching PDF.');
-                return null;
-            }
+					const link = document.createElement('a');
+					link.href = url;
+					link.setAttribute('download', filename);
+					document.body.appendChild(link);
+					link.click();
+					document.body.removeChild(link);
+
+					document.getElementById('upload-button').style.visibility = 'visible';
+					document.getElementById('submit-button').style.visibility = 'visible';
+				} catch (error) {
+					console.error('Error downloading file:', error);
+				}
+			}
         }
 
         async function updateApplication(applicationId, isApproved) {
@@ -211,43 +179,18 @@
         }
 
         document.getElementById('accept-button').addEventListener('click', function () {
-            var otherDocuments = document.getElementById('other-documents');
-            otherDocuments.style.display = 'block'; 
-            otherDocuments.scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('other-documents').style.display = 'block';
+            document.getElementById('other-documents').scrollIntoView({ behavior: 'smooth' });
             document.querySelector('.accept').style.display = 'none';
         });
 
-        function isTextOnly(str) {
-            return /^[a-zA-ZğüşöçĞÜŞİÖÇ\s]+$/.test(str);
-        }
-
-        function validateInputs() {
-            const inputs = document.querySelectorAll('#other-documents input, #other-documents select');
-            for (let i = 0; i < inputs.length; i++) {
-                const input = inputs[i];
-                if (input.type === 'text' || input.type === 'number' || input.type === 'date') {
-                    if (input.value.trim() === '') {
-                        alert(`Lütfen "${input.placeholder}" alanını doldurunuz.`);
-                        return false;
-                    }
-                } else if (input.tagName.toLowerCase() === 'select') {
-                    if (input.value.trim() === '') {
-                        alert(`Lütfen "${input.name}" seçeneğini belirleyiniz.`);
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-
         document.getElementById('upload-file').addEventListener('change', function (event) {
             event.preventDefault();
-            const fileNameDisplay = document.getElementById('file-name');
             const file = event.target.files[0];
             if (file) {
-                fileNameDisplay.textContent = `Selected file: ${file.name}`;
+                document.getElementById('file-name').textContent = `Selected file: ${file.name}`;
             } else {
-                fileNameDisplay.textContent = '';
+                document.getElementById('file-name').textContent = '';
             }
         });
 
@@ -255,60 +198,19 @@
             document.getElementById('upload-file').click();
         });
 
-
         document.getElementById('workOnHoliday').addEventListener('change', function () {
-            var holidayWorkDaysDiv = document.getElementById('holidayWorkDays');
             if (this.value === 'yes') {
-                holidayWorkDaysDiv.style.display = 'block';
+                document.getElementById('holidayWorkDays').style.display = 'block';
             } else {
-                holidayWorkDaysDiv.style.display = 'none';
+                document.getElementById('holidayWorkDays').style.display = 'none';
             }
         });
 
         window.addEventListener('load', function () {
-            var holidayWorkDaysDiv = document.getElementById('holidayWorkDays');
             if (document.getElementById('workOnHoliday').value === 'yes') {
-                holidayWorkDaysDiv.style.display = 'block';
-            } else {
-                holidayWorkDaysDiv.style.display = 'none';
+                document.getElementById('holidayWorkDays').style.display = 'block';
             }
         });
-
-        document.addEventListener('DOMContentLoaded', function() {
-        const startDateInput = document.getElementById('internStartDate');
-        const endDateInput = document.getElementById('internEndDate');
-
-        // Use today's date in YYYY-MM-DD format
-        const today = new Date().toISOString().split('T')[0];
-        
-        // Set the min attribute of startDateInput to today
-        startDateInput.setAttribute('min', today);
-
-        // Add an event listener to startDateInput
-        startDateInput.addEventListener('change', function() {
-            const startDate = new Date(startDateInput.value);
-            const minEndDate = new Date(startDate);
-            minEndDate.setDate(minEndDate.getDate() + 20);
-
-            // Format the minEndDate to YYYY-MM-DD format
-            const formattedMinEndDate = minEndDate.toISOString().split('T')[0];
-            endDateInput.setAttribute('min', formattedMinEndDate);
-        });
-
-        // Add an event listener to form submission to validate the dates
-        const form = startDateInput.closest('form');
-        form.addEventListener('submit', function(e) {
-            const startDate = new Date(startDateInput.value);
-            const endDate = new Date(endDateInput.value);
-            const minDuration = 20 * 24 * 60 * 60 * 1000; // 20 days in milliseconds
-
-            if (endDate - startDate < minDuration) {
-                e.preventDefault(); // Prevent form submission
-                alert('Staj bitiş tarihi, staj başlangıç tarihinden en az 20 gün sonra olmalıdır.');
-            }
-        });
-    });
-
     </script>
 </body>
 

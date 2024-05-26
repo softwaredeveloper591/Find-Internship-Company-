@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Apply Page</title>
-    
+    <link rel="icon" href="/İyte Logo.png">
 </head>
 
 <body>
@@ -15,7 +15,6 @@
             <a href="/student" class="order"><button><i class="fa-solid fa-house"></i>Home</button></a>
             <a href="/student/opportunities" class="order"><button>Opportunities</button></a>
             <a href="/student/applications" class="order"><button>Applications</button></a>
-            <a href="/student/internships" class="order"><button>Internships</button></a>
         </div>
         <link rel="stylesheet" href="/apply.css">
     </header>
@@ -36,9 +35,9 @@
                                 <form class="input-form" id="applyForm" method="POST" action="/student/opportunities/:<%= announcement.id %>" enctype="multipart/form-data">
                                     <div class="upload-file" id="custom-upload">
                                         <i class="fa-solid fa-file-pdf"></i>
-                                        Upload Employment Certificate<i class="fa-solid fa-upload"></i>
+                                        Upload CV<i class="fa-solid fa-upload"></i>
                                     </div>
-                                    <input type="file" name="studentFile" class="studentFile" accept=".pdf,.docx" style="display: none;">
+                                    <input type="file" name="CV" class="CV" accept=".pdf,.docx" style="display: none;">
 
                                     <div class="mb-3">
                                         <label for="studentNumber" class="form-label">Student's Phone Number</label>
@@ -54,7 +53,8 @@
                         </div>
                     </div>
                     <div class="details-container-2">
-                        <h2 class="card-subtitle mb-2"><%= announcement.Company.name %></h2>
+                        <h2 class="card-subtitle mb-2"><%= announcement.Company.name %></h2> 
+						<p class="card-due-date">Due Date: <%= announcement.formattedEndDate %></p>  
                         <h4 class="card-subtitle mb-2 text-muted"><%= announcement.announcementName %></h4>
                         <br>
                         <h5 class="card-subtitle mb-2">Description:</h5>
@@ -66,6 +66,7 @@
                     <div class="details-container-2" style="align-items: flex-start; display: flex; justify-content: space-between;">
                         <div class="content-else">
                             <h2 class="card-subtitle mb-2"><%= announcement.Company.name %></h2>
+							<p class="card-due-date">Due Date: <%= announcement.formattedEndDate %></p>  
                             <h4 class="card-subtitle mb-2 text-muted"><%= announcement.announcementName %></h4>
                             <br>
                             <h5 class="card-subtitle mb-2">Description:</h5>
@@ -79,9 +80,9 @@
                                 <form class="input-form" id="applyForm" method="POST" action="/student/opportunities/:<%= announcement.id %>" enctype="multipart/form-data">
                                     <div class="upload-file" id="custom-upload">
                                         <i class="fa-solid fa-file-pdf"></i>
-                                        Upload Employment Certificate<i class="fa-solid fa-upload"></i>
+                                        Upload CV<i class="fa-solid fa-upload"></i>
                                     </div>
-                                    <input type="file" name="studentFile" class="studentFile" accept=".pdf,.docx" style="display: none;">
+                                    <input type="file" name="CV" class="CV" accept=".pdf,.docx" style="display: none;">
 
                                     <div class="mb-3">
                                         <label for="studentNumber" class="form-label">Student's Phone Number</label>
@@ -106,13 +107,13 @@
     <script>
         document.querySelectorAll('.upload-file').forEach((uploadDiv, index) => {
             uploadDiv.addEventListener('click', function() {
-                const fileInput = document.querySelectorAll('.studentFile')[index];
+                const fileInput = document.querySelectorAll('.CV')[index];
                 fileInput.required = true;
                 fileInput.click();
             });
         });
 
-        document.querySelectorAll('.studentFile').forEach((fileInput, index) => {
+        document.querySelectorAll('.CV').forEach((fileInput, index) => {
             fileInput.addEventListener('change', function() {
                 const fileName = this.files[0].name;
                 const customUploadDiv = document.querySelectorAll('.upload-file')[index];
@@ -120,6 +121,16 @@
                 customUploadDiv.style.border = '2px solid #bf1b1b';
             });
         });
+
+		document.querySelectorAll('.input-form').forEach((form, index) => {
+            form.addEventListener('submit', function(event) {
+                const fileInput = form.querySelector('.CV');
+                if (fileInput.files.length === 0) {
+                    event.preventDefault(); // Prevent form submission
+                    alert("Please upload a file before submitting.");
+                }
+            });
+        });
     </script>
 
 </body>

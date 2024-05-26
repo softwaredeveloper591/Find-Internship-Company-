@@ -125,14 +125,13 @@ router.get("/student/opportunities", [auth, checkUserRole("student")], async fun
             include: [
                 {
                     model: Company_model,
-                    attributes: ['name']
+                    attributes: ['name'] ['username']
                 }
             ]
         });
 
         const formattedAnnouncements = announcements.map(announcement => ({
             ...announcement.dataValues,
-            formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD MM YYYY'),
 			image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
         }));
 
@@ -170,6 +169,7 @@ router.get("/student/opportunities/:opportunityId",[auth,checkUserRole("student"
 
 		const formattedAnnouncement = {
 			...announcement.dataValues,
+			formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD MM YYYY'),
 			image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
 		};
 
@@ -185,6 +185,7 @@ router.get("/student/opportunities/:opportunityId",[auth,checkUserRole("student"
 });
 
 router.post("/student/opportunities/:opportunityId",upload.single('CV'),[auth,checkUserRole("student")],async function(req,res){
+	try {
 	const student = await Student_model.findOne( { where: { id: req.user.id }} );
 
   	const announcementId=req.params.opportunityId.slice(1);
@@ -214,8 +215,7 @@ router.post("/student/opportunities/:opportunityId",upload.single('CV'),[auth,ch
         return zip.toBuffer();
 
     };
-	
-  	try {
+  	
 		bufferedApplicationForm = await createFilledDocument();
 
     const application = await Application_model.create({
@@ -242,7 +242,7 @@ router.post("/student/opportunities/:opportunityId",upload.single('CV'),[auth,ch
   	  });
 		res.redirect("/student/opportunities");
   	}  catch (error) {
-  	  console.log(error);
+		console.log(error);
   	  res.status(500).send('An error occurred while creating the application or the document.'); 
   	};
 });
@@ -322,7 +322,6 @@ router.post("/signup/student",async function(req,res){
 const Student= await axios.get('http://localhost:3500/student?mail='+email);
     const ubysStudent=Student.data[0];
 
-    console.log(ubysStudent);
 		if(!ubysStudent) {
 			throw Error('not in ubys database');
 		}

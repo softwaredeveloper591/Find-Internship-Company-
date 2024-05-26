@@ -5,7 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Announcement Requests</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
 	<link rel="stylesheet" href="/studentOpportunities.css">
+	<link rel="icon" href="/İyte Logo.png">
 </head>
 
 <body>
@@ -22,22 +26,26 @@
         </div>
     </header>
 	<div class="content-container">
-        <div class="content-2" id="content">
-            <% announcements.forEach(announcement => { %>
-                <div class="card">
-					<% if (announcement.image !== null) { %>
-                    	<img src="<%= announcement.image %>" alt="Announcement Logo">
-					<% } else { %>
-						<img src="" alt="Announcement Logo">
-					<% } %>
-                    <div class="card-body">
-                        <p class="card-title"><%= announcement.Company.name %></p>
-                        <p class="card-text"><%= announcement.announcementName %></p>
-                        <button class="details-button" onclick="window.location.href='/admin/announcement/:<%= announcement.id %>'">More Details</button>
-                    </div>
-                </div>
-            <% }) %>
-        </div>
+		<% if (announcements.length > 0) { %>
+        	<div class="content-2" id="content">
+            	<% announcements.forEach(announcement => { %>
+            	    <div class="card">
+						<% if (announcement.image !== null) { %>
+            	        	<img src="<%= announcement.image %>" alt="Announcement Logo">
+						<% } else { %>
+							<img src="/announcement.jpg" alt="Announcement Logo">
+						<% } %>
+            	        <div class="card-body">
+            	            <p class="card-title"><%= announcement.Company.name %></p> 
+            	            <p class="card-text"><%= announcement.announcementName %></p>
+            	            <button class="details-button" onclick="window.location.href='/admin/announcement/:<%= announcement.id %>'">More Details</button>
+            	        </div>
+            	    </div>
+            	<% }) %>		
+        	</div>
+		<% } else { %>
+			<h2 style="width: 1000px;">There are no announcement requests</h2>
+		<% } %>
     </div>
     
 	<script> 

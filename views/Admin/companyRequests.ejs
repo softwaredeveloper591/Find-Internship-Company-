@@ -6,13 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Company Requests</title>
     <script src="/admin_functions.js"></script>
+	<link rel="icon" href="/İyte Logo.png">
     <style>
         .sidebar .order {
             position: relative;
             display: block;
-            /* Ensure the anchor tag takes up the full width */
-            margin-bottom: 10px;
-            /* Space between links */
         }
 
         .sidebar .order .badge {
@@ -38,6 +36,13 @@
 <body>
     <header>
         <%- include('../partials/nav') %>
+		<style>
+			.container.mt-3 {
+				position: absolute;
+				top: 180px;
+				left: 120px;
+			}
+		</style>
             <div id="sidebar" class="sidebar">
                 <a href="/admin/announcementRequests" class="order">
                     <button>Announcement Requests</button>
@@ -49,8 +54,8 @@
                         Requests</button></a>
                 <a href="/admin/applicationRequests" class="order">
                     <button>Application Requests</button>
-                    <% if (totalAnnouncementsCount > 0) { %>
-                        <span class="badge"><%= totalAnnouncementsCount %></span>
+                    <% if (totalApplicationsCount > 0) { %>
+                        <span class="badge"><%= totalApplicationsCount %></span>
                     <% } %>
                 </a>
             </div>

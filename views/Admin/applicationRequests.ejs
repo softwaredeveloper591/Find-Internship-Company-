@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Students</title>
     <link rel="stylesheet" href="/adminApplications.css">
+	<link rel="icon" href="/İyte Logo.png">
 </head>
 <body>
     <header>
@@ -25,20 +26,23 @@
     <div class="container-apl">
         <div class="content-apl">
             <div class="students-container row row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-5 g-4">
-
-                <% applications.forEach(application => { %>
-                    <div class="col">
-						<button class="as" onclick="window.location.href='/admin/applications/:<%= application.id %>'">
-                        <div class="student-card card h-100 shadow-sm">
-                            <div class="card-body">
-                                <h5 class="card-title"><strong><%= application.Student.username %></strong></h5>
-                                <p class="card-text"><strong>ID:</strong> <%= application.Student.id %></p>
-                                <p class="card-text"><strong>Company:</strong> <%= application.Announcement.Company.name %></p>
-                            </div>
-                        </div>
-						</button>
-                    </div>
-                <% }) %>
+				<% if (applications.length > 0) { %>
+                	<% applications.forEach(application => { %>
+                	    <div class="col">
+							<button class="as" onclick="window.location.href='/admin/applications/:<%= application.id %>'">
+                	        <div class="student-card card h-100 shadow-sm">
+                	            <div class="card-body">
+                	                <h5 class="card-title"><strong><%= application.Student.username %></strong></h5>
+                	                <p class="card-text"><strong>ID:</strong> <%= application.Student.id %></p>
+                	                <p class="card-text"><strong>Company:</strong> <%= application.Announcement.Company.name %></p>
+                	            </div>
+                	        </div>
+							</button>
+                	    </div>
+                	<% }) %>
+				<% } else { %>
+					<h2 style="width: 1000px;">There are no application requests</h2>
+				<% } %>
             </div>
         </div>
     </div>
