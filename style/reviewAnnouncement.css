@@ -36,7 +36,7 @@ body, html {
 
 .details-container {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-evenly;
     align-items: center;
     border: 1px solid black;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -66,15 +66,18 @@ body, html {
 }
 
 .card {
+    justify-content: center;
     align-items: center;
     min-width: 400px;
-    max-width: 400px;
+    max-width: 650px;
+    height: 362px;
+ 
     flex: 1;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    background-color: #f9f9f9;
-    border: none;
+    background-color: #f1f1f1;
+    border: 3px solid black;
 }
 
 .card-header {
@@ -110,7 +113,7 @@ body, html {
 }
 
 button.approve-btn {
-  background-color: green;
+  background-color: darkred;
   border: none;
   color: white;
   padding: 10px 20px;
@@ -126,14 +129,16 @@ button.approve-btn {
   
 
 button.approve-btn:hover {
-  background-color: darkgreen;
+    background-color: rgb(217, 4, 4);
+    transform: scale(1.1); 
+    transition: transform 0.3s ease; 
 }
 
 button.reject-btn {
-  background-color: red;
+  background-color: darkred;
   border: none;
   color: white;
-  padding: 10px 20px;
+  padding: 10px 25px;
   text-align: center;
   text-decoration: none;
   display: inline-block;
@@ -145,7 +150,9 @@ button.reject-btn {
 }
 
 button.reject-btn:hover {
-  background-color: darkred;
+    background-color: rgb(217, 4, 4);
+    transform: scale(1.1); 
+    transition: transform 0.3s ease; 
 }
   
 textarea[name=feedback] {
