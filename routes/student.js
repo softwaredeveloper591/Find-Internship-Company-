@@ -26,6 +26,7 @@ const Company_model= require("../models/company-model");
 const Announcement_model = require("../models/announcement-model");
 const Document_model = require("../models/document-model");
 const Application_model = require("../models/application-model");
+const Ubys_model= require("../models/ubys-model");
 
 /*let totalAnnouncementsCount = 0;
 
@@ -318,19 +319,15 @@ router.post("/signup/student",async function(req,res){
 			throw Error('not a std mail');
 		}
     
-    
-const Student= await axios.get('http://localhost:3500/student?mail='+email);
-
-if (Student.status !== 200) {
-  // Yanıt başarılı değilse hata fırlat
-    throw new Error('Request to json server failed with status code: ' + response.status);
-    }
-
-    const ubysStudent=Student.data[0];
-
-		if(!ubysStudent) {
+    const Student = await Ubys_model.findOne({ where: { mail: email }});
+    console.log("Here is the Stduent:" ,Student);
+		if(!Student) {
 			throw Error('not in ubys database');
 		}
+    
+    const ubysStudent=Student.dataValues;
+    console.log("Here is the datavalues:" ,ubysStudent);
+
 
 		if(ubysStudent.department !== "CENG" || ubysStudent.year < 3) {
 			throw Error('not eligible');
