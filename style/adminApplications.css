@@ -54,6 +54,7 @@
 
 .student-card .card-body {
     text-align: center;
+	height: 150px;
 }
 
 .student-card .card-title {

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,16 +7,15 @@
     <link rel="stylesheet" href="/innerInternshipApplication.css">
     <link rel="icon" href="/İyte Logo.png">
 </head>
-
 <body>
     <header>
         <%- include('../partials/nav') %>
-            <div id="sidebar" class="sidebar">
-                <a href="/company" class="order"><button>HOME</button></a>
-                <a href="/company/announcement" class="order"><button>Share Opportunity</button></a>
-                <a href="/company/applications" class="order"><button>Applications</button></a>
-                <a href="/company/internships" class="order"><button>Internships</button></a>
-            </div>
+        <div id="sidebar" class="sidebar">
+            <a href="/company" class="order"><button>HOME</button></a>
+            <a href="/company/announcement" class="order"><button>Share Opportunity</button></a>
+            <a href="/company/applications" class="order"><button>Applications</button></a>
+            <a href="/company/internships" class="order"><button>Internships</button></a>
+        </div>
     </header>
 
     <div class="main-content">
@@ -26,31 +24,25 @@
                 <iframe src="/serveFile/<%= document.id %>" width="100%" height="500"></iframe>
             </div>
             <div class="details">
-                <p id="student-name">Student Name: <%= application.Student.username %>
-                </p>
-                <p id="application-title">Application Title: <%= application.Announcement.announcementName %>
-                </p>
+                <p id="student-name">Student Name: <%= application.Student.username %></p>
+                <p id="application-title">Application Title: <%= application.Announcement.announcementName %></p>
             </div>
             <div class="action-buttons">
                 <button class="accept" id="accept-button">ACCEPT</button>
-                <button class="reject" onclick="handleFormSubmission(true)">REJECT</button>
+                <button class="reject" onclick="updateApplication('<%= application.id %>', false)">REJECT</button>
             </div>
         </div>
-        <form method="post" id="applicationForm">
+        <form method="put" id="applicationForm">
             <div class="other-documents" id="other-documents" style="display: none;">
                 <div id="additional-inputs">
                     <div class="date-inputs">
                         <p>Staj Başlangıç Tarihi:</p>
-                        <input type="date" style="font-size: 14px; width:10%; margin-left: 10px;"
-                            placeholder="Intern Start Date" id="internStartDate" name="internStartDate" required>
+                        <input type="date" style="font-size: 14px; width:10%; margin-left: 10px;" placeholder="Intern Start Date" id="internStartDate" name="internStartDate" required>
                         <p style="margin-left: 15px;">Staj Bitiş Tarihi:</p>
-                        <input type="date" style="font-size: 14px; width:10%; margin-left: 10px;"
-                            placeholder="Intern End Date" id="internEndDate" name="internEndDate" required>
+                        <input type="date" style="font-size: 14px; width:10%; margin-left: 10px;" placeholder="Intern End Date" id="internEndDate" name="internEndDate" required>
                     </div>
-                    <input type="text" placeholder="Intern Duration (as work days)" id="internDuration"
-                        name="internDuration" required>
-                    <input type="text" placeholder="Duty and Title of The Representative" id="dutyAndTitle"
-                        name="dutyAndTitle" required>
+                    <input type="text" placeholder="Intern Duration (as work days)" id="internDuration" name="internDuration" required>
+                    <input type="text" placeholder="Duty and Title of The Representative" id="dutyAndTitle" name="dutyAndTitle" required>
 
                     <div class="question-answer">
                         <label for="workOnSaturday">Cumartesi günleri çalışıyor musunuz?</label>
@@ -68,10 +60,10 @@
                         </select>
                     </div>
 
-                    <div id="holidayWorkDays" class="question-answer" style="display: none;">
+                    <div id="day" class="question-answer" style="display: none;">
                         <p>Çalışılan Gün sayısı</p>
                         <div class="answer">
-                            <input type="number" style="width: 10%;" name="days" placeholder="Gün sayısı" value="0">
+                            <input type="number" style="width: 10%;" name="day" placeholder="Gün sayısı" value="0">
                         </div>
                     </div>
 
@@ -83,32 +75,19 @@
                         </select>
                     </div>
 
-                    <div class="file-upload">
-                        <div class="upload-box">
-                            <input type="file" id="ApplicationForm" name="ApplicationForm" accept=".pdf"
-                                style="display: none;" required>
-                            <label class="file-icon" for="ApplicationForm" style="background-image: url('/resume.jpg');"
-                                data-filename="ApplicationForm"></label>
-                        </div>
-                    </div>
-
-                    <button type="button" onclick="downloadButton('<%= application.id %>', 'Updated Application Form')"
-                        id="download-button">Download Application Form</button>
+                    <button type="button" onclick="downloadButton('<%= application.id %>', 'Updated Application Form')" id="download-button">Download Application Form</button>
                     <div class="upload">
                         <div class="file-name" id="file-name"></div>
-                        <button type="button" id="upload-button" style="visibility: hidden;">Upload Application
-                            Form</button>
-                        <input type="file" id="upload-file" accept=".pdf">
+                        <button type="button" id="upload-button" style="visibility: hidden;">Upload Application Form</button>
+                        <input type="file" name="upload-file" id="upload-file" accept=".pdf,.docx">
                     </div>
-                    <button type="submit" id="submit-button" style="visibility: hidden;"
-                        onclick="handleFormSubmission()">Submit the form</button>
+                    <button type="submit" id="submit-button" style="visibility: hidden;" onclick="updateApplication('<%= application.id %>', true)">Submit the form</button>
                 </div>
             </div>
         </form>
     </div>
 
     <script>
-
         document.addEventListener('DOMContentLoaded', (event) => {
             const today = new Date().toISOString().split('T')[0];
             const startDateInput = document.getElementById('internStartDate');
@@ -130,7 +109,7 @@
         document.getElementById('upload-file').addEventListener('input', function (event) {
             var fileInput = event.target;
             var filePath = fileInput.value;
-            var allowedExtensions = /(\.pdf)$/i;
+            var allowedExtensions = /(\.pdf|\.docx)$/i;
             var fileNameDisplay = document.getElementById('file-name');
 
             if (!allowedExtensions.exec(filePath)) {
@@ -153,16 +132,16 @@
             const workOnSaturday = applicationForm.workOnSaturday.value;
             const workOnHoliday = applicationForm.workOnHoliday.value;
             const sgk = applicationForm.sgk.value;
-            const days = applicationForm.days.value;
+            const day = applicationForm.day.value;
 
             if (!internStartDate || !internEndDate || !internDuration || !dutyAndTitle || !workOnSaturday || !workOnHoliday || !sgk) {
                 alert("You need to fill the form before downloading the Application form");
             }
             else {
                 try {
-                    const res = await fetch('/company/applications/<%= application.id %>/fillApplicationForm', {
+                    const res = await fetch(`/company/applications/${applicationId}/fillApplicationForm`, {
                         method: 'POST',
-                        body: JSON.stringify({ internStartDate, internEndDate, internDuration, dutyAndTitle, workOnSaturday, workOnHoliday, sgk, days }),
+                        body: JSON.stringify({ internStartDate, internEndDate, internDuration, dutyAndTitle, workOnSaturday, workOnHoliday, sgk, day }),
                         headers: { 'Content-Type': 'application/json' }
                     });
 
@@ -192,35 +171,39 @@
         }
 
         async function updateApplication(applicationId, isApproved) {
-            try {
-                const response = await fetch(`/company/applications/${applicationId}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ isApproved })
-                });
+			const fileInput = document.getElementById('upload-file');
+			if((isApproved && fileInput.files.length !== 0) || !isApproved) {
+				const file = fileInput.files[0];
+				const formData = new FormData();
+				formData.append('isApproved', isApproved);
+				if (file) {
+					formData.append('upload-file', file);  // Ensure the field name matches
+				}
 
-                const data = await response.json();
-                alert(data.message);
-                window.location.href = "/company/applications";
-            } catch (error) {
-                console.error("Error processing the request:", error);
-                alert("An error occurred. Please try again later.");
-            }
-        }
+				await fetch(`/company/applications/${applicationId}`, {
+					method: "PUT",
+					body: formData
+				})
+				.then(response => response.json())
+				.then(data => {
+					alert(data.message);
+					location.href = '/company/applications';
+				})
+				.catch(error => {
+					console.error("Error processing the request:", error);
+					alert("An error occurred. Please try again later.");
+				});
+			}
+			else {
+				event.preventDefault(); // Prevent form submission
+                alert("Please upload a file before submitting.");
+			}
+		}
 
-        async function handleFormSubmission(submitFromRejectButton = false) {
-            if (!submitFromRejectButton) {
-                const fileInput = document.getElementById('upload-file');
-                if (!fileInput.files || fileInput.files.length === 0) {
-                    alert("Please upload the Application Form");
-                    return;
-                } else {
-                    updateApplication('<%= application.id %>', true);
-                }
-            } else {
-                updateApplication('<%= application.id %>', false);
-            }
-        }
+        document.getElementById('applicationForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            updateApplication('<%= application.id %>', true);
+        });
 
         document.getElementById('accept-button').addEventListener('click', function () {
             document.getElementById('other-documents').style.display = 'block';
@@ -244,21 +227,17 @@
 
         document.getElementById('workOnHoliday').addEventListener('change', function () {
             if (this.value === 'yes') {
-                document.getElementById('holidayWorkDays').style.display = 'block';
+                document.getElementById('day').style.display = 'block';
             } else {
-                document.getElementById('holidayWorkDays').style.display = 'none';
+                document.getElementById('day').style.display = 'none';
             }
         });
 
         window.addEventListener('load', function () {
             if (document.getElementById('workOnHoliday').value === 'yes') {
-                document.getElementById('holidayWorkDays').style.display = 'block';
+                document.getElementById('day').style.display = 'block';
             }
         });
-
     </script>
-
-
 </body>
-
 </html>

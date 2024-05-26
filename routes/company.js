@@ -137,7 +137,7 @@ router.get("/company/applications",[auth,checkUserRole("company")],async functio
 				},
 				{
 					model: Student_model,
-					attributes: ['username', 'id']
+					attributes: ['username', 'id', 'year']
 				}
 			]
         });
@@ -236,13 +236,13 @@ router.get('/serveFile/:id', [auth, checkUserRole("company")], async (req, res) 
       console.error('Error serving file:', error);
       res.status(500).send('Error serving file.');
     }
-  });
+});
   
 
 router.post("/company/applications/:applicationId/fillApplicationForm",[auth,checkUserRole("company")],async function(req,res){
     try {
 
-		let { internStartDate, internEndDate, internDuration, dutyAndTitle, workOnSaturday, workOnHoliday, days, sgk } = req.body;
+		let { internStartDate, internEndDate, internDuration, dutyAndTitle, workOnSaturday, workOnHoliday, day, sgk } = req.body;
 		let y1,n1,y2,n2,y3,n3;
 
 		const applicationId = req.params.applicationId;
@@ -280,7 +280,7 @@ router.post("/company/applications/:applicationId/fillApplicationForm",[auth,che
 			y2 = "X", n2 = "";
 		}
 		else {
-			y2 = "", n2 = "X", days = "";
+			y2 = "", n2 = "X", day = "";
 		}
 
 		if (sgk === "yes") {
@@ -304,7 +304,7 @@ router.post("/company/applications/:applicationId/fillApplicationForm",[auth,che
 			.replace(/«n2»/g, n2)
 			.replace(/«y3»/g, y3)
 			.replace(/«n3»/g, n3)
-			.replace(/«days»/g, days);
+			.replace(/«day»/g, day);
 
 		zip.updateFile("word/document.xml", Buffer.from(docxTemplate, "utf-8"));
 		const updatedDocxBuffer = zip.toBuffer();
@@ -330,10 +330,16 @@ router.post("/company/applications/:applicationId/fillApplicationForm",[auth,che
     }
 });
 
-router.put("/company/applications/:applicationId",[auth,checkUserRole("company")],async function(req,res){
+router.put("/company/applications/:applicationId",upload.single('upload-file'),[auth,checkUserRole("company")],async function(req,res){
     try {
 		const applicationId = req.params.applicationId;
-		const isApproved = req.body.isApproved; 
+		const { isApproved } = req.body; 
+		const file = req.file;
+		let binaryData = null;
+		if(file) {
+			binaryData = file.buffer;
+			await Document_model.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "Updated Application Form" } });
+		}
 
 		const application = await Application_model.findOne({
 			where: {
@@ -351,9 +357,9 @@ router.put("/company/applications/:applicationId",[auth,checkUserRole("company")
 			]
         });
 
-		const emailSubject = isApproved ? 'Application Approved' : 'Application Rejected';
+		const emailSubject = isApproved === "true" ? 'Application Approved' : 'Application Rejected';
         const emailBody = `Hello ${application.Student.username},<br><br>
-            Your application titled "${application.Announcement.announcementName}" has been ${isApproved ? "approved by company" : "rejected by company and will be removed from our system"}.<br><br>
+            Your application titled "${application.Announcement.announcementName}" has been ${isApproved === "true" ? "approved by company" : "rejected by company and will be removed from our system"}.<br><br>
             Best Regards,<br>Admin Team`;
 
 		const transporter = nodeMailer.createTransport({
@@ -371,7 +377,7 @@ router.put("/company/applications/:applicationId",[auth,checkUserRole("company")
             html: emailBody
         });
 
-		if (isApproved === true) {
+		if (isApproved === "true") {
             application.isApprovedByCompany = true;
 			application.status = 1;
             await application.save();

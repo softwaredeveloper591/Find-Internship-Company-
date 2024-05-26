@@ -101,7 +101,7 @@
             });
         });
 
-		function updateApplication(applicationId, isApproved) {
+		async function updateApplication(applicationId, isApproved) {
 			const feedback = document.getElementById('feedback').value;
 			const fileInput = document.getElementById('studentFile');
 			if((isApproved && fileInput.files.length !== 0) || !isApproved) {
@@ -113,7 +113,7 @@
 					formData.append('studentFile', file);  // Ensure the field name matches
 				}
 
-				fetch(`/admin/applications/${applicationId}`, {
+				await fetch(`/admin/applications/${applicationId}`, {
 					method: "PUT",
 					body: formData
 				})

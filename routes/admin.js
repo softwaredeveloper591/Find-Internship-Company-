@@ -408,11 +408,10 @@ router.put("/admin/applications/:applicationId",upload.single('studentFile'),[au
 		let binaryData = null;
 		if(file) {
 			binaryData = file.buffer;
-			await Document_model.update({ data: binaryData }, { where: { applicationId, fileType: "Updated Application Form" } });
+			await Document_model.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "Updated Application Form" } });
 		}
 
 		const { isApproved, feedback } = req.body; 
-		console.log(isApproved);
 
 		const application = await Application_model.findOne({
 			where: {
@@ -456,13 +455,11 @@ router.put("/admin/applications/:applicationId",upload.single('studentFile'),[au
         });
 
 		if (isApproved === "true") {
-			console.log(isApproved,"true");
             application.isApprovedByDIC = true;
 			application.status = 2;
             await application.save();
             return res.status(200).json({ message: "Application approved." });
         } else {
-			console.log(isApproved,"false");
             application.isApprovedByDIC = false;
 			application.status = 4;
 			await application.save();

@@ -117,7 +117,7 @@ router.post("/secretary/applications/:applicationId",upload.single('studentFile'
 	   	await transporter.sendMail({
 			from: '"Buket Erşahin" <enesbilalbabaturalpro06@gmail.com>',
 			to: application.Announcement.Company.email,
-			subject: emailSubject,
+			subject: "Employment Sertificate",
 			html: emailBody
 	   	});
 
