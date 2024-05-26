@@ -22,6 +22,9 @@
             <a href="/admin/companyRequests" class="order"><button>Company Requests</button></a>
             <a href="/admin/applicationRequests" class="order">
                 <button>Application Requests</button>
+                <% if (totalApplicationsCount > 0) { %>
+                    <span class="badge"><%= totalApplicationsCount %></span>
+                <% } %>
             </a>
         </div>
     </header>

@@ -9,10 +9,10 @@
 </head>
 
 <body>
-    <header>    
+    <header>
         <%- include('../partials/nav') %>
         <div id="sidebar" class="sidebar">
-            <a href="/student" class="order"><button><i class="fa-solid fa-house"></i>Home</button></a>
+            <a href="/student" class="order"><button>HOME</button></a>
             <a href="/student/opportunities" class="order"><button>Opportunities</button></a>
             <a href="/student/applications" class="order"><button>Applications</button></a>
         </div>
@@ -37,8 +37,8 @@
                                         <i class="fa-solid fa-file-pdf"></i>
                                         Upload CV<i class="fa-solid fa-upload"></i>
                                     </div>
-                                    <input type="file" name="CV" class="CV" accept=".pdf,.docx" style="display: none;">
-
+                                    <input type="file" name="CV" class="CV" accept=".pdf" style="display: none;">
+                                    <p id="file-name"></p>
                                     <div class="mb-3">
                                         <label for="studentNumber" class="form-label">Student's Phone Number</label>
                                         <input type="text" class="form-control" id="user_phone" name="user_phone" pattern="^0[5][0-9]{9}$" maxlength="11" placeholder="05XXXXXXXXX" required>
@@ -53,24 +53,36 @@
                         </div>
                     </div>
                     <div class="details-container-2">
-                        <h2 class="card-subtitle mb-2"><%= announcement.Company.name %></h2> 
-						<p class="card-due-date">Due Date: <%= announcement.formattedEndDate %></p>  
-                        <h4 class="card-subtitle mb-2 text-muted"><%= announcement.announcementName %></h4>
+                        <h2 class="card-subtitle mb-2">
+                            <%= announcement.Company.name %>
+                        </h2>
+                        <p class="card-due-date">Due Date: <%= announcement.formattedEndDate %></p>
+                        <h4 class="card-subtitle mb-2 text-muted">
+                            <%= announcement.announcementName %>
+                        </h4>
                         <br>
                         <h5 class="card-subtitle mb-2">Description:</h5>
-                        <p class="card-text"><%= announcement.description %></p>
+                        <p class="card-text">
+                            <%= announcement.description %>
+                        </p>
                     </div>
                 </div>
             <% } else { %>
                 <div class="content-apply">
                     <div class="details-container-2" style="align-items: flex-start; display: flex; justify-content: space-between;">
                         <div class="content-else">
-                            <h2 class="card-subtitle mb-2"><%= announcement.Company.name %></h2>
-							<p class="card-due-date">Due Date: <%= announcement.formattedEndDate %></p>  
-                            <h4 class="card-subtitle mb-2 text-muted"><%= announcement.announcementName %></h4>
+                            <h2 class="card-subtitle mb-2">
+                                <%= announcement.Company.name %>
+                            </h2>
+                            <p class="card-due-date">Due Date: <%= announcement.formattedEndDate %></p>
+                            <h4 class="card-subtitle mb-2 text-muted">
+                                <%= announcement.announcementName %>
+                            </h4>
                             <br>
                             <h5 class="card-subtitle mb-2">Description:</h5>
-                            <p class="card-text"><%= announcement.description %></p>
+                            <p class="card-text">
+                                <%= announcement.description %>
+                            </p>
                         </div>
                         <div class="card">
                             <div class="card-header">
@@ -82,8 +94,7 @@
                                         <i class="fa-solid fa-file-pdf"></i>
                                         Upload CV<i class="fa-solid fa-upload"></i>
                                     </div>
-                                    <input type="file" name="CV" class="CV" accept=".pdf,.docx" style="display: none;">
-
+                                    <input type="file" name="CV" class="CV" accept=".pdf" style="display: none;">
                                     <div class="mb-3">
                                         <label for="studentNumber" class="form-label">Student's Phone Number</label>
                                         <input type="text" class="form-control" id="user_phone" name="user_phone" pattern="^0[5][0-9]{9}$" maxlength="11" placeholder="05XXXXXXXXX" required>
@@ -106,7 +117,7 @@
 
     <script>
         document.querySelectorAll('.upload-file').forEach((uploadDiv, index) => {
-            uploadDiv.addEventListener('click', function() {
+            uploadDiv.addEventListener('click', function () {
                 const fileInput = document.querySelectorAll('.CV')[index];
                 fileInput.required = true;
                 fileInput.click();
@@ -114,24 +125,31 @@
         });
 
         document.querySelectorAll('.CV').forEach((fileInput, index) => {
-            fileInput.addEventListener('change', function() {
-                const fileName = this.files[0].name;
+            fileInput.addEventListener('change', function () {
+                const file = this.files[0];
+                if (file && file.type !== 'application/pdf') {
+                    alert("Please upload a PDF file.");
+                    this.value = ''; // Clear the input
+                    return;
+                }
+                const fileName = file.name;
                 const customUploadDiv = document.querySelectorAll('.upload-file')[index];
                 customUploadDiv.innerHTML = '<i class="fa-solid fa-file"></i> ' + fileName;
                 customUploadDiv.style.border = '2px solid #bf1b1b';
             });
         });
 
-		document.querySelectorAll('.input-form').forEach((form, index) => {
-            form.addEventListener('submit', function(event) {
+        document.querySelectorAll('.input-form').forEach((form, index) => {
+            form.addEventListener('submit', function (event) {
                 const fileInput = form.querySelector('.CV');
                 if (fileInput.files.length === 0) {
                     event.preventDefault(); // Prevent form submission
                     alert("Please upload a file before submitting.");
                 }
-            });
-        });
+            });
+        });
     </script>
 
 </body>
+
 </html>
