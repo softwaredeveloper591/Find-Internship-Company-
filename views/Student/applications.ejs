@@ -24,7 +24,7 @@
 			<% applications.forEach(application => { %>
 				<div class="content-container">
 					<div id="info-container">
-						<p id="company-name-<%= application.id %>"><%= application.Announcement.Company.name %></p>
+						<strong><p style="margin-bottom: -4px;" id="company-name-<%= application.id %>"><%= application.Announcement.Company.name %></p></strong>
 						<p id="announcement-title-<%= application.id %>"><%= application.Announcement.announcementName %></p>
 					</div>
 					<img src="/arrow.png" alt="Arrow" style="height: 40px; margin-top: 90px;">

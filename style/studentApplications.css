@@ -5,18 +5,18 @@
 
 }
 .content-container {
-    /* Remove position: absolute */
-    top: 160px; /* Adjust based on your header height */
+   
+    top: 160px; 
     bottom: 0;
-    left: 90px; /* Default left margin */
+    left: 100px;
     right: 0;
-    overflow-y: auto; /* Make only the content div scrollable vertically */
+    overflow-y: auto; 
     padding: 5px;
     display: flex;
-    flex-direction: row; /* Align items in a row */
-    justify-content: center; /* Center items */
-    align-items: flex-start; /* Align items at the top */
-    gap: 20px; /* Space between items */
+    flex-direction: row; 
+    justify-content: center; 
+    align-items: flex-start; 
+    gap: 20px; 
 }
 
 .content-container h2{
@@ -35,14 +35,19 @@
     min-height: 180px;
     text-align: center;
     background-color: #f9f9f9;
-    font-size: 1vw; /* Adjust font size based on viewport width */
-	justify-content: center; /* Vertically center the content */
-    align-items: center; /* Horizontally center the content */
+    font-size: 1vw; 
+	justify-content: center; 
+    align-items: center; 
+}
+
+#info-container p{
+    margin-top: 5px;
+    max-width: 130px;
 }
 
 #information {
     justify-self: right;
-    margin-bottom: 10px; /* Space between Application ID and Company Name */
+    margin-bottom: 10px; 
 }
 
 .steps, .details {
@@ -50,8 +55,8 @@
 }
 
 .steps {
-    display: flex; /* Changed from inline-flex to flex */
-    gap: 10px; /* Space between items */
+    display: flex; 
+    gap: 10px; 
 }
 
 .steps div {
@@ -107,7 +112,7 @@
         height: 50px;
     }
     .content-container {
-        left: 30px; /* Reduce left margin for medium screens */
+        left: 80px; /* Reduce left margin for medium screens */
     }
 }
 
