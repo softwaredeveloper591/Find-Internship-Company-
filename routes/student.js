@@ -320,15 +320,11 @@ router.post("/signup/student",async function(req,res){
 		}
     
     const Student = await Ubys_model.findOne({ where: { mail: email }});
-    console.log("Here is the Stduent:" ,Student);
 		if(!Student) {
 			throw Error('not in ubys database');
 		}
-    
     const ubysStudent=Student.dataValues;
-    console.log("Here is the datavalues:" ,ubysStudent);
-
-
+    
 		if(ubysStudent.department !== "CENG" || ubysStudent.year < 3) {
 			throw Error('not eligible');
 		}
