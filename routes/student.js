@@ -320,6 +320,12 @@ router.post("/signup/student",async function(req,res){
     
     
 const Student= await axios.get('http://localhost:3500/student?mail='+email);
+
+if (Student.status !== 200) {
+  // Yanıt başarılı değilse hata fırlat
+    throw new Error('Request to json server failed with status code: ' + response.status);
+    }
+
     const ubysStudent=Student.data[0];
 
 		if(!ubysStudent) {
