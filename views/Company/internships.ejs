@@ -1,44 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Students</title>
-    <link rel="stylesheet" href="/adminApplications.css">
-	<link rel="icon" href="/İyte Logo.png">
+    <link rel="stylesheet" href="/companyInternships.css">
+    <link rel="icon" href="/İyte Logo.png">
 </head>
+
 <body>
     <header>
         <%- include('../partials/nav') %>
         <div id="sidebar" class="sidebar">
             <a href="/company/announcement" class="order"><button>Share Opportunity</button></a>
             <a href="/company/applications" class="order"><button>Applications</button></a>
-			<a href="/company/internships" class="order"><button style="background-color: rgb(217, 4, 4);">Internships</button></a>
-		</div>
+            <a href="/company/internships" class="order"><button style="background-color: rgb(217, 4, 4);">Internships</button></a>
+        </div>
     </header>
 
     <div class="container-apl">
-        <div class="content-apl">
-            <div class="students-container row row-cols-sm-1 row-cols-md-2 row-cols-lg-2 row-cols-xl-4 row-cols-xxl-5 g-4">
-				<% if (typeof applications !== 'undefined' && applications.length > 0) { %>
-                	<% applications.forEach(application => { %>
-                	    <div class="col">
-							<button class="as" onclick="window.location.href='/company/applications/:<%= application.id %>'">
-                	        <div class="student-card card h-100 shadow-sm">
-                	            <div class="card-body">
-                	                <h5 class="card-title"><strong><%= application.Student.username %></strong></h5>
-                	                <p class="card-text"><strong>ID:</strong> <%= application.Student.id %></p>
-                	                <p class="card-text"><strong>Announcement:</strong> <%= application.Announcement.announcementName %></p>
-                	            </div>
-                	        </div>
-							</button>
-                	    </div>
-                	<% }) %>
-				<% } else { %>
-					<h2 style="width: 1000px;">There are no internships yet</h2>
-				<% } %>
-            </div>
-        </div>
-    </div>
+		<div id="students-container" class="students-container">
+	   <% if (typeof applications !=='undefined' && applications.length> 0) { %>
+		   <% applications.forEach(application=> { %>
+			   <div class="col">
+				   <div class="student-card card">
+					   <div class="card-body d-flex justify-content-between">
+						   <div class="details">
+							   <h5 class="card-title"><strong>
+									   <%= application.Student.username %>
+								   </strong></h5>
+							   <p class="card-text"><strong>ID:</strong>
+								   <%= application.Student.id %>
+							   </p>
+							   <p class="card-text"><strong>Announcement:</strong>
+								   <%= application.Announcement.announcementName %>
+							   </p>
+						   </div>
+						   <button class="as"
+							   onclick="downloadButton('<%= application.id %>', 'Updated Application Form')">
+							   <div class="download-file">
+								   <i class="fa-solid fa-file"></i>Download Employment Certificate<i
+									   class="fa-solid fa-download"></i>
+							   </div>
+						   </button>
+					   </div>
+				   </div>
+			   </div>
+			   <% }) %>
+				   <% } else { %>
+					   <h2 style="width: 1000px;">There are no certificates yet.</h2>
+					   <% } %>
+	   </div>
+   </div>
+
+   <script>
+	   async function downloadButton(applicationId, fileType) {
+		   try {
+			   const response = await fetch(`/secretary/applications/download/${applicationId}/${fileType}`);
+			   if (!response.ok) {
+				   throw new Error('Failed to download file');
+			   }
+
+			   const blob = await response.blob();
+			   const contentDispositionHeader = response.headers.get('Content-Disposition');
+			   const filename = contentDispositionHeader.split('filename=')[1].replace(/"/g, '');
+			   const url = window.URL.createObjectURL(blob);
+
+			   const link = document.createElement('a');
+			   link.href = url;
+			   link.setAttribute('download', filename);
+			   document.body.appendChild(link);
+			   link.click();
+			   document.body.removeChild(link);
+		   } catch (error) {
+			   console.error('Error downloading file:', error);
+		   }
+	   }
+
+   </script>
 </body>
+
 </html>
