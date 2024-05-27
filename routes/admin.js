@@ -107,19 +107,37 @@ cron.schedule('0 0 * * *', deactivateExpiredAnnouncements);
 router.get("/admin", [auth, checkUserRole("admin")], async function (req, res) {
     try {
         const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+        const applications = await Application_model.findAll({
+			where: {
+				isApprovedByCompany: true,
+				isApprovedByDIC: null			
+			},
+            include: [
+				{
+                	model: Announcement_model,
+					include: {
+						model: Company_model,
+						attributes: ['name']
+					}
+				},
+				{
+					model: Student_model,
+					attributes: ['username'] ['id']
+				}
+			]
+        });
 
-        res.render("Admin/admin", {
+		res.render("Admin/applicationRequests", {
             usertype: "admin",
             dataValues: admin.dataValues,
+            applications,
 			totalAnnouncementsCount,
-			totalApplicationsCount,
 			totalCompaniesCount
         });
     } catch (err) {
-        console.error("Error loading admin dashboard:", err);
-        res.status(500).send("Error loading admin dashboard.");
+        console.error("Error fetching company registration requests:", err);
+        res.status(500).send("Error fetching company registration requests.");
     }
-
 });
 
 router.get("/admin/announcementRequests", [auth, checkUserRole("admin")], async (req, res) => {

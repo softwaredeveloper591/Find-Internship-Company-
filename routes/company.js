@@ -411,14 +411,35 @@ router.get("/company/applications/download/:applicationId/:fileType",[auth,check
   });
 
 router.get("/company",[auth,checkUserRole("company")],async function(req,res){
-    let company = await Company_model.findOne({ where: {id: req.user.id} });
-    res.render("Company/company",{ 
-		usertype:"company", 
-		dataValues:company.dataValues, 
-		action: req.query.action,
-		totalInternshipsCount,
-		totalApplicationsCount
-	});
+    try {
+        const company = await Company_model.findOne({ where: { id: req.user.id } });
+        const applications = await Application_model.findAll({
+			where: {
+				isApprovedByCompany: null,
+			},
+            include: [
+				{
+                	model: Announcement_model,
+                	where: { companyId: company.id },
+					attributes: ['announcementName']
+				},
+				{
+					model: Student_model,
+					attributes: ['username', 'id', 'year']
+				}
+			]
+        });
+
+        res.render("Company/applications", {
+            usertype: "company",
+            dataValues: company.dataValues,
+            applications,
+			totalInternshipsCount
+        });
+    } catch (err) {
+        console.error("Error fetching applications:", err);
+        res.status(500).send("Error fetching applications.");
+    }
 });
 
 router.post("/signup/company",async function(req,res){
