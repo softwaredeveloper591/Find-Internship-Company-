@@ -121,7 +121,7 @@ router.post("/forgotPassword", async function(req, res) {
         from: '"Buket Erşahin" <enesbilalbabaturalpro06@gmail.com>',
         to: email,
         subject: 'Password Reset Link',
-        html: `<a href="http://localhost:3000/changePassword?token=${token}">Reset Password</a>`
+        html: `<a href="/changePassword?token=${token}">Reset Password</a>`
     });
     res.status(200).json({ success: 'Password reset link has been sent.' });
 });
