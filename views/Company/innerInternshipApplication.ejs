@@ -147,7 +147,7 @@
                         headers: { 'Content-Type': 'application/json' }
                     });
 
-                    const response = await fetch(`/company/announcements/download/${applicationId}/${fileType}`);
+                    const response = await fetch(`/company/applications/download/${applicationId}/${fileType}`);
                     if (!response.ok) {
                         throw new Error('Failed to download file');
                     }

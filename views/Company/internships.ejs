@@ -38,7 +38,7 @@
 							   </p>
 						   </div>
 						   <button class="as"
-							   onclick="downloadButton('<%= application.id %>', 'Updated Application Form')">
+							   onclick="downloadButton('<%= application.id %>', 'Employment Certificate')">
 							   <div class="download-file">
 								   <i class="fa-solid fa-file"></i>Download Employment Certificate<i
 									   class="fa-solid fa-download"></i>
@@ -57,7 +57,7 @@
    <script>
 	   async function downloadButton(applicationId, fileType) {
 		   try {
-			   const response = await fetch(`/secretary/applications/download/${applicationId}/${fileType}`);
+			   const response = await fetch(`/company/applications/download/${applicationId}/${fileType}`);
 			   if (!response.ok) {
 				   throw new Error('Failed to download file');
 			   }

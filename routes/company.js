@@ -394,7 +394,7 @@ router.put("/company/applications/:applicationId",upload.single('upload-file'),[
     }
 });
 
-router.get("/company/announcements/download/:applicationId/:fileType",[auth,checkUserRole("company")],async function(req,res){
+router.get("/company/applications/download/:applicationId/:fileType",[auth,checkUserRole("company")],async function(req,res){
     const applicationId = req.params.applicationId;
     const fileType = req.params.fileType;
     const takenDocument = await Document_model.findOne({where:{applicationId:applicationId, fileType:fileType}});
