@@ -83,7 +83,7 @@
                         <button type="button" id="upload-button" style="visibility: hidden;">Upload Application Form</button>
                         <input type="file" name="upload-file" id="upload-file" accept=".pdf,.docx">
                     </div>
-                    <button type="submit" id="submit-button" style="visibility: hidden;" onclick="updateApplication('<%= application.id %>', true)">Submit the form</button>
+                    <button type="submit" id="submit-button" style="visibility: hidden;">Submit the form</button>
                 </div>
             </div>
         </form>
@@ -146,6 +146,10 @@
                         body: JSON.stringify({ internStartDate, internEndDate, internDuration, dutyAndTitle, workOnSaturday, workOnHoliday, sgk, day }),
                         headers: { 'Content-Type': 'application/json' }
                     });
+
+					if (!res.ok) {
+						throw new Error('Failed to fill the application form');
+					}
 
                     const response = await fetch(`/company/applications/download/${applicationId}/${fileType}`);
                     if (!response.ok) {

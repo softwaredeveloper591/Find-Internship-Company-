@@ -317,12 +317,13 @@ router.post("/company/applications/:applicationId/fillApplicationForm",[auth,che
 				data: updatedDocxBuffer,
 				fileType:'Updated Application Form',
 				username: document.Application.Student.username
-			  });
+			});
 		}
 		else {
 			await Document_model.update({ data: updatedDocxBuffer }, { where: { applicationId, fileType: "Updated Application Form" } });
-            res.send("you are okay");
+            
         }
+		res.send("you are okay");
 		
     } catch (err) {
         console.error("Error fetching applications:", err);
@@ -398,6 +399,7 @@ router.get("/company/applications/download/:applicationId/:fileType",[auth,check
     const applicationId = req.params.applicationId;
     const fileType = req.params.fileType;
     const takenDocument = await Document_model.findOne({where:{applicationId:applicationId, fileType:fileType}});
+
     if(!takenDocument){
         return res.status(400).json({ error: "You need to fill the form before downloading the application form." });
     }
