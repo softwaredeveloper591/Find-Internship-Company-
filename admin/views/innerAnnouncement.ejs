@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Announcement Request</title>
+	<link rel="icon" href="/İyte Logo.png">
+</head>
+
+<body>
+    <header>
+        <%- include('./nav') %>
+        <link rel="stylesheet" href="/reviewAnnouncement.css">
+        <div id="sidebar" class="sidebar">
+            <a href="/admin/announcementRequests" class="order"><button>Announcement Requests</button></a>
+            <a href="/admin/companyRequests" class="order"><button>Company Requests</button></a>
+            <a href="/admin/applicationRequests" class="order"><button>Application Requests</button></a>
+        </div>
+    </header>
+
+    <div class="container-apply">
+        <% if (announcement !== null) { %>
+            <% if (announcement.image !== null) { %>
+                <div class="content-apply">
+                    <div class="details-container">
+                        <div class="image-container">
+                            <img src="<%= announcement.image %>" class="card-img-top fixed-size-img" alt="Announcement Image">
+                        </div>
+                        <div class="card">
+                            <h1 style="font-weight: bolder; color: darkred;">Company Name</h1>
+                            <h2 class="card-subtitle mb-4"><%= announcement.Company.name %></h2>
+                            <h2 style="font-weight: bold; color: darkred;">Announcement Name</h2>
+                            <h4 class="card-subtitle mb-2"><%= announcement.announcementName %></h4>
+                        </div>
+                    </div>
+                    <div class="details-container-2">
+                        <h3 class="card-subtitle mb-2" style="font-weight: bold;">Description:</h3>
+                        <p class="card-text"><%= announcement.description %></p>
+                    </div>
+                </div>
+                <br>
+                <button class="approve-btn" onclick="updateAnnouncement('<%= announcement.id %>', true)">Approve</button>
+                <br>
+                
+                <label for="feedback">Feedback:</label>
+				<center>
+					<div class="input-group">
+						<form action="" class="input-form">
+							<textarea id="feedback" name="feedback" placeholder="Enter your feedback here..." required></textarea>
+						</form>
+						<div class="input-feedback" id="feedback-error"></div>
+					</div>
+				</center>
+    
+                <button class="reject-btn" onclick="updateAnnouncement('<%= announcement.id %>', false)">Reject</button>
+
+            <% } else { %>
+                <div class="content-apply">
+                    <div class="details-container-2" style="align-items: flex-start; display: flex; justify-content: space-between;">
+                        <div class="content-else">
+                            <h1 style="font-weight: bolder; color: darkred;">Company Name</h1>
+                            <h2 class="card-subtitle mb-4"><%= announcement.Company.name %></h2>
+                            <h2 style="font-weight: bold; color: darkred;">Announcement Name</h2>
+                            <h4 class="card-subtitle mb-2"><%= announcement.announcementName %></h4>
+                            <br>
+                            <h5 class="card-subtitle mb-2" style="font-weight: bold;">Description:</h5>
+                            <p class="card-text"><%= announcement.description %></p>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <button class="approve-btn" onclick="updateAnnouncement('<%= announcement.id %>', true)">Approve</button>
+                <br>
+                
+                <label for="feedback">Feedback:</label>
+                <center>
+					<div class="input-group">
+						<form action="" class="input-form">
+							<textarea id="feedback" name="feedback" placeholder="Enter your feedback here..." required></textarea>
+						</form>
+						<div class="input-feedback" id="feedback-error"></div>
+					</div>
+				</center>
+    
+                <button class="reject-btn" onclick="updateAnnouncement('<%= announcement.id %>', false)">Reject</button>
+            <% } %>
+        <% } else { %>
+            <h2>No information found about this announcement.</h2>
+        <% } %>
+    </div>
+
+<script>
+	function updateAnnouncement(announcementId, isApproved) {
+		const feedback = document.getElementById('feedback').value;
+		fetch(`/admin/announcement/${announcementId}`, {
+		    method: "PUT",
+		    headers: { "Content-Type": "application/json" },
+		    body: JSON.stringify({ isApproved, feedback })
+		})
+		.then(response => response.json())
+		.then(data => {
+		    alert(data.message);
+		    location.href = '/admin/announcementRequests';
+		})
+		.catch(error => {
+		    console.error("Error processing the request:", error);
+		    alert("An error occurred. Please try again later.");
+		});
+	}
+</script>
+
+</body>
+</html>

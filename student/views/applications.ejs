@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Home Page</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="/studentApplications.css">
+	<link rel="icon" href="/İyte Logo.png">
+</head>
+<body>
+    <header>
+        <%- include('./nav') %>
+        <div id="sidebar" class="sidebar">
+            <a href="/student" class="order"><button>HOME</button></a>
+            <a href="/student/opportunities" class="order"><button>Opportunities</button></a>
+            <a href="/student/applications" class="order"><button style="background-color: rgb(217, 4, 4);">Applications</button></a>
+        </div>
+    </header>
+    <div class="content-applications">
+		<% if (applications.length > 0) { %>
+			<% applications.forEach(application => { %>
+				<div class="content-container">
+					<div id="info-container">
+						<strong><p style="margin-bottom: -4px;" id="company-name-<%= application.id %>"><%= application.Announcement.Company.name %></p></strong>
+						<p id="announcement-title-<%= application.id %>"><%= application.Announcement.announcementName %></p>
+					</div>
+					<img src="/arrow.png" alt="Arrow" style="height: 40px; margin-top: 90px;">
+					<!-- Steps Section -->
+					<div class="steps">
+						<div id="pre-evaluation-<%= application.id %>" class="stage">
+							<img src="/interview.png" alt="Pre Evaluation">
+							<p>Şirket Değerlendirmesi</p>
+							<span>(0)</span>
+						</div>
+						<div id="evaluation-<%= application.id %>" class="stage">
+							<img src="/evaluation.png" alt="Evaluation Stage">
+							<p>Koordinatör Değerlendirme Aşaması</p>
+							<span>(0)</span>
+						</div>
+						<div id="ssi-<%= application.id %>" class="stage">
+							<img src="/loading.png" alt="SSI Stage">
+							<p>SSK İşlemleri Aşaması</p>
+							<span>(0)</span>
+						</div>
+						<div id="internship-<%= application.id %>" class="stage">
+							<img src="/employee.png" alt="Internship Stage">
+							<p>Staj Aşaması</p>
+							<span>(0)</span>
+						</div>
+                        <br> <hr> <br> <hr> <br>
+						<div id="rejected-<%= application.id %>" class="stage">
+							<img src="/reject.png" alt="Rejected">
+							<p>Rejected</p>
+							<span>(0)</span>
+						</div>
+					</div>
+				</div>    
+			<% }) %>
+		<% } else { %>
+			<h2 style="margin-left: 230px; margin-top: 60px;;">You haven't applied any internship yet</h2>
+		<% } %>
+	</div>
+	
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const applications = <%- JSON.stringify(applications) %>; // Convert applications data to a JavaScript object
+
+            applications.forEach(application => {
+                const idSuffix = application.id; // Get the unique ID for each application
+                setActiveStages(application, idSuffix);
+            });
+
+            function setActiveStages(application, idSuffix) {
+                // Check the status of the application and update the corresponding stage
+                if (application.status === 0) {
+                    document.getElementById(`pre-evaluation-${idSuffix}`).classList.add('active');
+                    document.querySelector(`#pre-evaluation-${idSuffix} span`).textContent = `(1)`;
+                } else if (application.status === 1) {
+                    document.getElementById(`evaluation-${idSuffix}`).classList.add('active');
+                    document.querySelector(`#evaluation-${idSuffix} span`).textContent = `(1)`;
+                } else if (application.status === 2) {
+                    document.getElementById(`ssi-${idSuffix}`).classList.add('active');
+                    document.querySelector(`#ssi-${idSuffix} span`).textContent = `(1)`;
+                } else if (application.status === 3) {
+                    document.getElementById(`internship-${idSuffix}`).classList.add('active');
+                    document.querySelector(`#internship-${idSuffix} span`).textContent = `(1)`;
+                } else if (application.status === 4) {
+                    document.getElementById(`rejected-${idSuffix}`).classList.add('active');
+                    document.querySelector(`#rejected-${idSuffix} span`).textContent = `(1)`;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

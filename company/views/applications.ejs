@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students</title>
+    <link rel="stylesheet" href="/adminApplications.css">
+	<link rel="icon" href="/İyte Logo.png">
+</head>
+<body>
+    <header>
+        <%- include('./nav') %>
+        <div id="sidebar" class="sidebar">
+            <a href="/company/announcement" class="order"><button>Share Opportunity</button></a>
+            <a href="/company/applications" class="order"><button style="background-color: rgb(217, 4, 4);">Applications</button></a>
+			<a href="/company/internships" class="order"><button>Internships</button></a>
+		</div>
+    </header>
+
+    <div class="container-apl">
+        <div class="content-apl">
+            <div class="students-container row row-cols-sm-1 row-cols-md-2 row-cols-lg-2 row-cols-xl-4 row-cols-xxl-5 g-4">
+				<% if (typeof applications !== 'undefined' && applications.length > 0) { %>
+                	<% applications.forEach(application => { %>
+                	    <div class="col">
+							<button class="as" onclick="window.location.href='/company/applications/:<%= application.id %>'">
+                	        <div class="student-card card h-100 shadow-sm">
+                	            <div class="card-body">
+                	                <h5 class="card-title"><strong><%= application.Student.username %></strong></h5>
+                	                <p class="card-text"><strong>Year:</strong> <%= application.Student.year %></p>
+                	                <p class="card-text"><strong>Announcement:</strong> <%= application.Announcement.announcementName %></p>
+                	            </div>
+                	        </div>
+							</button>
+                	    </div>
+                	<% }) %>
+				<% } else { %>
+					<h2 style="width: 1000px;">There are no applications or you have reviewed all applications</h2>
+				<% } %>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

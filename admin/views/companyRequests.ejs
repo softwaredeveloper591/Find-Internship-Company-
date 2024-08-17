@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Company Requests</title>
+	<link rel="icon" href="/İyte Logo.png">
+    <style>
+        .sidebar .order {
+            position: relative;
+            display: block;
+        }
+
+        .sidebar .order .badge {
+            position: absolute;
+            top: -15px;
+            /* Adjust as needed */
+            right: 0px;
+            /* Adjust as needed */
+            background-color: rgb(232, 25, 25);
+            color: white;
+            border: 1px solid darkred;
+            border-radius: 50%;
+            /* Changed to 50% for perfect circle */
+            padding: 5px 8px;
+            font-size: 15px;
+            box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <%- include('./nav') %>
+		<style>
+			.container.mt-3 {
+				position: absolute;
+				top: 180px;
+				left: 120px;
+			}
+		</style>
+            <div id="sidebar" class="sidebar">
+                <a href="/admin/announcementRequests" class="order">
+                    <button>Announcement Requests</button>
+                    <% if (totalAnnouncementsCount > 0) { %>
+                        <span class="badge"><%= totalAnnouncementsCount %></span>
+                    <% } %>
+                </a>
+                <a href="/admin/companyRequests" class="order"><button style="background-color: rgb(217, 4, 4);">Company
+                        Requests</button></a>
+                <a href="/admin/applicationRequests" class="order">
+                    <button>Application Requests</button>
+                    <% if (totalApplicationsCount > 0) { %>
+                        <span class="badge"><%= totalApplicationsCount %></span>
+                    <% } %>
+                </a>
+            </div>
+    </header>
+    <div class="container mt-3">
+        <div class="row">
+            <div class="col-md-1 ">
+            </div>
+            <div class="col-md-9">
+                <h1 class="h3 mb-3">Pending Company Registration Requests</h1>
+                <table class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Address</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (typeof companies !=='undefined' && companies.length> 0) { %>
+                            <% companies.forEach(company=> { %>
+                                <tr>
+                                    <td>
+                                        <%= company.name %>
+                                    </td>
+                                    <td>
+                                        <%= company.username %>
+                                    </td>
+                                    <td>
+                                        <%= company.email %>
+                                    </td>
+                                    <td>
+                                        <%= company.address %>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-success"
+                                            onclick="updateCompanyRequest('<%= company.id %>', true)">Approve</button>
+                                        <button class="btn btn-danger"
+                                            onclick="updateCompanyRequest('<%= company.id %>', false)">Reject</button>
+                                    </td>
+                                </tr>
+                                <% }); %>
+                                <% } else { %>
+                                        <tr>
+                                            <td colspan="5" class="text-center" style="margin-top: 70px;">No pending
+                                                registration requests found.</td>
+                                        </tr>
+                                <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+<script>
+	function updateCompanyRequest(companyId, isApproved) {
+		fetch(`/admin/company/${companyId}`, {
+		    method: "PUT",
+		    headers: { "Content-Type": "application/json" },
+		    body: JSON.stringify({ isApproved })
+		})
+		.then(response => response.json())
+		.then(data => {
+		    if (data.message) {
+		        alert(data.message);
+		        location.reload(); // Reload the page to refresh the content
+		    } else {
+		        alert("Action failed: " + (data.errors || "Unknown error"));
+		    }
+		})
+		.catch(error => {
+		    console.error("Error processing the request:", error);
+		    alert("An error occurred. Please try again later.");
+		});
+	}
+</script>
+
+</body>
+
+</html>

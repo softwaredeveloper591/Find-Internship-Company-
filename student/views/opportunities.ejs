@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opportunities Page</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+	<link rel="stylesheet" href="/studentOpportunities.css">
+	<link rel="icon" href="/İyte Logo.png">
+</head>
+<body>
+    <header>
+        <%- include('./nav') %>
+   
+        <div id="sidebar" class="sidebar">
+            <a href="/student" class="order"><button >HOME</button></a>
+            <a href="/student/opportunities" class="order"><button style="background-color: rgb(217, 4, 4);">Opportunities</button></a>
+            <a href="/student/applications" class="order"><button >Applications</button></a>
+        </div>
+    </header>
+    <div class="content-container">
+		<% if (announcements.length > 0) { %>
+        	<div class="content-2" id="content">
+        	    	<% announcements.forEach(announcement => { %>
+        	    	    <div class="card">
+							<% if (announcement.image !== null) { %>
+        	    	        	<img src="<%= announcement.image %>" alt="Opportunity Logo">
+							<% } else { %>
+								<img src="/announcement.jpg" alt="Announcement Logo">
+							<% } %>
+        	    	        <div class="card-body">
+        	    	            <p class="card-title"><%= announcement.Company.name %></p>
+        	    	            <p class="card-text"><%= announcement.announcementName %></p>
+        	    	            <button class="details-button" onclick="window.location.href='/student/opportunities/:<%= announcement.id %>'">More Details</button>
+        	    	        </div>
+        	    	    </div>
+        	    	<% }) %>
+        	</div>
+		<% } else { %>
+			<h2 style="margin-top: 200px;">There are no available announcements or you have applied all announcements</h2>
+		<% } %>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const contentDiv = document.getElementById('content');
+            const searchForm = document.getElementById('search-form');
+            const searchInput = document.getElementById('search-input');
+
+            // Mock data fetching
+            const internships = <%= JSON.stringify(announcements) %>;
+
+            // Function to render list items
+            function renderListItems(items) {
+                contentDiv.innerHTML = ''; // Clear the content before rendering
+
+                items.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+
+                    const img = document.createElement('img');
+                    img.src = item.image;
+                    img.alt = 'Opportunity Logo';
+
+                    const cardBody = document.createElement('div');
+                    cardBody.className = 'card-body';
+
+                    const companyTitle = document.createElement('p');
+                    companyTitle.className = 'card-title';
+                    companyTitle.textContent = item.Company.name;
+
+                    const itemTitle = document.createElement('p');
+                    itemTitle.className = 'card-text';
+                    itemTitle.textContent = item.announcementName;
+
+                    const itemDueDate = document.createElement('p');
+                    itemDueDate.className = 'card-due-date';
+                    itemDueDate.textContent = `Due Date: ${item.endDate}`;
+
+                    const detailsButton = document.createElement('button');
+                    detailsButton.className = 'details-button';
+                    detailsButton.textContent = 'More Details';
+                    detailsButton.onclick = () => window.location.href = `/student/opportunities/:${item.id}`; // Redirect to details page
+
+                    cardBody.appendChild(companyTitle);
+                    cardBody.appendChild(itemTitle);
+                    cardBody.appendChild(itemDueDate); // Add due date here
+                    cardBody.appendChild(detailsButton);
+
+                    card.appendChild(img);
+                    card.appendChild(cardBody);
+
+                    contentDiv.appendChild(card);
+                });
+            }
+
+            // Render the list items with the mock data
+            renderListItems(internships);
+
+            // Function to handle search
+            searchForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const searchTerm = searchInput.value.toLowerCase();
+
+                const filteredItems = internships.filter(item => {
+                    return item.Company.name.toLowerCase().includes(searchTerm) ||
+                           item.announcementName.toLowerCase().includes(searchTerm);
+                });
+
+                renderListItems(filteredItems);
+            });
+
+            // Function to center content
+            window.centerContent = function() {
+                contentDiv.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+            }
+        });
+    </script>
+</body>
+</html>

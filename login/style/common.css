@@ -1,0 +1,149 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    overflow: auto; /* Prevent horizontal scrolling */
+}
+
+.top-right-logo {
+    padding: 10px;
+}
+
+.top-right-logo img {
+    width: 50px; /* Adjust size as needed */
+    height: auto;
+}
+
+header {
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+    height: 140px;
+    background: -webkit-linear-gradient(left, darkred, #bf1b1b, #bf1b1b, darkred);
+    display: flex;
+    align-items: center;
+    padding: 20px;
+}
+
+.navbar {
+    display: flex;
+    justify-content: flex-end; /* Align items to the right */
+    width: 100%;
+    align-items: center;
+}
+
+.navbar-content {
+    display: flex;
+    align-items: center;
+    gap: 7px; /* Adds space between elements */
+}
+
+.search-input {
+    height: 25px;
+    border: none;
+    outline: none;
+    padding: 5px 10px;
+    font-size: 16px;
+    flex-grow: 1;
+    border-radius: 5px 0 0 5px;
+    width: 100px;
+}
+
+.search-button {
+    border: none;
+    background-color: darkred;
+    color: #fff;
+    padding: 0px 2px;
+    cursor: pointer;
+    border-radius: 5px 5px 5px 5px;
+    transition: background-color 0.3s;
+}
+
+.search-button:hover {
+    background-color: rgb(100, 1, 1);
+}
+
+.search-form {
+    height: 29px;
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 150px;
+    margin-right: 50px;
+}
+
+.website-name{
+    font-weight: bold;
+    color: #fff;
+    margin-right: 10%;
+}
+
+.text_navbar {
+    font-weight: bold;
+    color: #ffffff;
+    margin-top: 10px;
+    margin-right: 20px; /* Adds margin for spacing around the text */
+    position: absolute;
+    left: 45px;
+}
+
+.top-left-logo { /* Iyte logo specifications */
+    height: 100px;
+    z-index: 1000; /* Ensures the logo stays above other content */
+}
+
+.logo {
+    z-index: 1000; /* Ensures the logo stays above other content */
+    margin-left: 25px;
+    width: 140px;
+}
+
+.sidebar {
+    height: 100vh; /* Make the sidebar height equal to the viewport height */
+    width: 180px;
+    position: fixed; /* Fix the sidebar's position */
+    z-index: 1;
+    top: 140px; /* Adjust this value to match the header's height */
+    left: 0;
+    background: -webkit-linear-gradient(top, darkred, #bf1b1b, #bf1b1b, darkred);
+    overflow-x: hidden; /* Prevent horizontal overflow */
+    transition: width 0.09s; /* Smooth transition */
+    padding-top: 80px;
+    color: white;
+}
+
+.sidebar button {
+    display: block;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    border: none;
+    background: none;
+    width: 100%;
+}
+
+.order {
+    text-decoration: none;
+    color: white;
+}
+
+.order:hover {
+    color: white;
+}
+
+.sidebar button.active {
+    background-color: darkred;
+}
+
+.sidebar button:hover {
+    background-color: rgb(217, 4, 4);
+}
+
+.content {
+    margin-left: 180px; /* Adjust this value to match the sidebar's width */
+    padding: 20px;
+}

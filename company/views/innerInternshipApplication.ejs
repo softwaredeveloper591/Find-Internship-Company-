@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Page</title>
+    <link rel="stylesheet" href="/innerInternshipApplication.css">
+    <link rel="icon" href="/İyte Logo.png">
+</head>
+<body>
+    <header>
+        <%- include('./nav') %>
+            <div id="sidebar" class="sidebar">
+                <a href="/company/announcement" class="order"><button>Share Opportunity</button></a>
+                <a href="/company/applications" class="order"><button>Applications</button></a>
+                <a href="/company/internships" class="order"><button>Internships</button></a>
+            </div>
+    </header>
+
+    <div class="main-content">
+        <div class="temp">
+            <div class="file-content">
+                <iframe src="/company/serveFile/<%= document.id %>" width="100%" height="500"></iframe>
+            </div>
+            <div class="details">
+                <p id="student-name">Student Name: <%= application.Student.username %></p>
+                <p id="application-title">Application Title: <%= application.Announcement.announcementName %></p>
+            </div>
+            <div class="action-buttons">
+                <button class="accept" id="accept-button">ACCEPT</button>
+                <button class="reject" onclick="updateApplication('<%= application.id %>', false)">REJECT</button>
+            </div>
+        </div>
+        <form method="put" id="applicationForm">
+            <div class="other-documents" id="other-documents" style="display: none;">
+                <div id="additional-inputs">
+                    <div class="date-inputs">
+                        <p>Staj Başlangıç Tarihi:</p>
+                        <input type="date" style="font-size: 14px; width:10%; margin-left: 10px;" placeholder="Intern Start Date" id="internStartDate" name="internStartDate" required>
+                        <p style="margin-left: 15px;">Staj Bitiş Tarihi:</p>
+                        <input type="date" style="font-size: 14px; width:10%; margin-left: 10px;" placeholder="Intern End Date" id="internEndDate" name="internEndDate" required>
+                    </div>
+                    <input type="number" placeholder="Intern Duration (as work days)" id="internDuration"
+                        name="internDuration" min="0" required>
+                    <input type="text" placeholder="Duty and Title of The Representative" id="dutyAndTitle"
+                        name="dutyAndTitle" required>
+
+                    <div class="question-answer">
+                        <label for="workOnSaturday">Cumartesi günleri çalışıyor musunuz?</label>
+                        <select name="workOnSaturday" id="workOnSaturday" required>
+                            <option value="yes">Yes</option>
+                            <option value="no" selected>No</option>
+                        </select>
+                    </div>
+
+                    <div class="question-answer">
+                        <label for="workOnHoliday">Resmi-Dini Bayram/Tatil, Arefe Çalışıyor mu?</label>
+                        <select name="workOnHoliday" id="workOnHoliday" required>
+                            <option value="yes">Yes</option>
+                            <option value="no" selected>No</option>
+                        </select>
+                    </div>
+
+                    <div id="day" class="question-answer" style="display: none;">
+                        <p>Çalışılan Gün sayısı</p>
+                        <div class="answer">
+                            <input type="number" style="width: 10%;" name="day" placeholder="Gün sayısı" value="0"
+                                min="0">
+                        </div>
+                    </div>
+
+                    <div class="question-answer">
+                        <label for="sgk">Sigorta yapılmasını istemiyorum.</label>
+                        <select name="sgk" id="sgk" required>
+                            <option value="yes">Yes</option>
+                            <option value="no" selected>No</option>
+                        </select>
+                    </div>
+
+                    <button type="button" onclick="downloadButton('<%= application.id %>', 'Updated Application Form')" id="download-button">Download Application Form</button>
+                    <div class="upload">
+                        <div class="file-name" id="file-name"></div>
+                        <button type="button" id="upload-button" style="visibility: hidden;">Upload Application Form</button>
+                        <input type="file" name="upload-file" id="upload-file" accept=".pdf,.docx">
+                    </div>
+                    <button type="submit" id="submit-button" style="visibility: hidden;">Submit the form</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const today = new Date().toISOString().split('T')[0];
+            const startDateInput = document.getElementById('internStartDate');
+            const endDateInput = document.getElementById('internEndDate');
+
+            startDateInput.setAttribute('min', today);
+            endDateInput.setAttribute('min', today);
+
+            startDateInput.addEventListener('change', function () {
+                const startDate = new Date(this.value);
+                const minEndDate = new Date(startDate);
+                minEndDate.setDate(minEndDate.getDate() + 25);
+
+                const minEndDateString = minEndDate.toISOString().split('T')[0];
+                endDateInput.setAttribute('min', minEndDateString);
+            });
+        });
+
+        document.getElementById('upload-file').addEventListener('input', function (event) {
+            var fileInput = event.target;
+            var filePath = fileInput.value;
+            var allowedExtensions = /(\.pdf|\.docx)$/i;
+            var fileNameDisplay = document.getElementById('file-name');
+
+            if (!allowedExtensions.exec(filePath)) {
+                alert('Please select a PDF file');
+                fileInput.value = '';
+                fileNameDisplay.textContent = '';
+            } else {
+                var fileName = fileInput.files[0].name;
+                fileNameDisplay.textContent = 'Selected file: ' + fileName;
+            }
+        });
+
+        const applicationForm = document.getElementById('applicationForm');
+
+        async function downloadButton(applicationId, fileType) {
+            const internStartDate = applicationForm.internStartDate.value;
+            const internEndDate = applicationForm.internEndDate.value;
+            const internDuration = applicationForm.internDuration.value;
+            const dutyAndTitle = applicationForm.dutyAndTitle.value;
+            const workOnSaturday = applicationForm.workOnSaturday.value;
+            const workOnHoliday = applicationForm.workOnHoliday.value;
+            const sgk = applicationForm.sgk.value;
+            const day = applicationForm.day.value;
+
+            if (!internStartDate || !internEndDate || !internDuration || !dutyAndTitle || !workOnSaturday || !workOnHoliday || !sgk) {
+                alert("You need to fill the form before downloading the Application form");
+            }
+            else {
+                try {
+                    const res = await fetch(`/company/applications/${applicationId}/fillApplicationForm`, {
+                        method: 'POST',
+                        body: JSON.stringify({ internStartDate, internEndDate, internDuration, dutyAndTitle, workOnSaturday, workOnHoliday, sgk, day }),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+					if (!res.ok) {
+						throw new Error('Failed to fill the application form');
+					}
+
+                    const response = await fetch(`/company/applications/download/${applicationId}/${fileType}`);
+                    if (!response.ok) {
+                        throw new Error('Failed to download file');
+                    }
+
+                    const blob = await response.blob();
+                    const contentDispositionHeader = response.headers.get('Content-Disposition');
+                    const filename = contentDispositionHeader.split('filename=')[1].replace(/"/g, '');
+                    const url = window.URL.createObjectURL(blob);
+
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', filename);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    document.getElementById('upload-button').style.visibility = 'visible';
+                    document.getElementById('submit-button').style.visibility = 'visible';
+                } catch (error) {
+                    console.error('Error downloading file:', error);
+                }
+            }
+        }
+
+        async function updateApplication(applicationId, isApproved) {
+			const fileInput = document.getElementById('upload-file');
+			if((isApproved && fileInput.files.length !== 0) || !isApproved) {
+				const file = fileInput.files[0];
+				const formData = new FormData();
+				formData.append('isApproved', isApproved);
+				if (file) {
+					formData.append('upload-file', file);  // Ensure the field name matches
+				}
+
+				await fetch(`/company/applications/${applicationId}`, {
+					method: "PUT",
+					body: formData
+				})
+				.then(response => response.json())
+				.then(data => {
+					alert(data.message);
+					location.href = '/company/applications';
+				})
+				.catch(error => {
+					console.error("Error processing the request:", error);
+					alert("An error occurred. Please try again later.");
+				});
+			}
+			else {
+				event.preventDefault(); // Prevent form submission
+                alert("Please upload a file before submitting.");
+			}
+		}
+
+        document.getElementById('applicationForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            updateApplication('<%= application.id %>', true);
+        });
+
+        document.getElementById('accept-button').addEventListener('click', function () {
+            document.getElementById('other-documents').style.display = 'block';
+            document.getElementById('other-documents').scrollIntoView({ behavior: 'smooth' });
+            document.querySelector('.accept').style.display = 'none';
+        });
+
+        document.getElementById('upload-file').addEventListener('change', function (event) {
+            event.preventDefault();
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('file-name').textContent = `Selected file: ${file.name}`;
+            } else {
+                document.getElementById('file-name').textContent = '';
+            }
+        });
+
+        document.getElementById('upload-button').addEventListener('click', function () {
+            document.getElementById('upload-file').click();
+        });
+
+        document.getElementById('workOnHoliday').addEventListener('change', function () {
+            if (this.value === 'yes') {
+                document.getElementById('day').style.display = 'block';
+            } else {
+                document.getElementById('day').style.display = 'none';
+            }
+        });
+
+        window.addEventListener('load', function () {
+            if (document.getElementById('workOnHoliday').value === 'yes') {
+                document.getElementById('day').style.display = 'block';
+            }
+        });
+
+        document.getElementById('dutyAndTitle').addEventListener('input', function () {
+            this.value = this.value.replace(/[0-9]/g, '');
+        });
+
+    </script>
+</body>
+</html>

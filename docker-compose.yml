@@ -1,0 +1,106 @@
+services:
+  login:
+    build:
+      dockerfile: Dockerfile
+      context: ./login
+    container_name: login
+    ports:
+      - "3001:3001"
+    restart: always
+    volumes:
+      - .:/app
+      - /app/login/node_modules
+
+  signup:
+    build:
+      dockerfile: Dockerfile
+      context: ./signup
+    container_name: signup
+    ports:
+      - "3002:3002"
+    restart: always
+    volumes:
+      - .:/app
+      - /app/signup/node_modules
+
+  admin:
+    build:
+      dockerfile: Dockerfile
+      context: ./admin
+    container_name: admin
+    ports:
+      - "3003:3003"
+    restart: always
+    volumes:
+      - .:/app
+      - /app/admin/node_modules
+
+  student:
+    build:
+      dockerfile: Dockerfile
+      context: ./student
+    container_name: student
+    ports:
+      - "3004:3004"
+    restart: always
+    volumes:
+      - .:/app
+      - /app/student/node_modules
+
+  company:
+    build:
+      dockerfile: Dockerfile
+      context: ./company
+    container_name: company
+    ports:
+      - "3005:3005"
+    restart: always
+    volumes:
+      - .:/app
+      - /app/company/node_modules
+
+  secretary:
+    build:
+      dockerfile: Dockerfile
+      context: ./secretary
+    container_name: secretary
+    ports:
+      - "3006:3006"
+    restart: always
+    volumes:
+      - .:/app
+      - /app/secretary/node_modules
+
+  notification:
+    build:
+      dockerfile: Dockerfile
+      context: ./notification
+    container_name: notification
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_QUEUE=email_queue
+    volumes:
+      - .:/app
+      - /app/notification/node_modules
+
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    ports:
+      - "5672:5672"  # RabbitMQ message broker port
+      - "15672:15672"  # RabbitMQ management UI port
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  nginx-proxy:
+    build:
+      dockerfile: Dockerfile
+      context: ./proxy
+    ports:
+      - "80:80"
+    # No dependency on MySQL as it's running on the host

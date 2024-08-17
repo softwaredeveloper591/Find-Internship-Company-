@@ -1,0 +1,206 @@
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content {
+    margin-left: 180px;
+    margin-top: 140px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px;
+    max-height: calc(100vh - 120px); /* Adjust based on the height of the header */
+}
+
+.other-documents {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.cv {
+    display: flex;
+    flex-direction: column;
+    height: 500px;
+}
+
+.temp {
+    display: flex;
+    flex-direction: row;
+
+}
+
+.details {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-left: 20px;
+}
+
+.details p {
+    margin: 0;
+    padding: 10px 0;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.action-buttons{
+    display: inline-block;
+    margin-left: 70px;
+    margin-top: 460px;
+}
+
+.action-buttons .accept, .action-buttons .reject, #submit-button, #download-button, #upload-button{
+    padding: 10px 20px;
+    margin-right: 20px;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.action-buttons .accept, .action-buttons .reject, #submit-button, #download-button, #upload-button{
+    background-color: darkred;
+}
+
+.action-buttons .accept:hover, .action-buttons .reject:hover, #submit-button:hover,
+#download-button:hover, #upload-button:hover{
+    background-color: rgb(217, 4, 4);
+    transform: scale(1.15);
+    transition: transform 0.3s ease;
+}
+
+#pdf-container {
+    width: 350px;
+    height: 450px;
+    overflow: auto;
+    position: static;
+    display: flex;
+    top: 100px;
+    left: 300px;
+    border: 1px solid #000;
+}
+
+#pdf-canvas {
+    width: 100%;
+}
+
+#additional-inputs{
+
+    flex: 1;
+    padding-right: 20px;
+}
+
+#additional-inputs input{
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 50%;
+    box-sizing: border-box;
+}
+
+
+#additional-inputs h3 {
+    margin-bottom: 10px;
+    font-size: 18px;
+    color: darkred;
+}
+
+.date-inputs {
+    display: flex;
+}
+
+.date-inputs div {
+    margin-right: 20px; /* Add some space between the date inputs */
+}
+
+.date-inputs div:last-child {
+    margin-right: 0; /* Remove margin from the last date input */
+}
+
+.question-answer {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.question-answer p {
+    flex: 0.1;
+}
+
+.question-answer .answer {
+    display: flex;
+    align-items: center;
+    flex: 0.1;
+}
+
+#docx-preview-container {
+    flex: 1;
+    min-width: 300px;
+    max-width: 50%;
+}
+
+.upload {
+    position: relative;
+    display: inline-block;
+}
+
+#upload-button {
+    display: inline-block;
+    padding: 10px 20px;
+    cursor: pointer;
+    background-color: darkred;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+#download-button {
+    display: inline-block;
+    padding: 10px 20px;
+    cursor: pointer;
+    background-color: darkred;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+
+#upload-file {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    display: none;
+}
+
+.file-name {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #333;
+}
+
+.file-content{
+    width: 600px;
+   
+}
+
+#submit-button{
+
+    margin-left: 10%;
+}

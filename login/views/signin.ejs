@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/İyte Logo.png">
+  <title>Automated Internship System Login</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+
+
+<body>
+    <div class="left">
+      <div class="image-container">
+        <img src="/iyte_ceng.jpg" alt="IZTECH-CENG">
+        <div class="purple-overlay"></div>
+      </div>
+    </div>
+
+    <div class="right">
+      
+      <div class="top-right">
+        <div class="top-right-middle">
+          <a href="https://iyte.edu.tr/" target="_blank">
+            <img src="/İyte Logo.png"
+              height="200" width="200" alt="IYTE">
+          </a>
+        </div>
+        <div style="width: 85%; margin: 0 auto;">
+          <hr style="border: 1px solid black; border-color: black; opacity: 0.15;">
+        </div>
+      </div>
+
+      
+      <div class="bottom-right">
+        <form method="post" id="signin" class="signin">
+          <p name="page-name">Automated Internship System</p>
+          <h1 name="header">Login</h1>
+          <div class="container">
+              <input type="email" style="font-size: 14px;" placeholder="Email" id="email" name="email" required>
+              <input type="password" style="font-size: 14px;" placeholder="Password" id="password" name="password" required>
+              <div class="login error"></div>
+              <label>
+                  <input type="checkbox" id="remember" name="remember" value="lsRememberMe">
+                  <span style="font-size: 16px;">Remember your username</span>
+              </label>
+              <button type="submit" value="Login" onclick="lsRememberMe()">Login</button>
+          </div>
+        </form>
+
+        <form action="/forgotPassword" method ="post" id="forgotPassword" class="forgotPassword">
+          <div class="forgot-password"  id="forgot-password">
+            <input type="email" style="font-size: 14px;" placeholder="Email" id="email" name="email" required>
+            <div class="no user error"></div>
+            <button type="submit">Send Reset Link</button>
+          </div>
+        </form>
+        <center><a href="#" onclick="toggleForgotPassword()">Forgot Password?</a></center>
+        <br>
+        <center><a href='/signup'>Don't have an account? Sign up.</a></center>
+      </div>
+    </div>
+<script src="/remember.js"></script>
+<script src="/signin_errors.js"></script>
+
+</body>
+</html>
+
+<script>
+function toggleForgotPassword() {
+    var forgotPassword = document.getElementById("forgot-password");
+    forgotPassword.classList.toggle("active");
+    
+    const forgotPasswordForm = document.querySelector('form.forgotPassword');
+    const error = forgotPasswordForm.querySelector('.no.user.error');
+    error.textContent = '';
+    error.style.display = 'none';
+    forgotPasswordForm.reset();
+}
+</script>

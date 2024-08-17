@@ -1,0 +1,179 @@
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+
+.order{
+    text-decoration: none;
+    color: white;   
+}
+.order:hover{
+    color: white;
+}
+
+.container-company {
+	margin-top: 35px;
+    display: inline-block;
+    margin-left: 380px;
+    overflow-y: auto;
+}
+
+.content {
+	margin-top: 150px;
+    display: inline-block;
+    margin-left: 180px;
+}
+
+.details label{
+    display: block;
+}
+
+.upload-frame label{
+    margin-top: 10px;
+    padding: 20px; /* Adds space inside the border */
+    border: 2px dashed #000; /* Sets a dashed border */
+    display: inline-block; /* Allows the padding and border to enclose the text */
+}
+
+.details .publish{
+    align-items: end;
+    background-color: darkred;
+    color: white;
+    border: none;
+    padding: 10px;
+    margin-top: 10px;
+    margin-left: 89%;
+}
+
+.details textarea, .details input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+}
+
+
+.details{
+    width: 100vh;
+    height: auto;
+    margin-top: 140px;
+    background-color: rgb(241, 232, 232);
+    padding: 10px;
+    border-radius: 0rem;
+    box-shadow: 30px 20px 5px rgba(76, 73, 73, 0.1);
+}
+
+.active{
+    display: block;
+    background-color: darkred;
+    color: white;
+    padding: 10px;
+    border: none;
+    width: 100%;
+    
+}
+
+.active:hover{
+    background-color: red;
+    transition: 0.4s;
+}
+
+textarea {
+    resize: none;
+}
+
+i{
+    padding-right: 10px;
+}
+
+.dp-menu{
+    margin-left: -10px;
+    margin-right: 30px;
+    background-color: darkred;
+    display: inline-block;
+    border: none;
+}
+
+
+.image-upload-container {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start; 
+    align-items: center; 
+    gap: 20px; 
+    width: 500px;
+    height: 230px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.file-upload-img {
+    display: none; 
+    width: 300px;
+    height: 270px;
+    margin-top: 20px;
+    margin-right: 20px; 
+    z-index: 1;
+}
+
+.image-upload-container input[type="file"] {
+    font-size: 14px;
+    opacity: 0; 
+    margin-left: 330px;
+    width: 70px;
+    height: 70px;
+    position: absolute; 
+    cursor: pointer; 
+}
+
+
+.image-upload-container .upload-button {
+    background: darkred;
+    margin-left: 330px;
+    position: absolute;
+    color: #fff;
+    border: black; 
+    border-radius: 30%;
+    padding: 13px;
+    cursor: pointer;
+}
+
+.remove-button {
+    display: inline-flex;
+    background-color: darkred; 
+    color: white;
+    padding: 13px; 
+    margin-left: 390px;
+    border: black; 
+    border-radius: 30%;
+    position: absolute;
+    height: 50px;
+    width: 50px;
+}
+
+.dashed-rectangle {
+    text-align: center;
+    align-content: center;
+    width: 200px; 
+    height: 200px; 
+    border: 3px dashed black; 
+    margin-left: 20px;
+    position: absolute;
+}
+
+.details .publish:hover{
+	background-color: rgb(217, 4, 4);
+    transform: scale(1.15);
+    transition: transform 0.3s ease;
+}
+
+.dates-div{
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+.dates-div input{
+    width: 25%;
+}

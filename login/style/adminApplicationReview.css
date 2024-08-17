@@ -1,0 +1,155 @@
+html {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #e6e6e6;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.container-iar {
+    position: absolute;
+    display: inline-block;
+    overflow-y: auto;
+    justify-content: center;
+    align-items: center;
+    width: calc(100% - 180px);
+    padding: 40px;
+    top: 140px;
+    margin-left: 180px;
+}
+
+.content-iar {
+    width: calc(100% - 180px);
+}
+
+.student-info {
+    background: #f7f7f7;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+.feedback-section {
+    background: #f7f7f7;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.student-info p, .label-feedback {
+    margin-bottom: 10px;
+}
+
+.student-info p strong {
+    color: darkred;
+}
+
+.button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    text-decoration: none;
+    margin-right: 10px;
+}
+
+.button-submit {
+    background-color: darkred;
+    color: #fff;
+}
+
+.button-submit:hover {
+    background-color: #bf1b1b;
+}
+
+.button-accept {
+    background-color: green;
+    color: #fff;
+}
+
+.button-accept:hover {
+    background-color: darkgreen;
+}
+
+.inline-form {
+    display: inline;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.label-feedback {
+    font-weight: bold;
+}
+
+.input-feedback {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+textarea.input-feedback {
+    resize: none;
+}
+
+.download-file {
+    width: max-content;
+    display: flex;
+    position: relative;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    color: #bf1b1b;
+    padding: 10px 20px;
+    border: 2px solid #bf1b1b;
+    border-radius: 4px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.download-file:hover {
+    background-color: #bf1b1b;
+    color: #ffffff;
+}
+
+.margin-top-4 {
+    margin-top: 20px;
+}
+
+.send-to-sec {
+    width: 100%;
+    display: flex; 
+    justify-content: space-between; /* Add this */
+    align-items: center; /* Optional, for vertical alignment */
+}
+
+.inline-form {
+    display: inline; /* Change this to inline-block */
+    margin-left: auto; /* Add this */
+}
+
+.send-to-sec .as {
+	border: none;
+	background-color: transparent;
+}
+
+.upload-file {
+    display: flex;
+    position: relative;
+    align-items: center;
+    gap: 10px;
+    color: #43a047;
+    cursor: pointer;
+    padding: 10px 20px;
+    border: 2px solid #43a047;
+    border-radius: 4px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+.upload-file:hover {
+    background-color: #43a047;
+    color: #ffffff;
+}

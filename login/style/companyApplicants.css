@@ -1,0 +1,61 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    height: 100%;
+}
+
+.content {
+    position: absolute;
+    top: 140px; /* Adjust according to your header height */
+    bottom: 0;
+    left: 0;
+    right: 0;
+    overflow-y: auto; /* Make only the content div scrollable */
+    padding: 20px;
+    background-color: #fff; /* Optional: to distinguish the content area */
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Ensure 3 cards per row */
+    gap: 20px; /* Adjust gap as needed */
+}
+
+.card {
+    background-color: #f1f1f1;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    height: 150px; /* Ensure the card takes up the full height of the grid cell */
+
+}
+
+.card-body {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 0; /* Ensure the card body takes up remaining space */
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin: 0 0 10px;
+}
+
+.card-text {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.card-due-date {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 10px;
+}
+
+.card:hover {
+    transform: scale(1.05); 
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); 
+}

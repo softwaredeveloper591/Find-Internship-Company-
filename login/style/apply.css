@@ -1,0 +1,136 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
+
+.container-apply {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: calc(100% - 180px);
+    height: calc(100vh - 110px);
+    padding: 40px;
+    top: 140px;
+    margin-left: 180px;
+    overflow-y: auto;
+}
+
+.content-apply {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 20px;
+}
+
+.fixed-size-img {
+    height: 366px;
+    width: auto;
+    max-width: 99.9%;
+    border: 3px solid black;
+    border-radius: 0.375rem;
+    position: relative;
+}
+
+.details-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border: 1px solid black;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 0.375rem;
+    background-color: #f9f9f9;
+    padding: 20px;
+    gap: 20px;
+}
+
+.details-container-2 {
+    width: 100%;
+    padding: 20px;
+    border: 1px solid black;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 0.375rem;
+    background-color: #fff;
+    overflow: hidden; /* Change overflow property to hidden */
+}
+
+.details-container-2 h5 {
+    margin-bottom: 10px;
+    font-size: 1.25rem;
+    color: #333;
+}
+
+.card {
+    min-width: 400px;
+    max-width: 400px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.card-header {
+    font-weight: bold;
+}
+
+.card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.card-text {
+    word-wrap: break-word;
+    white-space: pre-wrap; /* Add this line */
+    overflow: auto; /* Add this line */
+}
+
+.image-container {
+    display: flex;
+    gap: 10px;
+    padding: 10px 20px;
+}
+
+.sbt-button {
+    background-color: darkred;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    text-align: center;
+    transition: background-color 0.3s;
+    align-self: flex-start;
+}
+
+.sbt-button:hover {
+    background-color: rgb(217, 4, 4);
+}
+
+.upload-file, #studentFile {
+    display: flex;
+    position: relative;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 10px;
+    color: #bf1b1b;
+    cursor: pointer;
+    padding: 10px 20px;
+    border: 2px solid #bf1b1b;
+    border-radius: 4px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+	margin-bottom: 15px;
+}
+
+.upload-file:hover, #studentFile:hover {
+    color: #ffffff;
+    background-color: #bf1b1b;
+}
+
+.content-else {
+	width: 70%;
+}

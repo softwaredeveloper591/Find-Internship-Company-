@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applications</title>
+    <link rel="stylesheet" href="/adminApplications.css">
+	<link rel="icon" href="/İyte Logo.png">
+</head>
+<body>
+    <header>
+        <%- include('./nav') %>
+        <div id="sidebar" class="sidebar">
+            <a href="/admin/announcementRequests" class="order"><button>Announcement Requests</button>
+                <% if (totalAnnouncementsCount > 0) { %>
+                    <span class="badge"><%= totalAnnouncementsCount %></span>
+                <% } %>
+            </a>
+            <a href="/admin/companyRequests" class="order"><button >Company Requests</button></a>
+            <a href="/admin/applicationRequests" class="order">
+                <button style="background-color: rgb(217, 4, 4);">Application Requests</button>
+            </a>
+        </div>
+    </header>
+
+    <div class="container-apl">
+        <div class="content-apl">
+            <div class="students-container row row-cols-sm-1 row-cols-md-2 row-cols-lg-2 row-cols-xl-4 row-cols-xxl-5 g-4">
+				<% if (applications.length > 0) { %>
+                	<% applications.forEach(application => { %>
+                	    <div class="col">
+							<button class="as" onclick="window.location.href='/admin/applications/:<%= application.id %>'">
+                	        <div class="student-card card h-100 shadow-sm">
+                	            <div class="card-body">
+                	                <h5 class="card-title"><strong><%= application.Student.username %></strong></h5>
+                	                <p class="card-text"><strong>ID:</strong> <%= application.Student.id %></p>
+                	                <p class="card-text"><strong>Company:</strong> <%= application.Announcement.Company.name %></p>
+                	            </div>
+                	        </div>
+							</button>
+                	    </div>
+                	<% }) %>
+				<% } else { %>
+					<h2 style="width: 1000px;">There are no application requests</h2>
+				<% } %>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
