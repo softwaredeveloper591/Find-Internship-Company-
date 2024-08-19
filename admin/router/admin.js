@@ -246,7 +246,7 @@ router.put("/announcement/:announcementId", [auth, checkUserRole("admin")], asyn
 
 				const queue = 'email_queue';
 				const msg = JSON.stringify({
-					to: company.email,
+					to: announcement.Company.email,
 					subject: emailSubject,
 					body: emailBody
 				});
@@ -491,7 +491,7 @@ router.put("/applications/:applicationId",upload.single('studentFile'),[auth,che
 
 				const queue = 'email_queue';
 				const msg = JSON.stringify({
-					to: company.email,
+					to: application.Announcement.Company.email,
 					subject: emailSubject,
 					body: emailBody
 				});

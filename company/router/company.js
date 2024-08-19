@@ -373,9 +373,9 @@ router.put("/applications/:applicationId",upload.single('upload-file'),[auth,che
 
 				const queue = 'email_queue';
 				const msg = JSON.stringify({
-					to: company.email,
+					to: application.Student.email,
 					subject: emailSubject,
-					body: emailBody
+					body: emailBodybruh
 				});
 
 				// Ensure the queue exists

@@ -91,22 +91,58 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', (event) => {
-            const today = new Date().toISOString().split('T')[0];
-            const startDateInput = document.getElementById('internStartDate');
-            const endDateInput = document.getElementById('internEndDate');
+			const today = new Date().toISOString().split('T')[0];
+			const startDateInput = document.getElementById('internStartDate');
+			const endDateInput = document.getElementById('internEndDate');
 
-            startDateInput.setAttribute('min', today);
-            endDateInput.setAttribute('min', today);
+			startDateInput.setAttribute('min', today);
+			endDateInput.setAttribute('min', today);
 
-            startDateInput.addEventListener('change', function () {
-                const startDate = new Date(this.value);
-                const minEndDate = new Date(startDate);
-                minEndDate.setDate(minEndDate.getDate() + 25);
+			startDateInput.addEventListener('change', function () {
+			    const startDate = new Date(this.value);
+			    const minEndDate = calculateMinEndDate(startDate, 20);
+			    const minEndDateString = minEndDate.toISOString().split('T')[0];
+			    endDateInput.setAttribute('min', minEndDateString);
+			});
+		});
 
-                const minEndDateString = minEndDate.toISOString().split('T')[0];
-                endDateInput.setAttribute('min', minEndDateString);
-            });
-        });
+		function calculateMinEndDate(startDate, minWorkDays) {
+		    const officialHolidays = [
+		        '2024-01-01', // New Year's Day
+		        '2024-04-23', // National Sovereignty and Children's Day
+		        '2024-05-01', // Labor and Solidarity Day
+		        '2024-04-09', // Eve of Ramadan Feast (half-day)
+		        '2024-04-10', // First Day of Ramadan Feast
+		        '2024-04-11', // Second Day of Ramadan Feast
+		        '2024-04-12', // Third Day of Ramadan Feast
+		        '2024-05-19', // Commemoration of Atatürk, Youth and Sports Day
+		        '2024-07-15', // Democracy and National Unity Day
+		        '2024-06-16', // Eve of Sacrifice Feast (half-day)
+		        '2024-06-17', // First Day of Sacrifice Feast
+		        '2024-06-18', // Second Day of Sacrifice Feast
+		        '2024-06-19', // Third Day of Sacrifice Feast
+		        '2024-06-20', // Fourth Day of Sacrifice Feast
+		        '2024-08-30', // Victory Day
+		        '2024-10-28', // Republic Day Eve (half-day)
+		        '2024-10-29', // Republic Day
+		    ];
+		
+		    let workdaysCount = 0;
+		    let currentDate = new Date(startDate);
+		
+		    while (workdaysCount < minWorkDays) {
+		        currentDate.setDate(currentDate.getDate() + 1);
+		        const currentDayOfWeek = currentDate.getDay();
+		        const currentDateString = currentDate.toISOString().split('T')[0];
+			
+		        // Skip weekends (Saturday=6, Sunday=0) and official holidays
+		        if (currentDayOfWeek !== 0 && currentDayOfWeek !== 6 && !officialHolidays.includes(currentDateString)) {
+		            workdaysCount++;
+		        }
+		    }
+		
+		    return currentDate;
+		}
 
         document.getElementById('upload-file').addEventListener('input', function (event) {
             var fileInput = event.target;

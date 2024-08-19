@@ -114,7 +114,7 @@ router.post("/applications/:applicationId",upload.single('studentFile'),[auth,ch
 
 				const queue = 'email_queue';
 				const msg = JSON.stringify({
-					to: company.email,
+					to: application.Announcement.Company.email,
 					subject: emailSubject,
 					body: emailBody
 				});
