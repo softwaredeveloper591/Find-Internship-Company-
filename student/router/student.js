@@ -65,6 +65,38 @@ router.get("/",[auth,checkUserRole("student")], asyncErrorHandler( async (req, r
 	});
 }));
 
+router.get("/applicationForm", [auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
+    const student = await Student_model.findOne({ where: {id: req.user.id} });
+    res.render("applicationForm",{ 
+		usertype:"student", 
+		dataValues:student.dataValues,
+		//totalAnnouncementsCount
+	});
+
+	// there will be only a download button at this page so we should handle it according to this
+	// adding a page to side bar would be absurd
+}));
+
+router.post("/applicationForm", upload.single('ApplicationForm'), [auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
+    const student = await Student_model.findOne({ where: {id: req.user.id} });
+
+	const file = req.file;
+	if (!file) {
+		return res.status(400).json({ error: "No file uploaded" });
+	}
+
+  	const binaryData = file.buffer;
+
+	await Document_model.create({
+		name:`${student.username}_ApplicationForm.docx`,
+		data: binaryData,
+		fileType:'Application Form',
+		username: student.username
+  	});  
+
+	res.status(201).json({ message: "Application form uploaded successfully" });
+}));
+
 router.get("/opportunities", [auth, checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
 
     const student = await Student_model.findOne({ where: { id: req.user.id }});

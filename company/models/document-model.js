@@ -10,11 +10,12 @@ const Document = sequelize.define('Document', {
   },
   applicationId: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+	allowNull: true,
     references: {
       model: 'Application',
       key: 'id'
-    }
+    },
+	defaultValue: null
   },
   name: {
     type: DataTypes.STRING(100),

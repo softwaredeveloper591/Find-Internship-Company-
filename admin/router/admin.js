@@ -136,6 +136,38 @@ router.get("/", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, r
     });
 }));
 
+router.get("/applicationForms", [auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
+    const admin = await Student_model.findOne({ where: {id: req.user.id} });
+
+	const applicationForms = await Document_model.findAll({ where: { applicationId: null }});
+    res.render("applicationForm",{ 
+		usertype:"admin", 
+		dataValues:admin.dataValues,
+		applicationForms
+	});
+
+	// in the front end there will be student names and a download button next to the names
+	// we need to use /documents/download/:id/:fileType
+	/* maybe I can combine a way to join /documents/download/:id/:fileType and /application/download/:applicationId/:fileType 
+	in the future but I will leave it like that for now*/
+}));
+
+router.get("/documents/download/:id/:fileType",[auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+    const id = req.params.id;
+    const fileType = req.params.fileType;
+    const takenDocument = await Document_model.findOne({where:{id, fileType}});
+    if(!takenDocument){
+        throw new Error("There is no such document.")
+    }
+    let filename= takenDocument.dataValues.name;
+    let binaryData= takenDocument.dataValues.data;
+    let contentType = 'application/octet-stream'; // Default content type
+    contentType = 'image/jpeg';
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', contentType);
+    res.send(binaryData);
+}));
+
 router.get("/announcementRequests", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
 	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
 	const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
@@ -368,9 +400,9 @@ router.get("/applications/:applicationId",[auth,checkUserRole("admin")], asyncEr
 router.get("/applications/download/:applicationId/:fileType",[auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
     const applicationId = req.params.applicationId;
     const fileType = req.params.fileType;
-    const takenDocument = await Document_model.findOne({where:{applicationId:applicationId, fileType:fileType}});
+    const takenDocument = await Document_model.findOne({where:{applicationId, fileType}});
     if(!takenDocument){
-        throw error("There is no such document.")
+        throw new Error("There is no such document.")
     }
     let filename= takenDocument.dataValues.name;
     let binaryData= takenDocument.dataValues.data;
