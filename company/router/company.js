@@ -57,7 +57,7 @@ router.use(async (req, res, next) => {
     next();
 });
 
-router.get("/",[auth,checkUserRole("company")], asyncErrorHandler(async function(req, res ,next){
+router.get("/",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
     const company = await Company_model.findOne({ where: { id: req.user.id } });
     const applications = await Application_model.findAll({
 		where: {
@@ -83,7 +83,7 @@ router.get("/",[auth,checkUserRole("company")], asyncErrorHandler(async function
     });
 }));
 
-router.get("/announcement",[auth,checkUserRole("company")], asyncErrorHandler(async function(req, res, next){
+router.get("/announcement",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
 	const company = await Company_model.findOne({ where: {id: req.user.id} });
     res.render("companyShareOpportunity",{ 
 		usertype:"company", 
@@ -92,7 +92,7 @@ router.get("/announcement",[auth,checkUserRole("company")], asyncErrorHandler(as
 	});
 }));
 
-router.post('/announcement',upload.single('image'), [auth, checkUserRole('company')], asyncErrorHandler(async function(req, res ,next){
+router.post('/announcement',upload.single('image'), [auth, checkUserRole('company')], asyncErrorHandler( async (req, res, next) => {
 	const { companyId, announcementName, description, startDate, endDate } = req.body;
 	let image = null;
 	const file = req.file;
@@ -113,7 +113,7 @@ router.post('/announcement',upload.single('image'), [auth, checkUserRole('compan
     res.redirect("/company?action=formfilled");
 }));
 
-router.get("/applications",[auth,checkUserRole("company")], asyncErrorHandler(async function(req, res, next){
+router.get("/applications",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
     const company = await Company_model.findOne({ where: { id: req.user.id } });
     const applications = await Application_model.findAll({
 		where: {
@@ -140,7 +140,7 @@ router.get("/applications",[auth,checkUserRole("company")], asyncErrorHandler(as
     });
 }));
 
-router.get("/internships",[auth,checkUserRole("company")], asyncErrorHandler(async function(req, res, next){
+router.get("/internships",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
     const company = await Company_model.findOne({ where: { id: req.user.id } });
     const applications = await Application_model.findAll({
 		where: {
@@ -167,7 +167,7 @@ router.get("/internships",[auth,checkUserRole("company")], asyncErrorHandler(asy
     });
 }));
 
-router.get("/applications/:applicationId",[auth,checkUserRole("company")], asyncErrorHandler(async function(req, res, next){
+router.get("/applications/:applicationId",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
     const company = await Company_model.findOne({ where: { id: req.user.id } });
 	const applicationId = req.params.applicationId.slice(1);
     const application = await Application_model.findOne({
@@ -200,7 +200,7 @@ router.get("/applications/:applicationId",[auth,checkUserRole("company")], async
     });
 }));
 
-router.get('/serveFile/:id', [auth, checkUserRole("company")], asyncErrorHandler(async (req, res, next) => {
+router.get('/serveFile/:id', [auth, checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
     const file = await Document_model.findByPk(req.params.id);
     if (file) {
       res.setHeader('Content-Type', 'application/pdf');
@@ -210,7 +210,7 @@ router.get('/serveFile/:id', [auth, checkUserRole("company")], asyncErrorHandler
     }
 }));
   
-router.post("/applications/:applicationId/fillApplicationForm",[auth,checkUserRole("company")], asyncErrorHandler(async function(req, res, next){
+router.post("/applications/:applicationId/fillApplicationForm",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
 	let { internStartDate, internEndDate, internDuration, dutyAndTitle, workOnSaturday, workOnHoliday, day, sgk } = req.body;
 	let y1,n1,y2,n2,y3,n3;
 	const applicationId = req.params.applicationId;
@@ -290,7 +290,7 @@ router.post("/applications/:applicationId/fillApplicationForm",[auth,checkUserRo
 	res.send("you are okay");
 }));
 
-router.put("/applications/:applicationId",upload.single('upload-file'),[auth,checkUserRole("company")], asyncErrorHandler(async function(req, res ,next){
+router.put("/applications/:applicationId",upload.single('upload-file'),[auth,checkUserRole("company")], asyncErrorHandler(async (req, res ,next) => {
 	const applicationId = req.params.applicationId;
 	const { isApproved } = req.body;
 
@@ -355,7 +355,7 @@ router.put("/applications/:applicationId",upload.single('upload-file'),[auth,che
 	}
 }));
 
-router.get("/applications/download/:applicationId/:fileType",[auth,checkUserRole("company")], asyncErrorHandler(async function(req, res ,next){
+router.get("/applications/download/:applicationId/:fileType",[auth,checkUserRole("company")], asyncErrorHandler(async (req, res , next) => {
 	const applicationId = req.params.applicationId;
     const fileType = req.params.fileType;
     const takenDocument = await Document_model.findOne({where:{applicationId:applicationId, fileType:fileType}});

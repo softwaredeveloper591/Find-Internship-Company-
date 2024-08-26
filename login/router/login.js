@@ -9,6 +9,8 @@ const Admin_model= require("../models/admin-model");
 const Company_model= require("../models/company-model");
 const Secretary_model = require("../models/secretary-model");
 
+const asyncErrorHandler = require("../utils/asyncErrorHandler");
+
 async function findUserByEmail(email) {
 	let user = null;
 	let userType = '';
@@ -92,42 +94,33 @@ router.post("/", async function(req,res){
 		res.status(200).json({ user: user.userType });
     } 
 	catch (error) {
-		console.log(error);
 		const errors = handleErrors(error);
       	res.status(400).json({ errors });
     }
 });
 
-router.post("/forgotPassword", async function(req, res) {
-	try{
-		const { email } = req.body;
-    	const user = await findUserByEmail(email);
-    	if (!user) {
-    	  return res.status(404).json({ error: 'No user with that email' });
+router.post("/forgotPassword", asyncErrorHandler( async (req, res, next) => {
+	const { email } = req.body;
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.status(404).json({ error: 'No user with that email' });
+    }
+    const token = jwt.sign({ id: user.user.id, userType: user.userType }, 'secretKey', { expiresIn: '5m' });
+    const transporter = nodeMailer.createTransport({
+        service: 'gmail',
+    	auth: {
+        	user: 'enesbilalbabaturalpro06@gmail.com', // your Gmail address
+        	pass: 'elde beun xhtc btxu' // your Gmail password or App Password if 2FA is enabled
     	}
-    	const token = jwt.sign({ id: user.user.id, userType: user.userType }, 'secretKey', { expiresIn: '5m' });
-
-    	const transporter = nodeMailer.createTransport({
-    	    service: 'gmail',
-    		auth: {
-    	    	user: 'enesbilalbabaturalpro06@gmail.com', // your Gmail address
-    	    	pass: 'elde beun xhtc btxu' // your Gmail password or App Password if 2FA is enabled
-    		}
-    	});
-
-    	await transporter.sendMail({
-    	    from: '"Buket Erşahin" <enesbilalbabaturalpro06@gmail.com>',
-    	    to: email,
-    	    subject: 'Password Reset Link',
-			html: `<a href="http://localhost/changePassword?token=${token}">Reset Password</a>`
-    	});
-    	res.status(200).json({ success: 'Password reset link has been sent.' });
-	}
-	catch(error) {
-		console.log(error);
-	}
-    
-});
+    });
+    await transporter.sendMail({
+        from: '"Buket Erşahin" <enesbilalbabaturalpro06@gmail.com>',
+        to: email,
+        subject: 'Password Reset Link',
+		html: `<a href="http://localhost/changePassword?token=${token}">Reset Password</a>`
+    });
+    res.status(200).json({ success: 'Password reset link has been sent.' });  
+}));
 
 router.get('/changePassword', (req, res) => {
     const { token } = req.query;
@@ -153,7 +146,7 @@ router.get('/changePassword', (req, res) => {
     }
 });
 
-router.post('/changePassword', async (req, res) => {
+router.post('/changePassword', asyncErrorHandler( async (req, res, next) => {
     const { password, confirmPassword, token } = req.body;
     if (password.length < 6) {
         return res.status(404).json({ error: 'Minimum password length is 6 characters' });
@@ -163,43 +156,35 @@ router.post('/changePassword', async (req, res) => {
 		return res.status(404).json({ error: 'Passwords do not match' });
 	}
 
-    try {
-		//console.log(decoded);
-		const decoded = jwt.verify(token, 'secretKey');
-        const { id, userType } = decoded;
-        let model;
-        switch (userType) {
-            case 'admin':
-                model = Admin_model;
-                break;
-            case 'student':
-                model = Student_model;
-                break;
-            case 'company':
-                model = Company_model;
-                break;
-            default:
-                return res.status(400).json({ error: 'Invalid user type' });
-        }
-
-		const user = await model.findOne({ where: { id } });
-
-		const checkPassword= await bcrypt.compare(password,user.password);
-		
-        if(checkPassword) {
-			return res.status(400).json({ error: 'New password must be different from the current password.' });
-		}
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        await model.update( { password: hashedPassword }, { where: { id } } );
-		res.status(200).json({ success: 'password updated succesfully' });
-    } catch (error) {
-        console.error('Error updating password:', error);
-        res.status(500).json({ error: 'Failed to update password' });
+	//console.log(decoded);
+	const decoded = jwt.verify(token, 'secretKey');
+    const { id, userType } = decoded;
+    let model;
+    switch (userType) {
+        case 'admin':
+            model = Admin_model;
+            break;
+        case 'student':
+            model = Student_model;
+            break;
+        case 'company':
+            model = Company_model;
+            break;
+        default:
+            return res.status(400).json({ error: 'Invalid user type' });
     }
-});
+	const user = await model.findOne({ where: { id } });
+	const checkPassword= await bcrypt.compare(password,user.password);
+	
+    if(checkPassword) {
+		return res.status(400).json({ error: 'New password must be different from the current password.' });
+	}
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await model.update( { password: hashedPassword }, { where: { id } } );
+	res.status(200).json({ success: 'password updated succesfully' });
+}));
 
-router.get("/logout",function(req,res){
+router.get("/logout", function(req,res){
     res.clearCookie('jwt');
 
     res.redirect('/');

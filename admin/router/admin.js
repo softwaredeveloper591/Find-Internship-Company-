@@ -9,6 +9,7 @@ const amqp = require('amqplib/callback_api');
 
 const auth = require("../middleware/auth"); 
 const checkUserRole= require("../middleware/checkUserRole")
+const asyncErrorHandler = require("../utils/asyncErrorHandler");
 
 const Admin_model= require("../models/admin-model");
 const Company_model= require("../models/company-model");
@@ -105,83 +106,70 @@ async function deactivateExpiredAnnouncements() {
 
 cron.schedule('0 0 * * *', deactivateExpiredAnnouncements);
 
-router.get("/", [auth, checkUserRole("admin")], async function (req, res) {
-    try {
-        const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
-        const applications = await Application_model.findAll({
-			where: {
-				isApprovedByCompany: true,
-				isApprovedByDIC: null			
-			},
-            include: [
-				{
-                	model: Announcement_model,
-					include: {
-						model: Company_model,
-						attributes: ['name']
-					}
-				},
-				{
-					model: Student_model,
-					attributes: ['username'] ['id']
-				}
-			]
-        });
-
-		res.render("applicationRequests", {
-            usertype: "admin",
-            dataValues: admin.dataValues,
-            applications,
-			totalAnnouncementsCount,
-			totalCompaniesCount
-        });
-    } catch (err) {
-        console.error("Error fetching company registration requests:", err);
-        res.status(500).send("Error fetching company registration requests.");
-    }
-});
-
-router.get("/announcementRequests", [auth, checkUserRole("admin")], async (req, res) => {
-    try {
-		const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
-		const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
-		
-		const announcements = await Announcement_model.findAll({
-			where: {
-				isActive: false,
-				endDate: {
-					[Sequelize.Op.gt]: now // Check if the current time is less than the endDate
-				}
-			},
-			include: [
-				{
+router.get("/", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+    const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+    const applications = await Application_model.findAll({
+		where: {
+			isApprovedByCompany: true,
+			isApprovedByDIC: null			
+		},
+        include: [
+			{
+            	model: Announcement_model,
+				include: {
 					model: Company_model,
-					attributes: ['name'] 
+					attributes: ['name']
 				}
-			]
-		})
+			},
+			{
+				model: Student_model,
+				attributes: ['username'] ['id']
+			}
+		]
+    });
+	res.render("applicationRequests", {
+        usertype: "admin",
+        dataValues: admin.dataValues,
+        applications,
+		totalAnnouncementsCount,
+		totalCompaniesCount
+    });
+}));
 
-		const announcementsWithImages = announcements.map(announcement => {
-			return {
-			  ...announcement.dataValues,
-			  image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
-			};
-		});
+router.get("/announcementRequests", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+	const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
+	
+	const announcements = await Announcement_model.findAll({
+		where: {
+			isActive: false,
+			endDate: {
+				[Sequelize.Op.gt]: now // Check if the current time is less than the endDate
+			}
+		},
+		include: [
+			{
+				model: Company_model,
+				attributes: ['name'] 
+			}
+		]
+	})
+	const announcementsWithImages = announcements.map(announcement => {
+		return {
+		  ...announcement.dataValues,
+		  image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
+		};
+	});
+	res.render("announcementRequests", {
+		usertype: "admin",
+		dataValues: admin.dataValues,
+		announcements: announcementsWithImages,
+		totalApplicationsCount,
+		totalCompaniesCount
+	});
+}));
 
-		res.render("announcementRequests", {
-			usertype: "admin",
-			dataValues: admin.dataValues,
-			announcements: announcementsWithImages,
-			totalApplicationsCount,
-			totalCompaniesCount
-		});
-    } catch (err) {
-        console.error("Error fetching announcement requests:", err);
-        res.status(500).send("Error fetching announcement requests.");
-    }
-});
-
-router.get("/announcement/:announcementId", [auth, checkUserRole("admin")], async function (req, res) {
+router.get("/announcement/:announcementId", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
 	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
 	const announcementId = req.params.announcementId.slice(1);
     const announcement = await Announcement_model.findOne({ 
@@ -210,226 +198,174 @@ router.get("/announcement/:announcementId", [auth, checkUserRole("admin")], asyn
 		totalApplicationsCount,
 		totalCompaniesCount
 	});
-});
+}));
 
-router.put("/announcement/:announcementId", [auth, checkUserRole("admin")], async function (req, res) {
+router.put("/announcement/:announcementId", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
     const announcementId = req.params.announcementId;
     const { isApproved, feedback } = req.body;
 
-    try {
-        const announcement = await Announcement_model.findOne({
-			where: {
-				id: announcementId
-			},
-			include: [
-				{
-					model: Company_model,
-					attributes: ['username', 'email'] 
-				}
-			]
-		})
-
-        if (!announcement) {
-            return res.status(404).json({ errors: "Announcement not found." });
-        }
-
-        const emailSubject = isApproved ? 'Announcement Approved' : 'Announcement Rejected';
-        const emailBody = `Hello ${announcement.Company.username},<br><br>
-            Your announcement titled "${announcement.announcementName}" has been ${isApproved ? "approved" : `rejected and will be removed from our system. <br><br> ${feedback ? `Feedback: <br> ${feedback}.` : ""}`} <br><br>
-            Best Regards,<br>Admin Team`;
-
-		amqp.connect('amqp://rabbitmq', (err, connection) => {
+    const announcement = await Announcement_model.findOne({
+		where: {
+			id: announcementId
+		},
+		include: [
+			{
+				model: Company_model,
+				attributes: ['username', 'email'] 
+			}
+		]
+	})
+    if (!announcement) {
+        return res.status(404).json({ errors: "Announcement not found." });
+    }
+    const emailSubject = isApproved ? 'Announcement Approved' : 'Announcement Rejected';
+    const emailBody = `Hello ${announcement.Company.username},<br><br>
+        Your announcement titled "${announcement.announcementName}" has been ${isApproved ? "approved" : `rejected and will be removed from our system. <br><br> ${feedback ? `Feedback: <br> ${feedback}.` : ""}`} <br><br>
+        Best Regards,<br>Admin Team`;
+	amqp.connect('amqp://rabbitmq', (err, connection) => {
+		if (err) throw err;
+		connection.createChannel((err, channel) => {
 			if (err) throw err;
-
-			connection.createChannel((err, channel) => {
-				if (err) throw err;
-
-				const queue = 'email_queue';
-				const msg = JSON.stringify({
-					to: announcement.Company.email,
-					subject: emailSubject,
-					body: emailBody
-				});
-
-				// Ensure the queue exists
-				channel.assertQueue(queue, { durable: true });
-
-				// Publish the message to the queue
-				channel.sendToQueue(queue, Buffer.from(msg), { persistent: true });
-
-				console.log(" [x] Sent %s", msg);
+			const queue = 'email_queue';
+			const msg = JSON.stringify({
+				to: announcement.Company.email,
+				subject: emailSubject,
+				body: emailBody
 			});
-
-			setTimeout(() => {
-				connection.close();
-			}, 500);
+			// Ensure the queue exists
+			channel.assertQueue(queue, { durable: true });
+			// Publish the message to the queue
+			channel.sendToQueue(queue, Buffer.from(msg), { persistent: true });
+			console.log(" [x] Sent %s", msg);
 		});
-
-        if (!isApproved) {
-			await Announcement_model.destroy({ where: { id: announcement.id } });
-			return res.status(200).json({ message: "Announcement rejected and removed from the system." });
-        }
-
-		announcement.isActive = true;
-        await announcement.save();
-		res.status(200).json({ message: "Announcement approved." });
-
-    } catch (err) {
-        console.error("Error processing announcement:", err);
-        res.status(400).json({ errors: "Unable to process the announcement." });
+		setTimeout(() => {
+			connection.close();
+		}, 500);
+	});
+    if (!isApproved) {
+		await Announcement_model.destroy({ where: { id: announcement.id } });
+		return res.status(200).json({ message: "Announcement rejected and removed from the system." });
     }
-});
+	announcement.isActive = true;
+    await announcement.save();
+	res.status(200).json({ message: "Announcement approved." });
+}));
 
-router.get("/companyRequests", [auth, checkUserRole("admin")], async (req, res) => {
-    try {
-        let admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
-        const pendingCompanies = await Company_model.findAll({ where: { statusByDIC: false } });
+router.get("/companyRequests", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+    let admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+    const pendingCompanies = await Company_model.findAll({ where: { statusByDIC: false } });
+    res.render("companyRequests", {
+        usertype: "admin",
+        dataValues: admin.dataValues,
+        companies: pendingCompanies,
+		totalAnnouncementsCount,
+		totalApplicationsCount
+    });
+}));
 
-        res.render("companyRequests", {
-            usertype: "admin",
-            dataValues: admin.dataValues,
-            companies: pendingCompanies,
-			totalAnnouncementsCount,
-			totalApplicationsCount
-        });
-    } catch (err) {
-        console.error("Error fetching company registration requests:", err);
-        res.status(500).send("Error fetching company registration requests.");
+router.put("/company/:companyId", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+	const companyId = req.params.companyId;
+	const isApproved = req.body.isApproved;
+    const company = await Company_model.findOne({ where: { id: companyId } });
+    if (!company) {
+        return res.status(404).json({ errors: "Company not found." });
     }
-});
-
-router.put("/company/:companyId", [auth, checkUserRole("admin")], async function (req, res) {
-    const companyId = req.params.companyId;
-    const isApproved = req.body.isApproved;
-
-    try {
-        const company = await Company_model.findOne({ where: { id: companyId } });
-
-        if (!company) {
-            return res.status(404).json({ errors: "Company not found." });
-        }
-
-        const emailSubject = isApproved ? 'Company Registration Approved' : 'Company Registration Rejected';
-        const emailBody = `Hello ${company.username},<br><br>
-            Your registration request has been ${isApproved ? "approved" : "rejected and removed from our system"}.<br><br>
-            Best Regards,<br>Admin Team`;
-
-        // Connect to RabbitMQ
-        amqp.connect('amqp://rabbitmq', (err, connection) => {
+    const emailSubject = isApproved ? 'Company Registration Approved' : 'Company Registration Rejected';
+    const emailBody = `Hello ${company.username},<br><br>
+        Your registration request has been ${isApproved ? "approved" : "rejected and removed from our system"}.<br><br>
+        Best Regards,<br>Admin Team`;
+    // Connect to RabbitMQ
+    amqp.connect('amqp://rabbitmq', (err, connection) => {
+        if (err) throw err;
+        connection.createChannel((err, channel) => {
             if (err) throw err;
-
-            connection.createChannel((err, channel) => {
-                if (err) throw err;
-
-                const queue = 'email_queue';
-                const msg = JSON.stringify({
-                    to: company.email,
-                    subject: emailSubject,
-                    body: emailBody
-                });
-
-                // Ensure the queue exists
-                channel.assertQueue(queue, { durable: true });
-
-                // Publish the message to the queue
-                channel.sendToQueue(queue, Buffer.from(msg), { persistent: true });
-
-                console.log(" [x] Sent %s", msg);
+            const queue = 'email_queue';
+            const msg = JSON.stringify({
+                to: company.email,
+                subject: emailSubject,
+                body: emailBody
             });
-
-            setTimeout(() => {
-                connection.close();
-            }, 500);
+            // Ensure the queue exists
+            channel.assertQueue(queue, { durable: true });
+            // Publish the message to the queue
+            channel.sendToQueue(queue, Buffer.from(msg), { persistent: true });
+            console.log(" [x] Sent %s", msg);
         });
-
-        if (!isApproved) {
-            await company.destroy();
-            return res.status(200).json({ message: "Company registration request rejected and deleted." });
-        }
-
-        company.statusByDIC = true;
-        await company.save();
-        res.status(200).json({ message: "Company registration request approved." });
-
-    } catch (err) {
-        console.error("Error processing company registration request:", err);
-        res.status(400).json({ errors: "Unable to process the request." });
+        setTimeout(() => {
+            connection.close();
+        }, 500);
+    });
+    if (!isApproved) {
+        await company.destroy();
+        return res.status(200).json({ message: "Company registration request rejected and deleted." });
     }
-});
+    company.statusByDIC = true;
+    await company.save();
+    res.status(200).json({ message: "Company registration request approved." });
+}));
 
-router.get("/applicationRequests", [auth, checkUserRole("admin")], async (req, res) => {
-    try {
-        const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
-        const applications = await Application_model.findAll({
-			where: {
-				isApprovedByCompany: true,
-				isApprovedByDIC: null			
-			},
-            include: [
-				{
-                	model: Announcement_model,
-					include: {
-						model: Company_model,
-						attributes: ['name']
-					}
-				},
-				{
-					model: Student_model,
-					attributes: ['username'] ['id']
+router.get("/applicationRequests", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+   
+    const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+    const applications = await Application_model.findAll({
+		where: {
+			isApprovedByCompany: true,
+			isApprovedByDIC: null			
+		},
+        include: [
+			{
+            	model: Announcement_model,
+				include: {
+					model: Company_model,
+					attributes: ['name']
 				}
-			]
-        });
-
-		res.render("applicationRequests", {
-            usertype: "admin",
-            dataValues: admin.dataValues,
-            applications,
-			totalAnnouncementsCount,
-			totalCompaniesCount
-        });
-    } catch (err) {
-        console.error("Error fetching company registration requests:", err);
-        res.status(500).send("Error fetching company registration requests.");
-    }
-});
-
-router.get("/applications/:applicationId",[auth,checkUserRole("admin")],async function(req,res){
-	try {
-		const applicationId = req.params.applicationId.slice(1);
-        const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
-        const application = await Application_model.findOne({
-			where: {
-				id: applicationId		
 			},
-            include: [
-				{
-                	model: Announcement_model,
-					include: {
-						model: Company_model,
-						attributes: ['name']
-					}
-				},
-				{
-					model: Student_model,
-					attributes: ['username', 'id']
+			{
+				model: Student_model,
+				attributes: ['username'] ['id']
+			}
+		]
+    });
+	res.render("applicationRequests", {
+        usertype: "admin",
+        dataValues: admin.dataValues,
+        applications,
+		totalAnnouncementsCount,
+		totalCompaniesCount
+    });
+}));
+
+router.get("/applications/:applicationId",[auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+	const applicationId = req.params.applicationId.slice(1);
+    const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+    const application = await Application_model.findOne({
+		where: {
+			id: applicationId		
+		},
+        include: [
+			{
+            	model: Announcement_model,
+				include: {
+					model: Company_model,
+					attributes: ['name']
 				}
-			]
-        });
+			},
+			{
+				model: Student_model,
+				attributes: ['username', 'id']
+			}
+		]
+    });
+	res.render("adminInnerApplication", {
+        usertype: "admin",
+        dataValues: admin.dataValues,
+        application,
+		totalAnnouncementsCount,
+		totalCompaniesCount
+    });
+}));
 
-		res.render("adminInnerApplication", {
-            usertype: "admin",
-            dataValues: admin.dataValues,
-            application,
-			totalAnnouncementsCount,
-			totalCompaniesCount
-        });
-    } catch (err) {
-        console.error("Error fetching company registration requests:", err);
-        res.status(500).send("Error fetching company registration requests.");
-    }
-});
-
-router.get("/applications/download/:applicationId/:fileType",[auth,checkUserRole("admin")],async function(req,res){
+router.get("/applications/download/:applicationId/:fileType",[auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
     const applicationId = req.params.applicationId;
     const fileType = req.params.fileType;
     const takenDocument = await Document_model.findOne({where:{applicationId:applicationId, fileType:fileType}});
@@ -443,89 +379,72 @@ router.get("/applications/download/:applicationId/:fileType",[auth,checkUserRole
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Type', contentType);
     res.send(binaryData);
-});
+}));
 
-router.put("/applications/:applicationId",upload.single('studentFile'),[auth,checkUserRole("admin")],async function(req,res){
-    try {
-		const applicationId = req.params.applicationId;
-  		const file = req.file;
-		let binaryData = null;
-		if(file) {
-			binaryData = file.buffer;
-			await Document_model.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "Updated Application Form" } });
-		}
-
-		const { isApproved, feedback } = req.body; 
-
-		const application = await Application_model.findOne({
-			where: {
-				id: applicationId
+router.put("/applications/:applicationId",upload.single('studentFile'),[auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+	const applicationId = req.params.applicationId;
+  	const file = req.file;
+	let binaryData = null;
+	if(file) {
+		binaryData = file.buffer;
+		await Document_model.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "Updated Application Form" } });
+	}
+	const { isApproved, feedback } = req.body; 
+	const application = await Application_model.findOne({
+		where: {
+			id: applicationId
+		},
+        include: [
+			{
+            	model: Student_model,
+				attributes: ['username', 'email']
 			},
-            include: [
-				{
-                	model: Student_model,
-					attributes: ['username', 'email']
-				},
-				{
-                	model: Announcement_model,
-					include: [
-						{
-							model: Company_model
-						}
-					],
-					attributes: ['announcementName']
-				}
-			]
-        });
-
-		const emailSubject = isApproved === "true" ? 'Application Approved' : 'Application Rejected';
-		const emailBody = `Hello ${application.Announcement.Company.username},<br><br>
-			Your application titled "${application.Announcement.announcementName}" has been ${isApproved === "true" ? "approved" : `rejected and will be removed from our system. <br><br> ${feedback ? `Feedback: <br> ${feedback}.` : ""}`} <br><br>
-			Best Regards,<br>Admin Team`;
-
-		amqp.connect('amqp://rabbitmq', (err, connection) => {
+			{
+            	model: Announcement_model,
+				include: [
+					{
+						model: Company_model
+					}
+				],
+				attributes: ['announcementName']
+			}
+		]
+    });
+	const emailSubject = isApproved === "true" ? 'Application Approved' : 'Application Rejected';
+	const emailBody = `Hello ${application.Announcement.Company.username},<br><br>
+		Your application titled "${application.Announcement.announcementName}" has been ${isApproved === "true" ? "approved" : `rejected and will be removed from our system. <br><br> ${feedback ? `Feedback: <br> ${feedback}.` : ""}`} <br><br>
+		Best Regards,<br>Admin Team`;
+	amqp.connect('amqp://rabbitmq', (err, connection) => {
+		if (err) throw err;
+		connection.createChannel((err, channel) => {
 			if (err) throw err;
-
-			connection.createChannel((err, channel) => {
-				if (err) throw err;
-
-				const queue = 'email_queue';
-				const msg = JSON.stringify({
-					to: application.Announcement.Company.email,
-					subject: emailSubject,
-					body: emailBody
-				});
-
-				// Ensure the queue exists
-				channel.assertQueue(queue, { durable: true });
-
-				// Publish the message to the queue
-				channel.sendToQueue(queue, Buffer.from(msg), { persistent: true });
-
-				console.log(" [x] Sent %s", msg);
+			const queue = 'email_queue';
+			const msg = JSON.stringify({
+				to: application.Announcement.Company.email,
+				subject: emailSubject,
+				body: emailBody
 			});
-
-			setTimeout(() => {
-				connection.close();
-			}, 500);
+			// Ensure the queue exists
+			channel.assertQueue(queue, { durable: true });
+			// Publish the message to the queue
+			channel.sendToQueue(queue, Buffer.from(msg), { persistent: true });
+			console.log(" [x] Sent %s", msg);
 		});
-
-		if (isApproved === "true") {
-            application.isApprovedByDIC = true;
-			application.status = 2;
-            await application.save();
-            return res.status(200).json({ message: "Application approved." });
-        } else {
-            application.isApprovedByDIC = false;
-			application.status = 4;
-			await application.save();
-            return res.status(200).json({ message: "Application rejected." });
-        }
-
-    } catch (err) {
-        console.error("Error fetching applications:", err);
-        res.status(500).send("Error fetching applications.");
+		setTimeout(() => {
+			connection.close();
+		}, 500);
+	});
+	if (isApproved === "true") {
+        application.isApprovedByDIC = true;
+		application.status = 2;
+        await application.save();
+        return res.status(200).json({ message: "Application approved." });
+    } else {
+        application.isApprovedByDIC = false;
+		application.status = 4;
+		await application.save();
+        return res.status(200).json({ message: "Application rejected." });
     }
-});
+}));
 
 module.exports= router;
