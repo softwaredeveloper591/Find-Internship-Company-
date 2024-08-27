@@ -103,7 +103,7 @@ router.get("/opportunities", [auth, checkUserRole("student")], asyncErrorHandler
     const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
     const announcements = await Announcement_model.findAll({
         where: {
-            isActive: true,
+            status: "approved",
             startDate: {
                 [Sequelize.Op.lte]: now // Ensure the announcement has started
             },

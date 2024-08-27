@@ -28,7 +28,9 @@ async function updateTotalAnnouncementsCount() {
         totalAnnouncementsCount = await Announcement_model.count( 
 			{ 
 				where: {
-					isActive: false,
+					status: {
+						[Sequelize.Op.in]: ["pending", "edited"]
+					},
 					endDate: {
 						[Sequelize.Op.gt]: now // Check if the current time is less than the endDate
 					}
@@ -88,13 +90,13 @@ async function deactivateExpiredAnnouncements() {
     try {
         const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
         const result = await Announcement_model.update(
-            { isActive: false }, // Set isActive to false
+            { status: "inactive" }, // Set status to false
             {
                 where: {
                     endDate: {
                         [Sequelize.Op.lte]: now // Check if the current time is greater than or equal to endDate
                     },
-                    isActive: true // Only update active announcements
+                    status: "approved" // Only update active announcements
                 }
             }
         );
@@ -149,7 +151,10 @@ router.get("/applicationForms", [auth,checkUserRole("student")], asyncErrorHandl
 	// in the front end there will be student names and a download button next to the names
 	// we need to use /documents/download/:id/:fileType
 	/* maybe I can combine a way to join /documents/download/:id/:fileType and /application/download/:applicationId/:fileType 
-	in the future but I will leave it like that for now*/
+	in the future but I will leave it like that for now
+	There is a library called uuid to assign unique ids to the table. Maybe I can use it or I can use the document model 
+	instead of the application model at admin's applications page
+	uuid is simply a random number generator which generates very large random numbers so the probolity of collision is very low*/
 }));
 
 router.get("/documents/download/:id/:fileType",[auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
@@ -174,10 +179,16 @@ router.get("/announcementRequests", [auth, checkUserRole("admin")], asyncErrorHa
 	
 	const announcements = await Announcement_model.findAll({
 		where: {
-			isActive: false,
+			status: {
+				[Sequelize.Op.in]: ["pending", "edited"] // Match status to either "pending" or "edited"
+			},
+
+			// We should indicate at the frontend whether the announcement has been edited or not.
 			endDate: {
 				[Sequelize.Op.gt]: now // Check if the current time is less than the endDate
 			}
+
+			// we can automaticly reject the announcements with pass due dates.
 		},
 		include: [
 			{
@@ -254,6 +265,7 @@ router.put("/announcement/:announcementId", [auth, checkUserRole("admin")], asyn
     const emailBody = `Hello ${announcement.Company.username},<br><br>
         Your announcement titled "${announcement.announcementName}" has been ${isApproved ? "approved" : `rejected and will be removed from our system. <br><br> ${feedback ? `Feedback: <br> ${feedback}.` : ""}`} <br><br>
         Best Regards,<br>Admin Team`;
+
 	amqp.connect('amqp://rabbitmq', (err, connection) => {
 		if (err) throw err;
 		connection.createChannel((err, channel) => {
@@ -278,7 +290,7 @@ router.put("/announcement/:announcementId", [auth, checkUserRole("admin")], asyn
 		await Announcement_model.destroy({ where: { id: announcement.id } });
 		return res.status(200).json({ message: "Announcement rejected and removed from the system." });
     }
-	announcement.isActive = true;
+	announcement.status = "approved";
     await announcement.save();
 	res.status(200).json({ message: "Announcement approved." });
 }));

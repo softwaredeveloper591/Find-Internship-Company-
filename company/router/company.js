@@ -106,11 +106,71 @@ router.post('/announcement',upload.single('image'), [auth, checkUserRole('compan
         companyId,
         announcementName,
         description,
+		image,
         startDate: startDateInTurkey,
-        endDate: endDateInTurkey,
-        image
+        endDate: endDateInTurkey
     });
     res.redirect("/company?action=formfilled");
+}));
+
+router.get("/announcements",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
+	const company = await Company_model.findOne({ where: {id: req.user.id} });
+	const announcements = await Announcement_model.findAll( { companyId: company.id });
+
+    res.render("announcements",{ 
+		usertype:"company",
+		dataValues: company.dataValues,
+		announcements,
+	});
+}));
+
+router.get("/announcements/:id",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
+	const announcementId = req.params.id;
+	const announcement = await Announcement_model.findOne( { where: { id: announcementId}} );
+
+	const formattedAnnouncement = {
+		...announcement.dataValues,
+		formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD MM YYYY'),
+		image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
+	};
+
+    res.render("singleAnnouncement",{ 
+		usertype:"company", 
+		formattedAnnouncement,
+	});
+}));
+
+router.post("/announcements/:id", upload.single('image'), [auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
+
+	/*I thought companies can edit the announcement directly on the page as on the linkedin profile and when they click the 
+	"edit or something else" button the announcement will be edited and admin will see it as edited at the announcements page*/
+	const announcementId = req.params.id;
+	const announcement = await Announcement_model.findOne( { where: { id: announcementId}} );
+
+	const { announcementName, description, startDate, endDate } = req.body;
+	let image = null;
+	const file = req.file;
+	if (file) {
+		image = file.buffer;
+	}
+	
+	const startDateInTurkey = moment.tz(startDate, 'Europe/Istanbul').startOf('day').toDate();
+    const endDateInTurkey = moment.tz(endDate, 'Europe/Istanbul').endOf('day').toDate();
+
+	await announcement.update(
+		{ 
+			announcementName,
+			description,
+			startDate: startDateInTurkey,
+			endDate: endDateInTurkey,
+			image,
+			status: "edited"
+		}
+	);
+
+	res.status(200).json({ message: "Announcement updated successfully" });
+
+	// we can directly save the default announcement image to the table instead of pulling it from the pictures every time
 }));
 
 router.get("/applications",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {

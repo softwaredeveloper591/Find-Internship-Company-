@@ -32,10 +32,10 @@ const Announcement = sequelize.define('Announcement', {
 		type: DataTypes.DATE,
 		allowNull: false
 	},
-	isActive: {
-		type: DataTypes.BOOLEAN,
+	status: {
+		type: DataTypes.STRING(40),
         allowNull: false,
-		defaultValue: false
+		defaultValue: "pending"
 	}
   }, {
     tableName: 'announcement',
