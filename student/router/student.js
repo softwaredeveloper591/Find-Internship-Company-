@@ -8,6 +8,7 @@ const { Op } = require('sequelize');
 const moment = require('moment-timezone');
 const bodyParser = require('body-parser');
 const AdmZip = require("adm-zip");
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 
@@ -73,12 +74,34 @@ router.get("/applicationForm", [auth,checkUserRole("student")], asyncErrorHandle
 		//totalAnnouncementsCount
 	});
 
-	// there will be only a download button at this page so we should handle it according to this
+	/*there will be only a upload button at this page so we should handle it according to this.
+	Student will be able to download the file after admin sends it back*/
 	// adding a page to side bar would be absurd
+}));
+
+
+// router for student to see application forms that is sent back by admin and download them
+router.get("/applicationForms", [auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
+    const student = await Student_model.findOne({ where: {id: req.user.id} });
+	const applicationForms = await Document_model.findAll({ where: {fileType: "Updated Manual Application Form"}});
+
+	res.send(applicationForms); // to test it at postman
+
+    /*res.render("applicationForm",{ 
+		usertype:"student", 
+		dataValues:student.dataValues,
+		//totalAnnouncementsCount
+	});*/
+
+	/*there will be only a upload and download button at this page so we should handle it according to this.
+	Student will be able to download the file after admin sends it back*/
+	// adding a page to side bar would be absurd just for this
 }));
 
 router.post("/applicationForm", upload.single('ApplicationForm'), [auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
     const student = await Student_model.findOne({ where: {id: req.user.id} });
+
+	const applicationId = uuidv4();
 
 	const file = req.file;
 	if (!file) {
@@ -88,9 +111,10 @@ router.post("/applicationForm", upload.single('ApplicationForm'), [auth,checkUse
   	const binaryData = file.buffer;
 
 	await Document_model.create({
-		name:`${student.username}_ApplicationForm.docx`,
+		applicationId,
+		name:`${student.username}_ApplicationForm`,  
 		data: binaryData,
-		fileType:'Application Form',
+		fileType:'Manual Application Form',
 		username: student.username
   	});  
 
@@ -195,7 +219,7 @@ router.post("/opportunities/:opportunityId",upload.single('CV'),[auth,checkUserR
       	status: 0,
     });
     await Document_model.create({
-      	name:`${student.username}_ApplicationForm.docx`,
+      	name:`${student.username}_ApplicationForm`,
       	applicationId: application.id,
       	data: bufferedApplicationForm,
       	fileType:'Application Form',

@@ -138,26 +138,49 @@ router.get("/", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, r
     });
 }));
 
-router.get("/applicationForms", [auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
-    const admin = await Student_model.findOne({ where: {id: req.user.id} });
+router.get("/applicationForms", [auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+    const admin = await Admin_model.findOne({ where: {id: req.user.id} });
 
-	const applicationForms = await Document_model.findAll({ where: { applicationId: null }});
-    res.render("applicationForm",{ 
+	const applicationForms = await Document_model.findAll({ where: { fileType: "Manual Application Form" }}); 
+
+	res.send(applicationForms); // to test it at postman
+
+    /*res.render("applicationForm",{ 
 		usertype:"admin", 
 		dataValues:admin.dataValues,
 		applicationForms
-	});
+	});*/
+
+	// we need to use username to show which student sent the application form
 
 	// in the front end there will be student names and a download button next to the names
 	// we need to use /documents/download/:id/:fileType
-	/* maybe I can combine a way to join /documents/download/:id/:fileType and /application/download/:applicationId/:fileType 
+	/* maybe I can find a way to combine /documents/download/:id/:fileType and /application/download/:applicationId/:fileType 
 	in the future but I will leave it like that for now
 	There is a library called uuid to assign unique ids to the table. Maybe I can use it or I can use the document model 
 	instead of the application model at admin's applications page
 	uuid is simply a random number generator which generates very large random numbers so the probolity of collision is very low*/
+	// I used uuid
 }));
 
-router.get("/documents/download/:id/:fileType",[auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+router.post("/applicationForms/:applicationId", upload.single('ApplicationForm'), [auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+	const applicationId = req.params.applicationId;
+	/* admin needs to click submit button. We need to use a script as await fetch(/applicationForms/:applicationId"). */
+	const file = req.file;
+	let binaryData = null;
+	if(!file) {
+		return res.status(404).json({ errors: "Error uploading file" });
+	}
+	binaryData = file.buffer;
+
+	await Document_model.update({ name: file.originalname, data: binaryData, fileType: "Updated Manual Application Form" }, { where: { applicationId }});
+
+	res.status(200).json({ message: "File is uploaded"});
+}));
+
+// since I used uuid we don't need this router. We can use the /application/download/:applicationId/:fileType
+
+/*router.get("/documents/download/:id/:fileType",[auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
     const id = req.params.id;
     const fileType = req.params.fileType;
     const takenDocument = await Document_model.findOne({where:{id, fileType}});
@@ -171,7 +194,7 @@ router.get("/documents/download/:id/:fileType",[auth,checkUserRole("admin")], as
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Type', contentType);
     res.send(binaryData);
-}));
+}));*/
 
 router.get("/announcementRequests", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
 	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
@@ -225,7 +248,7 @@ router.get("/announcement/:announcementId", [auth, checkUserRole("admin")], asyn
 				attributes: ['name']
 			}
 		]
-	}) 
+	}); 
 
 	const formattedAnnouncement = {
         ...announcement.dataValues,

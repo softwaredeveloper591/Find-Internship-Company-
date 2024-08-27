@@ -9,7 +9,7 @@ const Document = sequelize.define('Document', {
     autoIncrement: true
   },
   applicationId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.STRING(100),
 	allowNull: true,
     references: {
       model: 'Application',
