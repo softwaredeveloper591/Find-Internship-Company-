@@ -201,8 +201,11 @@ router.get("/applications",[auth,checkUserRole("company")], asyncErrorHandler( a
 }));
 
 router.get("/internships",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
+
+	// There should be the processes of upload company form and download Practice Evaluation Survey at this page
+	// since there will be internships more than one, the internships should be clickable.
     const company = await Company_model.findOne({ where: { id: req.user.id } });
-    const applications = await Application_model.findAll({
+    const interns = await Application_model.findAll({
 		where: {
 			isSentBySecretary: true,
 		},
@@ -222,9 +225,71 @@ router.get("/internships",[auth,checkUserRole("company")], asyncErrorHandler( as
     res.render("internships", {
         usertype: "company",
         dataValues: company.dataValues,
-        applications,
+        interns,
 		totalApplicationsCount
     });
+}));
+
+router.get("/internships/:applicationId",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
+    const company = await Company_model.findOne({ where: { id: req.user.id } });
+	const applicationId = req.params.applicationId;
+    const internship = await Application_model.findOne({
+		where: {
+			id: applicationId
+		},
+        include: [
+			{
+            	model: Announcement_model,
+            	where: { companyId: company.id },
+				attributes: ['announcementName']
+			},
+			{
+				model: Student_model,
+				attributes: ['username', 'id']
+			}
+		]
+    });
+
+	res.send(internship); // to test it on postman
+
+    /*res.render("singleInternship", {
+        usertype: "company",
+        dataValues: company.dataValues,
+        application,
+		totalApplicationsCount
+    });*/
+
+	// I dont know how this process will be handled at the frontend so I am just writing it like this for now.
+}));
+
+router.post("/companyForm/:applicationId", upload.single('companyForm'), [auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
+	const company = await Company_model.findOne({ where: { id: req.user.id } });
+	const applicationId = req.params.applicationId;
+    
+	const file = req.file;
+
+	if (!file) {
+		return res.status(400).json({ error: "No file uploaded" });
+	}
+
+  	const binaryData = file.buffer;
+
+	const companyForm = await Document_model.findOne({where: {applicationId, fileType: "Company Form"}});
+
+	if (companyForm === null) {
+	  await Document_model.create({
+			applicationId,
+		  	name: file.originalname,
+			fileType:'Company Form',
+		  	username: company.username, // I thought using the company name would be better for this file
+		  	data: binaryData,
+	  });
+	}
+	else {
+	  await Document_model.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "Company Form" } });   
+	}
+
+	return res.status(201).json({ message: "Company Form is uploaded" });
 }));
 
 router.get("/applications/:applicationId",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {

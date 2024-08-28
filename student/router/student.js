@@ -79,7 +79,6 @@ router.get("/applicationForm", [auth,checkUserRole("student")], asyncErrorHandle
 	// adding a page to side bar would be absurd
 }));
 
-
 // router for student to see application forms that is sent back by admin and download them
 router.get("/applicationForms", [auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
     const student = await Student_model.findOne({ where: {id: req.user.id} });
@@ -240,7 +239,7 @@ router.get("/applications",[auth,checkUserRole("student")], asyncErrorHandler( a
 	const student = await Student_model.findOne({ where: { id: req.user.id }});
     const applications = await Application_model.findAll({
 		where: {
-		  studentId: student.dataValues.id  // Filter applications by the provided student ID
+		  studentId: student.id  // Filter applications by the provided student ID
 		},
 		include: [
 		  	{
@@ -267,7 +266,83 @@ router.get("/applications",[auth,checkUserRole("student")], asyncErrorHandler( a
 	});
 }));
 
-//bu get isteği şu anda herhangi bir yerde kullanılmııyor, ilerde kullanmak için yazıldı.---hala kullanılmıyor!!!!
+router.get("/internship",[auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
+	const student = await Student_model.findOne({ where: { id: req.user.id }});
+
+	const internship = await Application_model.findOne({
+		where: {
+		  studentId: student.id,  // Filter applications by the provided student ID
+		  status:3
+		},
+		include: [
+			// we dont need this since we have const student = await Student_model.findOne({ where: { id: req.user.id }});
+		  	/*{
+				model: Student_model,
+				attributes: ['username'] // Fetching only the student name
+		  	},*/
+		  	{
+				model: Announcement_model,
+				attributes: ['announcementName'],
+				include: [
+				  {
+					model: Company_model,
+					attributes: ['name'] // Fetching the company name
+				  }
+				]
+		  	}
+		]
+	});
+
+	res.send(internship); // to test it on postman
+
+	/*res.render("internship",{ 
+		usertype:"student", 
+		dataValues:student.dataValues,
+		internship
+	});*/
+
+	// I dont know how this process will be handled at the frontend so I am just writing it like this for now.
+	// There shold be the options to upload summer practise report and fill Practice Evaluation Survey at this page.
+	// Should we check if the internship is over before the student do these processes.
+}));
+
+router.post("/summerPracticeReport/:applicationId", upload.single('SummerPracticeReport'), [auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
+	const applicationId = req.params.applicationId;
+	/* We need to use a script as await fetch(/summerPracticeReport/:applicationId"). So we need to send applicationId
+	to backend from frontend */
+	const student = await Student_model.findOne({ where: { id: req.user.id }});
+
+	const file = req.file;
+
+	if (!file) {
+		return res.status(400).json({ error: "No file uploaded" });
+	}
+
+  	const binaryData = file.buffer;
+
+	const summerPracticeReport = await Document_model.findOne({where: {applicationId, fileType: "Summer Practice Report"}});
+
+	if (summerPracticeReport === null) {
+		await Document_model.create({
+			applicationId,
+			name: file.originalname,
+			fileType:'Summer Practice Report',
+			username: student.username,
+			data: binaryData
+		});
+	}
+	else {
+		await Document_model.update({ data: binaryData, name: file.originalname }, { where: { applicationId, fileType: "Summer Practice Report" } });   
+    }
+
+	/* when the student uploads the file again, it would be good to ask "are you sure you want to upload 
+	the summer practice report again". Also users should be able to see the files they uploaded to check if everything okay.*/
+
+	res.status(201).json({ message: "Summer Practice Report is uploaded" });
+    
+}));
+
+// what is this for?
 router.get("/opportunities/download/:studentId/:fileType",[auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
   const fileType = req.params.fileType;
   const studentId=req.params.studentId;

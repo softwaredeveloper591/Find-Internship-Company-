@@ -481,6 +481,7 @@ router.put("/applications/:applicationId",upload.single('studentFile'),[auth,che
 	const emailBody = `Hello ${application.Announcement.Company.username},<br><br>
 		Your application titled "${application.Announcement.announcementName}" has been ${isApproved === "true" ? "approved" : `rejected and will be removed from our system. <br><br> ${feedback ? `Feedback: <br> ${feedback}.` : ""}`} <br><br>
 		Best Regards,<br>Admin Team`;
+
 	amqp.connect('amqp://rabbitmq', (err, connection) => {
 		if (err) throw err;
 		connection.createChannel((err, channel) => {
@@ -512,6 +513,75 @@ router.put("/applications/:applicationId",upload.single('studentFile'),[auth,che
 		await application.save();
         return res.status(200).json({ message: "Application rejected." });
     }
+}));
+
+router.get("/interns", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+    const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+    const interns = await Application_model.findAll({
+		where: {
+			status: 3		
+		},
+        include: [
+			{
+            	model: Announcement_model,
+				include: {
+					model: Company_model,
+					attributes: ['name']
+				}
+			},
+			{
+				model: Student_model,
+				attributes: ['username'] ['id']
+			}
+		]
+    });
+
+	res.send(interns); // to test it on postman
+
+	/*res.render("applicationRequests", {
+        usertype: "admin",
+        dataValues: admin.dataValues,
+        interns,
+		totalAnnouncementsCount,
+		totalCompaniesCount
+    });*/
+
+}));
+
+router.get("/interns/:applicationId", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+	// there will be all files off the student at this page
+    const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+	const applicationId = req.params.applicationId;
+
+    const intern = await Application_model.findOne({
+		where: {
+			id: applicationId		
+		},
+        include: [
+			{
+            	model: Announcement_model,
+				include: {
+					model: Company_model,
+					attributes: ['name']
+				}
+			},
+			{
+				model: Student_model,
+				attributes: ['username'] ['id']
+			}
+		]
+    });
+
+	res.send(intern); // to test it on postman
+
+	/*res.render("applicationRequests", {
+        usertype: "admin",
+        dataValues: admin.dataValues,
+        intern,
+		totalAnnouncementsCount,
+		totalCompaniesCount
+    });*/
+	
 }));
 
 module.exports= router;

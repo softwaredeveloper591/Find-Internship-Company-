@@ -96,9 +96,12 @@ router.post("/applications/:applicationId",upload.single('studentFile'),[auth,ch
    	  	fileType,
    	  	username: application.Student.username
    	});
+
+	const emailSubject = 'SSI certificate';
 	const emailBody = `Hello ${application.Announcement.Company.username},<br><br>
 	The SSI certificate of the student named ${application.Student.username} has been sent to you. You can download it from the system.<br><br>
 	Best Regards,<br>Admin Team`;
+
 	amqp.connect('amqp://rabbitmq', (err, connection) => {
 		if (err) throw err;
 		connection.createChannel((err, channel) => {
