@@ -14,6 +14,7 @@ const Announcement_model= require("../models/announcement-model");
 const Company_model= require("../models/company-model");
 const Student_model= require("../models/student-model");
 const Document_model= require("../models/document-model");
+const Internship_model = require("../models/internship-model");
 
 router.get("/", [auth, checkUserRole("secretary")], asyncErrorHandler( async (req, res, next) => {
  
@@ -43,6 +44,47 @@ router.get("/", [auth, checkUserRole("secretary")], asyncErrorHandler( async (re
         dataValues: secretary.dataValues,
 		applications
     });
+}));
+
+router.get("/applicationForms",[auth,checkUserRole("secretary")], asyncErrorHandler( async (req, res, next) => {
+	/* There will be application forms of more than one student, so we need to organize them according to each student
+	(i.e according to different applicationIds) to be able to seperate them from each other. This way we can get the applicationId 
+	of the file a student sent and secretary can send employment certificate to the student with the same applicationId. */
+    const secretary = await Secretary_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+	const applicationForms = await Document_model.findAll({ where: { fileType: "Updated Manuel Application Form"}});
+
+	res.send(applicationForms);
+
+	/*res.render("applicationForms", {
+        usertype: "secretary",
+        dataValues: secretary.dataValues,
+		applicationForms
+    });*/
+}));
+
+router.post("/employmentCertificate", upload.single('employmentCertificate'), [auth,checkUserRole("secretary")], asyncErrorHandler( async (req, res, next) => {
+	const { applicationId, id } = req.body; //can get both from the document table 
+
+	const student = await Student_model.findOne({ where: { id }});
+
+	const file = req.file;
+	let binaryData = null;
+	if(!file) {
+		return res.status(404).json({ errors: "Error uploading file" });
+	}
+	binaryData = file.buffer;
+
+	await Document_model.create({
+		applicationId,
+		name: file.originalname,
+		fileType: 'Manual Employment Certificate',
+		username: student.username,
+		userId: id,
+		data: binaryData
+  	});  
+
+	res.status(200).json({ message: "Employment Certificate is uploaded"});
+
 }));
 
 router.get("/applications/download/:applicationId/:fileType",[auth,checkUserRole("secretary")], asyncErrorHandler( async (req, res, next) => {
@@ -86,7 +128,7 @@ router.post("/applications/:applicationId",upload.single('studentFile'),[auth,ch
   	
   	const file = req.file;
   	const binaryData = file.buffer;
-  	const fileType="Employment Certificate";
+  	const fileType = "Employment Certificate";
   	const name = file.originalname;
 
    	await Document_model.create({
@@ -96,6 +138,16 @@ router.post("/applications/:applicationId",upload.single('studentFile'),[auth,ch
    	  	fileType,
    	  	username: application.Student.username
    	});
+
+	application.status = 3;
+	application.isSentBySecretary = true;
+	await application.save();
+
+	await Internship_model.create({
+		id: applicationId,
+		studentName: application.Student.username,
+		studentId : application.Student.id
+	});
 
 	const emailSubject = 'SSI certificate';
 	const emailBody = `Hello ${application.Announcement.Company.username},<br><br>
@@ -122,9 +174,7 @@ router.post("/applications/:applicationId",upload.single('studentFile'),[auth,ch
 			connection.close();
 		}, 500);
 	});
-	application.status = 3;
-	application.isSentBySecretary = true;
-	await application.save();
+
 	res.redirect("/secretary");
 }));
 

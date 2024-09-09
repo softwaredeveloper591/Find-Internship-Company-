@@ -39,4 +39,4 @@ const Application = sequelize.define('Application', {
 Document.belongsTo(Application, { foreignKey: 'applicationId' });
 Application.hasMany(Document, { foreignKey: 'applicationId' });
 
-  module.exports=Application;
+module.exports = Application;

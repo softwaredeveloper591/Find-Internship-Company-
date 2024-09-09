@@ -15,6 +15,7 @@ const Announcement_model = require("../models/announcement-model");
 const Application_model = require("../models/application-model");
 const Document_model = require("../models/document-model");
 const Student_model = require("../models/student-model");
+const Internship_model = require("../models/internship-model");
 
 let totalApplicationsCount = 0;
 let totalInternshipsCount = 0;
@@ -140,7 +141,7 @@ router.get("/announcements/:id",[auth,checkUserRole("company")], asyncErrorHandl
 	});
 }));
 
-router.post("/announcements/:id", upload.single('image'), [auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
+router.put("/announcements/:id", upload.single('image'), [auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
 
 	/*I thought companies can edit the announcement directly on the page as on the linkedin profile and when they click the 
 	"edit or something else" button the announcement will be edited and admin will see it as edited at the announcements page*/
@@ -231,6 +232,8 @@ router.get("/internships",[auth,checkUserRole("company")], asyncErrorHandler( as
 }));
 
 router.get("/internships/:applicationId",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
+	/* The internships that rejected or internships for which feedback sent should be clear 
+	for company to understand the status of the intern. */
     const company = await Company_model.findOne({ where: { id: req.user.id } });
 	const applicationId = req.params.applicationId;
     const internship = await Application_model.findOne({
@@ -260,6 +263,61 @@ router.get("/internships/:applicationId",[auth,checkUserRole("company")], asyncE
     });*/
 
 	// I dont know how this process will be handled at the frontend so I am just writing it like this for now.
+}));
+
+router.put("/internships/:applicationId",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
+    const company = await Company_model.findOne({ where: { id: req.user.id } });
+	const applicationId = req.params.applicationId;
+	const { isApproved, feedback } = req.body; // isApproved is a hidden object
+
+	const internship = await Internship_model.findOne({ where: { id: applicationId}});
+
+	if (isApproved === "true") {
+		internship.isApproved = "approvedByCompany";
+	    await internship.save();
+	    return res.status(200).json({ message: "Summer practice report approved." });
+	} else if(isApproved === "false") {
+		// company must enter a feedback to inform student what the problem is for this option.
+		const emailSubject = 'Summer Practice Report Rejected';
+		const emailBody = `Hello ${internship.studentName},<br><br>
+	    Your summer practice report has been rejected by ${company.name}.<br><br> Feedback: <br> ${feedback}. <br><br>
+	    Best Regards,<br>Admin Team`;
+
+		amqp.connect('amqp://rabbitmq', (err, connection) => {
+			if (err) throw err;
+			connection.createChannel((err, channel) => {
+				if (err) throw err;
+				const queue = 'email_queue';
+				const msg = JSON.stringify({
+					to: application.Student.email,
+					subject: emailSubject,
+					body: emailBody
+				});
+				// Ensure the queue exists
+				channel.assertQueue(queue, { durable: true });
+				// Publish the message to the queue
+				channel.sendToQueue(queue, Buffer.from(msg), { persistent: true });
+				console.log(" [x] Sent %s", msg);
+			});
+	
+			setTimeout(() => {
+				connection.close();
+			}, 500);
+		});	
+
+		internship.isApproved = "feedbackSent";
+		await internship.save();
+		// there should be a feedback for this option to inform students why they got rejected.
+		// students can be rejected because of a mistake in the file so they can be able to send the file again.
+	    return res.status(200).json({ message: `Summer practice report rejected and ${internship.studentName} is informed` });
+	}
+	else {
+		// also there should be an option for company to reject the internship of the student definitly. 
+		internship.isApproved = "rejected";
+		await internship.save();
+		return res.status(200).json({ message: "Internship is rejected." });
+	}
+
 }));
 
 router.post("/companyForm/:applicationId", upload.single('companyForm'), [auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {

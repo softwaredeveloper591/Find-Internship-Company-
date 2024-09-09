@@ -29,9 +29,18 @@ const Document = sequelize.define('Document', {
     type: DataTypes.STRING(45),
     allowNull: false
   },
+  userId: {
+	type: DataTypes.STRING(45),
+    allowNull: false,
+	defaultValue: null
+  },
   data: {
     type: DataTypes.BLOB('medium'),
     allowNull: false
+  },
+  status: {
+    type: DataTypes.BLOB('medium'),
+	defaultValue: null
   }
 }, {
   tableName: 'document',

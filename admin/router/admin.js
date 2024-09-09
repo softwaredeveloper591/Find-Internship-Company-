@@ -17,6 +17,7 @@ const Announcement_model = require("../models/announcement-model");
 const Application_model = require("../models/application-model");
 const Student_model = require("../models/student-model");
 const Document_model = require("../models/document-model");
+const Internship_model = require("../models/internship-model");
 
 let totalAnnouncementsCount = 0;
 let totalApplicationsCount = 0;
@@ -138,7 +139,13 @@ router.get("/", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, r
     });
 }));
 
-router.get("/applicationForms", [auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+router.get("/files", [auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+	/* There will be application forms of more than one student, so we need to organize them according to each student
+	(i.e according to different studentIds) to be able to seperate them from each other. This way we can get the studentId 
+	of the file a student sent and admin can send a feedback to the student. */
+	// also each application form of a student should be organized according to applicationId.
+	/* there should be a part to show internship files too and this part should also separate from each other according to file type 
+	for admin to be able to send feedback for each of them separately. */
     const admin = await Admin_model.findOne({ where: {id: req.user.id} });
 
 	const applicationForms = await Document_model.findAll({ where: { fileType: "Manual Application Form" }}); 
@@ -163,9 +170,61 @@ router.get("/applicationForms", [auth,checkUserRole("admin")], asyncErrorHandler
 	// I used uuid
 }));
 
-router.post("/applicationForms/:applicationId", upload.single('ApplicationForm'), [auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+router.put("/feedback/:studentId", [auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+	const studentId = req.params.studentId;
+	const { applicationId, feedback } = req.body; // we need applicationId to update document table
+
+	await Document_model.update(
+		{
+			status: "checked"
+		},
+		{
+			where: {applicationId}
+		}
+	);
+
+	// checked files should be signed as "feedback is sent" so admin can understand which files are checked.
+
+	const student = await Student_model.findOne({ where: { id: studentId}});
+
+	const emailSubject = 'Application Form Checked';
+    const emailBody = `Hello ${student.username},<br><br>
+        Your application form has been checked by admin. <br><br> Feedback: <br> ${feedback}. <br><br>
+        Best Regards,<br>Admin Team`;
+
+	/* admin must send a feedback to the student for student to know if the application form is correct or not. 
+	If it is correct, student should wait for the employment certificate. If it is not, student should know this so he can 
+	upload the corrected application form. */
+	// admin must download the file before sending a feedback.
+
+	amqp.connect('amqp://rabbitmq', (err, connection) => {
+		if (err) throw err;
+		connection.createChannel((err, channel) => {
+			if (err) throw err;
+			const queue = 'email_queue';
+			const msg = JSON.stringify({
+				to: student.email,
+				subject: emailSubject,
+				body: emailBody
+			});
+			// Ensure the queue exists
+			channel.assertQueue(queue, { durable: true });
+			// Publish the message to the queue
+			channel.sendToQueue(queue, Buffer.from(msg), { persistent: true });
+			console.log(" [x] Sent %s", msg);
+		});
+		setTimeout(() => {
+			connection.close();
+		}, 500);
+	});
+
+	res.status(200).json({ message: "Feedback sent"});
+}));
+
+router.put("/applicationForm/:applicationId", upload.single('applicationForm'), [auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+	
 	const applicationId = req.params.applicationId;
-	/* admin needs to click submit button. We need to use a script as await fetch(/applicationForms/:applicationId"). */
+
 	const file = req.file;
 	let binaryData = null;
 	if(!file) {
@@ -173,9 +232,27 @@ router.post("/applicationForms/:applicationId", upload.single('ApplicationForm')
 	}
 	binaryData = file.buffer;
 
-	await Document_model.update({ name: file.originalname, data: binaryData, fileType: "Updated Manual Application Form" }, { where: { applicationId }});
+	await Document_model.update(
+		{ 
+			name: file.originalname, 
+			data: binaryData, fileType: "Updated Manual Application Form" 
+		}, 
+		{ 
+			where: { applicationId }
+		}
+	);
 
-	res.status(200).json({ message: "File is uploaded"});
+	res.status(200).json({ message: "Application form sent to secretary"});
+}));
+
+router.delete("/deleteApplicationForm/:applicationId", [auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+	/* admin should be able to delete the application forms which are checked after sending a feedback and uploading application form
+	for secretary to download. */
+	// I don't know if it is a good idea to delete them permanently since these are formal document but I will probably delete them.
+	const applicationId = req.params.applicationId;
+	await Document_model.destroy({ where: { applicationId } });
+
+	res.status(200).json({ message: "Application form deleted"});
 }));
 
 // since I used uuid we don't need this router. We can use the /application/download/:applicationId/:fileType
@@ -550,24 +627,31 @@ router.get("/interns", [auth, checkUserRole("admin")], asyncErrorHandler( async 
 
 router.get("/interns/:applicationId", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
 	// there will be all files off the student at this page
+	// admin should be able to see if the internship of the student rejected by the company.
     const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
 	const applicationId = req.params.applicationId;
 
-    const intern = await Application_model.findOne({
+    const intern = await Internship_model.findOne({
 		where: {
 			id: applicationId		
 		},
         include: [
 			{
-            	model: Announcement_model,
-				include: {
-					model: Company_model,
-					attributes: ['name']
-				}
-			},
-			{
-				model: Student_model,
-				attributes: ['username'] ['id']
+				model: Application_model,
+				include: [
+					{
+						model: Announcement_model,
+						include: 
+							{
+								model: Company_model,
+								attributes: ['name']
+							}
+					},
+					{
+						model: Student_model,
+						attributes: ['username'] ['id']
+					}
+				]
 			}
 		]
     });
@@ -581,6 +665,30 @@ router.get("/interns/:applicationId", [auth, checkUserRole("admin")], asyncError
 		totalAnnouncementsCount,
 		totalCompaniesCount
     });*/
+	
+}));
+
+router.put("/interns/:applicationId", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+	/* I think admin doesn't have approve summer practice report or survey but should be able to give feedback to companies and students.
+	This way companies and students can upload the files again if there is a mistake. It is enough to check the necessary files
+	for admin to enter the score. Files don't have to be approved by admin, there should be just feedback option. */
+
+	const applicationId = req.params.applicationId;
+	const score = req.body; // will come from frontend
+
+	const internship = await Internship_model.findOne({ where: { id: applicationId}});
+
+    if (score === "feedback") {
+		internship.isApproved = "feedbackSentByAdmin"
+		await internship.save();
+		return res.status(200).json({ message: "feedback is sent to company" });
+	}
+	else {
+		internship.isApproved = "approved";
+		internship.score = score;
+		await internship.save();
+		return res.status(200).json({ message: "score is entered" });
+	}
 	
 }));
 

@@ -11,17 +11,17 @@
 <body>
     <header>
         <%- include('./nav') %>
-            <div id="sidebar" class="sidebar">
-                <a href="/student" class="order"><button>HOME</button></a>
-                <a href="/student/opportunities" class="order"><button>Opportunities</button></a>
-                <a href="/student/applications" class="order"><button>Applications</button></a>
-            </div>
-            <link rel="stylesheet" href="/apply.css">
+        <div id="sidebar" class="sidebar">
+            <a href="/student" class="order"><button>HOME</button></a>
+            <a href="/student/opportunities" class="order"><button>Opportunities</button></a>
+            <a href="/student/applications" class="order"><button>Applications</button></a>
+        </div>
+        <link rel="stylesheet" href="/apply.css">
     </header>
 
     <div class="container-apply">
-        <% if (announcement !==null) { %>
-            <% if (announcement.image !==null) { %>
+        <% if (announcement !== null) { %>
+            <% if (announcement.image !== null) { %>
                 <div class="content-apply">
                     <div class="details-container">
                         <div class="image-container">
@@ -34,7 +34,7 @@
                             </div>
                             <div class="card-body">
                                 <form class="input-form" id="applyForm" method="POST"
-                                    action="/student/opportunities/:<%= announcement.id %>"
+                                    action="/student/opportunities/<%= announcement.id %>"
                                     enctype="multipart/form-data">
                                     <div class="upload-file" id="custom-upload">
                                         <i class="fa-solid fa-file-pdf"></i>
@@ -42,6 +42,7 @@
                                     </div>
                                     <input type="file" name="CV" class="CV" accept=".pdf" style="display: none;">
                                     <p id="file-name"></p>
+                                    <button type="button" id="preview-button" class="sbt-button">Preview PDF</button>
                                     <div class="mb-3">
                                         <label for="studentNumber" class="form-label">Student's Phone Number</label>
                                         <input type="text" class="form-control" id="user_phone" name="user_phone"
@@ -99,13 +100,15 @@
                                 </div>
                                 <div class="card-body">
                                     <form class="input-form" id="applyForm" method="POST"
-                                        action="/student/opportunities/:<%= announcement.id %>"
+                                        action="/student/opportunities/<%= announcement.id %>"
                                         enctype="multipart/form-data">
                                         <div class="upload-file" id="custom-upload">
                                             <i class="fa-solid fa-file-pdf"></i>
                                             Upload CV<i class="fa-solid fa-upload"></i>
                                         </div>
                                         <input type="file" name="CV" class="CV" accept=".pdf" style="display: none;">
+                                        <p id="file-name"></p>
+                                        <button type="button" id="preview-button" class="sbt-button">Preview PDF</button>
                                         <div class="mb-3">
                                             <label for="studentNumber" class="form-label">Student's Phone Number</label>
                                             <input type="text" class="form-control" id="user_phone" name="user_phone"
@@ -148,10 +151,27 @@
                     this.value = ''; 
                     return;
                 }
+
                 const fileName = file.name;
                 const customUploadDiv = document.querySelectorAll('.upload-file')[index];
                 customUploadDiv.innerHTML = '<i class="fa-solid fa-file"></i> ' + fileName;
                 customUploadDiv.style.border = '2px solid #bf1b1b';
+            });
+        });
+
+		// I added a script for students to be able to see the file they uploaded on a new page
+		// This is just an attempt to remember that we need to do this.
+
+        document.querySelectorAll('#preview-button').forEach((button, index) => {
+            button.addEventListener('click', function () {
+                const fileInput = document.querySelectorAll('.CV')[index];
+                const file = fileInput.files[0];
+                if (file) {
+                    const fileURL = URL.createObjectURL(file);
+                    window.open(fileURL, '_blank');
+                } else {
+                    alert("Please upload a file before previewing.");
+                }
             });
         });
 
