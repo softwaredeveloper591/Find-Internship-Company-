@@ -51,7 +51,7 @@ router.get("/applicationForms",[auth,checkUserRole("secretary")], asyncErrorHand
 	(i.e according to different applicationIds) to be able to seperate them from each other. This way we can get the applicationId 
 	of the file a student sent and secretary can send employment certificate to the student with the same applicationId. */
     const secretary = await Secretary_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
-	const applicationForms = await Document_model.findAll({ where: { fileType: "Updated Manuel Application Form"}});
+	const applicationForms = await Document_model.findAll({ where: { fileType: "Updated Manual Application Form"}});
 
 	res.send(applicationForms);
 
@@ -74,6 +74,15 @@ router.post("/employmentCertificate", upload.single('employmentCertificate'), [a
 	}
 	binaryData = file.buffer;
 
+	await Document_model.update(
+		{
+			status: "checkedBySecretary"
+		},
+		{
+			where: {applicationId}
+		}
+	);
+
 	await Document_model.create({
 		applicationId,
 		name: file.originalname,
@@ -90,16 +99,16 @@ router.post("/employmentCertificate", upload.single('employmentCertificate'), [a
 router.get("/applications/download/:applicationId/:fileType",[auth,checkUserRole("secretary")], asyncErrorHandler( async (req, res, next) => {
     const applicationId = req.params.applicationId;
     const fileType = req.params.fileType;
-    const takenDocument = await Document_model.findOne({where:{applicationId:applicationId, fileType:fileType}});
+    const takenDocument = await Document_model.findOne({where:{applicationId, fileType}});
     if(!takenDocument){
-        throw error("There is no such document.")
+        return res.status(404).json({ errors: "Error downloading file" });
     }
     let filename= takenDocument.dataValues.name;
     let binaryData= takenDocument.dataValues.data;
     let contentType = 'application/octet-stream'; // Default content type
     contentType = 'image/jpeg';
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', 'attachment; filename='+encodeURI(filename)); // this doesn't solve the problem completely
+    res.setHeader('Content-Type', contentType);										   // the file name is corrupted
     res.send(binaryData);
 }));
 

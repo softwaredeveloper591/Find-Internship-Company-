@@ -1,7 +1,7 @@
 const { DataTypes}= require("sequelize");
 const sequelize=require("../data/db");
 
-const Student= sequelize.define('Student', {
+const Student = sequelize.define('Student', {
     id: {
         type: DataTypes.INTEGER,
         allowNull: false,

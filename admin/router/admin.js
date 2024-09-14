@@ -1,18 +1,19 @@
 const express = require("express");
-const router= express.Router();
+const router = express.Router();
 const cron = require('node-cron');
 const { Sequelize } = require('sequelize');
+const { Op } = require('sequelize');
 const moment = require('moment-timezone');
 const multer= require("multer");
 const upload = multer();
-const amqp = require('amqplib/callback_api');
 
 const auth = require("../middleware/auth"); 
-const checkUserRole= require("../middleware/checkUserRole")
-const asyncErrorHandler = require("../utils/asyncErrorHandler");
+const checkUserRole = require("../middleware/checkUserRole")
+const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
+const { sendEmail } = require("../utils/emailSender");
 
-const Admin_model= require("../models/admin-model");
-const Company_model= require("../models/company-model");
+const Admin_model = require("../models/admin-model");
+const Company_model = require("../models/company-model");
 const Announcement_model = require("../models/announcement-model");
 const Application_model = require("../models/application-model");
 const Student_model = require("../models/student-model");
@@ -148,7 +149,15 @@ router.get("/files", [auth,checkUserRole("admin")], asyncErrorHandler( async (re
 	for admin to be able to send feedback for each of them separately. */
     const admin = await Admin_model.findOne({ where: {id: req.user.id} });
 
-	const applicationForms = await Document_model.findAll({ where: { fileType: "Manual Application Form" }}); 
+	const applicationForms = await Document_model.findAll({
+		where: {
+		  	fileType: "Manual Application Form",
+		  	[Op.or]: [
+            	{ status: { [Op.ne]: "deleted" } },
+            	{ status: null }
+        	]
+		}
+	});
 
 	res.send(applicationForms); // to test it at postman
 
@@ -176,7 +185,7 @@ router.put("/feedback/:studentId", [auth,checkUserRole("admin")], asyncErrorHand
 
 	await Document_model.update(
 		{
-			status: "checked"
+			status: "checkedByAdmin"
 		},
 		{
 			where: {applicationId}
@@ -196,41 +205,22 @@ router.put("/feedback/:studentId", [auth,checkUserRole("admin")], asyncErrorHand
 	If it is correct, student should wait for the employment certificate. If it is not, student should know this so he can 
 	upload the corrected application form. */
 	// admin must download the file before sending a feedback.
-
-	amqp.connect('amqp://rabbitmq', (err, connection) => {
-		if (err) throw err;
-		connection.createChannel((err, channel) => {
-			if (err) throw err;
-			const queue = 'email_queue';
-			const msg = JSON.stringify({
-				to: student.email,
-				subject: emailSubject,
-				body: emailBody
-			});
-			// Ensure the queue exists
-			channel.assertQueue(queue, { durable: true });
-			// Publish the message to the queue
-			channel.sendToQueue(queue, Buffer.from(msg), { persistent: true });
-			console.log(" [x] Sent %s", msg);
-		});
-		setTimeout(() => {
-			connection.close();
-		}, 500);
-	});
+	sendEmail(student.email, emailSubject, emailBody);
 
 	res.status(200).json({ message: "Feedback sent"});
 }));
 
-router.put("/applicationForm/:applicationId", upload.single('applicationForm'), [auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+router.put("/applicationForms/:applicationId", upload.single('ApplicationForm'), [auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
 	
 	const applicationId = req.params.applicationId;
 
 	const file = req.file;
-	let binaryData = null;
+
 	if(!file) {
 		return res.status(404).json({ errors: "Error uploading file" });
 	}
-	binaryData = file.buffer;
+
+	const binaryData = file.buffer;
 
 	await Document_model.update(
 		{ 
@@ -245,12 +235,12 @@ router.put("/applicationForm/:applicationId", upload.single('applicationForm'), 
 	res.status(200).json({ message: "Application form sent to secretary"});
 }));
 
-router.delete("/deleteApplicationForm/:applicationId", [auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+router.put("/deleteApplicationForm/:applicationId", [auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
 	/* admin should be able to delete the application forms which are checked after sending a feedback and uploading application form
 	for secretary to download. */
-	// I don't know if it is a good idea to delete them permanently since these are formal document but I will probably delete them.
+	
 	const applicationId = req.params.applicationId;
-	await Document_model.destroy({ where: { applicationId } });
+	await Document_model.update({status: "deleted"},{ where: { applicationId } });
 
 	res.status(200).json({ message: "Application form deleted"});
 }));
@@ -366,26 +356,8 @@ router.put("/announcement/:announcementId", [auth, checkUserRole("admin")], asyn
         Your announcement titled "${announcement.announcementName}" has been ${isApproved ? "approved" : `rejected and will be removed from our system. <br><br> ${feedback ? `Feedback: <br> ${feedback}.` : ""}`} <br><br>
         Best Regards,<br>Admin Team`;
 
-	amqp.connect('amqp://rabbitmq', (err, connection) => {
-		if (err) throw err;
-		connection.createChannel((err, channel) => {
-			if (err) throw err;
-			const queue = 'email_queue';
-			const msg = JSON.stringify({
-				to: announcement.Company.email,
-				subject: emailSubject,
-				body: emailBody
-			});
-			// Ensure the queue exists
-			channel.assertQueue(queue, { durable: true });
-			// Publish the message to the queue
-			channel.sendToQueue(queue, Buffer.from(msg), { persistent: true });
-			console.log(" [x] Sent %s", msg);
-		});
-		setTimeout(() => {
-			connection.close();
-		}, 500);
-	});
+	sendEmail(announcement.Company.email, emailSubject, emailBody);
+
     if (!isApproved) {
 		await Announcement_model.destroy({ where: { id: announcement.id } });
 		return res.status(200).json({ message: "Announcement rejected and removed from the system." });
@@ -409,7 +381,7 @@ router.get("/companyRequests", [auth, checkUserRole("admin")], asyncErrorHandler
 
 router.put("/company/:companyId", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
 	const companyId = req.params.companyId;
-	const isApproved = req.body.isApproved;
+	const { isApproved } = req.body;
     const company = await Company_model.findOne({ where: { id: companyId } });
     if (!company) {
         return res.status(404).json({ errors: "Company not found." });
@@ -419,26 +391,8 @@ router.put("/company/:companyId", [auth, checkUserRole("admin")], asyncErrorHand
         Your registration request has been ${isApproved ? "approved" : "rejected and removed from our system"}.<br><br>
         Best Regards,<br>Admin Team`;
     // Connect to RabbitMQ
-    amqp.connect('amqp://rabbitmq', (err, connection) => {
-        if (err) throw err;
-        connection.createChannel((err, channel) => {
-            if (err) throw err;
-            const queue = 'email_queue';
-            const msg = JSON.stringify({
-                to: company.email,
-                subject: emailSubject,
-                body: emailBody
-            });
-            // Ensure the queue exists
-            channel.assertQueue(queue, { durable: true });
-            // Publish the message to the queue
-            channel.sendToQueue(queue, Buffer.from(msg), { persistent: true });
-            console.log(" [x] Sent %s", msg);
-        });
-        setTimeout(() => {
-            connection.close();
-        }, 500);
-    });
+    sendEmail(company.email, emailSubject, emailBody);
+
     if (!isApproved) {
         await company.destroy();
         return res.status(200).json({ message: "Company registration request rejected and deleted." });
@@ -520,7 +474,7 @@ router.get("/applications/download/:applicationId/:fileType",[auth,checkUserRole
     let binaryData= takenDocument.dataValues.data;
     let contentType = 'application/octet-stream'; // Default content type
     contentType = 'image/jpeg';
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Disposition', 'attachment; filename='+encodeURI(filename));
     res.setHeader('Content-Type', contentType);
     res.send(binaryData);
 }));
@@ -555,30 +509,12 @@ router.put("/applications/:applicationId",upload.single('studentFile'),[auth,che
 		]
     });
 	const emailSubject = isApproved === "true" ? 'Application Approved' : 'Application Rejected';
-	const emailBody = `Hello ${application.Announcement.Company.username},<br><br>
+	const emailBody = `Hello ${application.Student.username},<br><br>
 		Your application titled "${application.Announcement.announcementName}" has been ${isApproved === "true" ? "approved" : `rejected and will be removed from our system. <br><br> ${feedback ? `Feedback: <br> ${feedback}.` : ""}`} <br><br>
 		Best Regards,<br>Admin Team`;
 
-	amqp.connect('amqp://rabbitmq', (err, connection) => {
-		if (err) throw err;
-		connection.createChannel((err, channel) => {
-			if (err) throw err;
-			const queue = 'email_queue';
-			const msg = JSON.stringify({
-				to: application.Announcement.Company.email,
-				subject: emailSubject,
-				body: emailBody
-			});
-			// Ensure the queue exists
-			channel.assertQueue(queue, { durable: true });
-			// Publish the message to the queue
-			channel.sendToQueue(queue, Buffer.from(msg), { persistent: true });
-			console.log(" [x] Sent %s", msg);
-		});
-		setTimeout(() => {
-			connection.close();
-		}, 500);
-	});
+	sendEmail(application.Student.email, emailSubject, emailBody);
+
 	if (isApproved === "true") {
         application.isApprovedByDIC = true;
 		application.status = 2;
@@ -594,25 +530,26 @@ router.put("/applications/:applicationId",upload.single('studentFile'),[auth,che
 
 router.get("/interns", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
     const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
-    const interns = await Application_model.findAll({
-		where: {
-			status: 3		
-		},
-        include: [
+
+	const interns = await Internship_model.findAll({
+		include: [
 			{
-            	model: Announcement_model,
+				model: Application_model,
 				include: {
-					model: Company_model,
-					attributes: ['name']
+					model: Announcement_model,
+					include: {
+						model: Company_model,
+						attributes: ['name']
+					}
 				}
 			},
 			{
 				model: Student_model,
-				attributes: ['username'] ['id']
+				attributes: ['username', 'id']
 			}
 		]
-    });
-
+	});
+    
 	res.send(interns); // to test it on postman
 
 	/*res.render("applicationRequests", {
@@ -649,7 +586,7 @@ router.get("/interns/:applicationId", [auth, checkUserRole("admin")], asyncError
 					},
 					{
 						model: Student_model,
-						attributes: ['username'] ['id']
+						attributes: ['username', 'id']
 					}
 				]
 			}
@@ -669,27 +606,26 @@ router.get("/interns/:applicationId", [auth, checkUserRole("admin")], asyncError
 }));
 
 router.put("/interns/:applicationId", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
-	/* I think admin doesn't have approve summer practice report or survey but should be able to give feedback to companies and students.
+	/* I think admin doesn't have to approve summer practice report or survey but should be able to give feedback to companies and students.
 	This way companies and students can upload the files again if there is a mistake. It is enough to check the necessary files
 	for admin to enter the score. Files don't have to be approved by admin, there should be just feedback option. */
 
 	const applicationId = req.params.applicationId;
-	const score = req.body; // will come from frontend
+	const { score, feedback } = req.body; 
 
 	const internship = await Internship_model.findOne({ where: { id: applicationId}});
 
-    if (score === "feedback") {
+    if (feedback !== null) {
+		// I forgot to add feedback :d
 		internship.isApproved = "feedbackSentByAdmin"
 		await internship.save();
 		return res.status(200).json({ message: "feedback is sent to company" });
-	}
-	else {
+	} else {
 		internship.isApproved = "approved";
 		internship.score = score;
 		await internship.save();
 		return res.status(200).json({ message: "score is entered" });
 	}
-	
 }));
 
 module.exports= router;

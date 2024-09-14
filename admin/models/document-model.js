@@ -10,7 +10,6 @@ const Document = sequelize.define('Document', {
   },
   applicationId: {
     type: DataTypes.STRING(100),
-	allowNull: true,
     references: {
       model: 'Application',
       key: 'id'
@@ -31,7 +30,6 @@ const Document = sequelize.define('Document', {
   },
   userId: {
 	type: DataTypes.STRING(45),
-    allowNull: false,
 	defaultValue: null
   },
   data: {
@@ -39,7 +37,7 @@ const Document = sequelize.define('Document', {
     allowNull: false
   },
   status: {
-    type: DataTypes.BLOB('medium'),
+    type: DataTypes.STRING(45),
 	defaultValue: null
   }
 }, {

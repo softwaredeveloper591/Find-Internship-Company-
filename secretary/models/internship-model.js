@@ -1,5 +1,6 @@
 const { DataTypes}= require("sequelize");
 const sequelize=require("../data/db");
+const Application = require('./application-model');
 
 const Internship = sequelize.define('Internship', {
     id: {
@@ -12,10 +13,9 @@ const Internship = sequelize.define('Internship', {
 	  defaultValue: 'started'
     },
     score: {
-      type: DataTypes.STRING(45),
-      allowNull: false,
-	  defaultValue: '0'
-    },
+		type: DataTypes.STRING(45),
+		defaultValue: null
+	},
     studentName: {
       type: DataTypes.STRING(45),
       allowNull: false
@@ -24,10 +24,17 @@ const Internship = sequelize.define('Internship', {
 	  type: DataTypes.STRING(45),
       allowNull: false,
 	  defaultValue: 0
+	},
+	studentId: {
+		type: DataTypes.STRING(45),
+		defaultValue: null
 	}
   }, {
     tableName: 'internship',
     timestamps: false
   });
+
+Application.belongsTo(Internship, { foreignKey: 'id' });
+Internship.hasOne(Application, { foreignKey: 'id' });
 
 module.exports = Internship;

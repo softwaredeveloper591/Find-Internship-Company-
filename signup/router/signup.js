@@ -1,13 +1,14 @@
 const express = require("express");
-const bcrypt= require("bcrypt");
-const jwt=require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const { isEmail } = require('validator');
+const { APP_SECRET } = require("../config");
 
-const Student_model= require("../models/student-model");
-const Company_model= require("../models/company-model");
-const Ubys_model= require("../models/ubys-model");
+const Student_model = require("../models/student-model");
+const Company_model = require("../models/company-model");
+const Ubys_model = require("../models/ubys-model");
 
-const router= express.Router();
+const router = express.Router();
 
 const handleErrors = (err) => {
 	console.log(err.message, err.code);
@@ -44,7 +45,7 @@ const handleErrors = (err) => {
 	return errors;
 }
 
-router.get("/",function(req,res){
+router.get("/", function(req,res) {
     res.render("signup");
 });
 
@@ -83,7 +84,6 @@ router.post("/company",async function(req,res){
 router.post("/student",async function(req,res){
     const { email, password, confirmPassword } = req.body;
     const hashedPassword = await bcrypt.hash(password,10);
-	console.log("I am here");
 
 	const mail = email;
     const parts = mail.split("@");
@@ -134,7 +134,7 @@ router.post("/student",async function(req,res){
 });
 
 function createTokenWithIdandUserType(id,userType){       //we can add this function into the models so that every model has its own function.
-  return jwt.sign({id: id, userType:userType},'privateKey');//----------------------------------------------------------------------
+  return jwt.sign({id: id, userType:userType}, APP_SECRET);//----------------------------------------------------------------------
 };
 
 module.exports = router;

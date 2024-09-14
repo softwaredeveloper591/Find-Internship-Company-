@@ -1,7 +1,8 @@
 const amqp = require('amqplib/callback_api');
 const nodeMailer = require('nodemailer');
+require("dotenv").config();
 
-amqp.connect('amqp://rabbitmq', (err, connection) => {
+amqp.connect(process.env.MSG_QUEUE_URL, (err, connection) => {
     if (err) throw err;
 
     connection.createChannel((err, channel) => {
@@ -22,7 +23,7 @@ amqp.connect('amqp://rabbitmq', (err, connection) => {
                     service: 'gmail',
                     auth: {
                         user: 'enesbilalbabaturalpro06@gmail.com',
-                        pass: 'elde beun xhtc btxu'
+                        pass: process.env.EMAIL_PASS
                     }
                 });
 

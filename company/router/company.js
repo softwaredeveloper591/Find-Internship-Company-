@@ -4,11 +4,11 @@ const moment = require('moment-timezone');
 const multer= require("multer");
 const upload = multer();
 const AdmZip = require("adm-zip");
-const amqp = require('amqplib/callback_api');
 
 const auth = require("../middleware/auth");  
 const checkUserRole = require("../middleware/checkUserRole");
-const asyncErrorHandler = require("../utils/asyncErrorHandler");
+const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
+const { sendEmail } = require("../utils/emailSender");
 
 const Company_model= require("../models/company-model");
 const Announcement_model = require("../models/announcement-model");
@@ -206,29 +206,34 @@ router.get("/internships",[auth,checkUserRole("company")], asyncErrorHandler( as
 	// There should be the processes of upload company form and download Practice Evaluation Survey at this page
 	// since there will be internships more than one, the internships should be clickable.
     const company = await Company_model.findOne({ where: { id: req.user.id } });
-    const interns = await Application_model.findAll({
-		where: {
-			isSentBySecretary: true,
-		},
-        include: [
-			{
-            	model: Announcement_model,
-            	where: { companyId: company.id },
-				attributes: ['announcementName']
-			},
-			{
-				model: Student_model,
-				attributes: ['username', 'id']
-			}
-		]
-    });
 
-    res.render("internships", {
+	const interns = await Internship_model.findAll({
+		include: [
+		  	{
+				model: Application_model,
+				include: [
+			  		{
+						model: Announcement_model,
+						where: { companyId: company.id },
+						attributes: ['announcementName']
+			  		},
+			  		{
+						model: Student_model,
+						attributes: ['username', 'id']
+			 	 	}
+				]	
+		  	}
+		]
+	});
+
+	res.send(interns);
+
+    /*res.render("internships", {
         usertype: "company",
         dataValues: company.dataValues,
         interns,
 		totalApplicationsCount
-    });
+    });*/
 }));
 
 router.get("/internships/:applicationId",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
@@ -236,19 +241,24 @@ router.get("/internships/:applicationId",[auth,checkUserRole("company")], asyncE
 	for company to understand the status of the intern. */
     const company = await Company_model.findOne({ where: { id: req.user.id } });
 	const applicationId = req.params.applicationId;
-    const internship = await Application_model.findOne({
+
+	const internship = await Internship_model.findOne({
 		where: {
-			id: applicationId
+			id: applicationId		
 		},
         include: [
 			{
-            	model: Announcement_model,
-            	where: { companyId: company.id },
-				attributes: ['announcementName']
-			},
-			{
-				model: Student_model,
-				attributes: ['username', 'id']
+				model: Application_model,
+				include: [
+					{
+						model: Announcement_model,
+						attributes: ['announcementName']
+					},
+					{
+						model: Student_model,
+						attributes: ['username','id']
+					}
+				]
 			}
 		]
     });
@@ -270,7 +280,20 @@ router.put("/internships/:applicationId",[auth,checkUserRole("company")], asyncE
 	const applicationId = req.params.applicationId;
 	const { isApproved, feedback } = req.body; // isApproved is a hidden object
 
-	const internship = await Internship_model.findOne({ where: { id: applicationId}});
+	const internship = await Internship_model.findOne(
+		{ 
+			where: 
+			{ 
+				id: applicationId
+			},
+			include: [
+				{
+					model: Student_model,
+					attributes: ['email']
+				}
+			]
+		},	
+	);
 
 	if (isApproved === "true") {
 		internship.isApproved = "approvedByCompany";
@@ -283,27 +306,7 @@ router.put("/internships/:applicationId",[auth,checkUserRole("company")], asyncE
 	    Your summer practice report has been rejected by ${company.name}.<br><br> Feedback: <br> ${feedback}. <br><br>
 	    Best Regards,<br>Admin Team`;
 
-		amqp.connect('amqp://rabbitmq', (err, connection) => {
-			if (err) throw err;
-			connection.createChannel((err, channel) => {
-				if (err) throw err;
-				const queue = 'email_queue';
-				const msg = JSON.stringify({
-					to: application.Student.email,
-					subject: emailSubject,
-					body: emailBody
-				});
-				// Ensure the queue exists
-				channel.assertQueue(queue, { durable: true });
-				// Publish the message to the queue
-				channel.sendToQueue(queue, Buffer.from(msg), { persistent: true });
-				console.log(" [x] Sent %s", msg);
-			});
-	
-			setTimeout(() => {
-				connection.close();
-			}, 500);
-		});	
+		sendEmail(internship.Student.email, emailSubject, emailBody);
 
 		internship.isApproved = "feedbackSent";
 		await internship.save();
@@ -503,27 +506,7 @@ router.put("/applications/:applicationId",upload.single('upload-file'),[auth,che
 	    Your application titled "${application.Announcement.announcementName}" has been ${isApproved === "true" ? "approved by company" : "rejected by company and will be removed from our system"}.<br><br>
 	    Best Regards,<br>Admin Team`;
 
-	amqp.connect('amqp://rabbitmq', (err, connection) => {
-		if (err) throw err;
-		connection.createChannel((err, channel) => {
-			if (err) throw err;
-			const queue = 'email_queue';
-			const msg = JSON.stringify({
-				to: application.Student.email,
-				subject: emailSubject,
-				body: emailBody
-			});
-			// Ensure the queue exists
-			channel.assertQueue(queue, { durable: true });
-			// Publish the message to the queue
-			channel.sendToQueue(queue, Buffer.from(msg), { persistent: true });
-			console.log(" [x] Sent %s", msg);
-		});
-
-		setTimeout(() => {
-			connection.close();
-		}, 500);
-	});	
+	sendEmail(application.Student.email, emailSubject, emailBody);
 
 	if (isApproved === "true") {
 	    application.isApprovedByCompany = true;
@@ -551,7 +534,7 @@ router.get("/applications/download/:applicationId/:fileType",[auth,checkUserRole
     let contentType = 'application/octet-stream'; // Default content type
     contentType = 'image/jpeg';
 
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Disposition', 'attachment; filename='+encodeURI(filename));
     res.setHeader('Content-Type', contentType);
     res.send(binaryData);
 }));

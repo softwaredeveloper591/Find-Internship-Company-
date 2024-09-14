@@ -17,7 +17,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 const auth = require("../middleware/auth"); 
 const checkUserRole= require("../middleware/checkUserRole");
-const asyncErrorHandler = require("../utils/asyncErrorHandler");
+const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
+const { uploadFile } = require('../utils/fileUploader');
 
 const Student_model= require("../models/student-model");
 const Company_model= require("../models/company-model");
@@ -86,22 +87,12 @@ router.post("/applicationForm", upload.single('ApplicationForm'), [auth,checkUse
     const student = await Student_model.findOne({ where: {id: req.user.id} });
 
 	const applicationId = uuidv4();
-
 	const file = req.file;
-	if (!file) {
-		return res.status(400).json({ error: "No file uploaded" });
-	}
+	const fileType = 'Manual Application Form';
+	const name = `${student.username}_ApplicationForm`;
+	const status = null;
 
-  	const binaryData = file.buffer;
-
-	await Document_model.create({
-		applicationId,
-		name: `${student.username}_ApplicationForm`,
-		fileType: 'Manual Application Form',
-		username: student.username,
-		userId: student.id,
-		data: binaryData
-  	});  
+	await uploadFile(file, applicationId, student, name, fileType, status, Document_model);
 
 	res.status(201).json({ message: "Application Form uploaded successfully" });
 }));
@@ -114,16 +105,9 @@ router.post("/file", upload.single('file'), [auth,checkUserRole("student")], asy
 	let name = "";
 	let fileType = "";
 
-	const filetype = req.body; // this value will change according to file type. (i.e. application form, company form ...)
+	const { filetype } = req.body; // this value will change according to file type. (i.e. application form, company form ...)
 
-	const file = req.file;
-	if (!file) {
-		return res.status(400).json({ error: "No file uploaded" });
-	}
-
-  	const binaryData = file.buffer;
-
-	if (filetype  === "companyForm") {
+	if (filetype === "companyForm") {
 		name = `${student.username}_CompanyForm`;
 		fileType = 'Manual Company Form';
 	} else if(filetype === "summerPracticeReport") {
@@ -134,20 +118,11 @@ router.post("/file", upload.single('file'), [auth,checkUserRole("student")], asy
 		fileType = 'Manual Summer Practice Evaluation Survey';
 	}
 
-	// add update !!!
-	const document = await Document_model.findOne({where: {userId: student.id, fileType: filetype}});
+	const file = req.file;
+	const applicationId = null;
+	const status = "resent";
 
-	if(document === null) {
-		await Document_model.create({
-			name,
-			fileType,
-			username: student.username,
-			userId: student.id,
-			data: binaryData
-		  });  
-	} else {
-		await Document_model.update({status: "resent"},{where: {userId: student.id, fileType: filetype}});
-	}
+	await uploadFile(file, applicationId, student, name, fileType, status, Document_model);
 
 	res.status(201).json({ message: "File uploaded successfully" });
 }));
@@ -221,11 +196,8 @@ router.get("/opportunities/:opportunityId",[auth,checkUserRole("student")], asyn
 router.post("/opportunities/:opportunityId",upload.single('CV'),[auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
 
 	const student = await Student_model.findOne( { where: { id: req.user.id }} );
-  	const announcementId=req.params.opportunityId;
-  	const file = req.file;
-  	const binaryData = file.buffer;
-  	const fileType="CV";
-  	const name = file.originalname;
+  	const announcementId = req.params.opportunityId;
+  	
   	const { user_phone, relative_phone } = req.body;
     const templatePath = path.join(__dirname, '../files', 'ApplicationForm.docx');
     const createFilledDocument = async () => {
@@ -243,12 +215,14 @@ router.post("/opportunities/:opportunityId",upload.single('CV'),[auth,checkUserR
         return zip.toBuffer();
     };
 
-		bufferedApplicationForm = await createFilledDocument();
+	bufferedApplicationForm = await createFilledDocument();
+
     const application = await Application_model.create({
       	studentId: student.id,
       	announcementId,
       	status: 0,
     });
+
     await Document_model.create({
       	name:`${student.username}_ApplicationForm`,
       	applicationId: application.id,
@@ -256,13 +230,14 @@ router.post("/opportunities/:opportunityId",upload.single('CV'),[auth,checkUserR
       	fileType:'Application Form',
       	username: student.username
     });
-  	await Document_model.create({
-  	  	name,
-  	  	applicationId: application.id,
-  	  	data: binaryData,
-  	  	fileType,
-  	  	username: student.username
-  	});
+
+	const file = req.file;
+  	const fileType = "CV";
+  	const name = file.originalname;
+	const status = null;
+	const applicationId = application.id;
+
+	await uploadFile(file, applicationId, student, name, fileType, status, Document_model);
 
 	res.redirect("/student/opportunities");
 }));
@@ -359,7 +334,7 @@ router.put("/internship",[auth,checkUserRole("student")], asyncErrorHandler( asy
 	const { finished, applicationId } = req.body;
 	// both are hidden objects at frontend
 
-	if (finished) {
+	if (finished === "finished") {
 		await Internship_model.update(
 			{
 				status: 'finished'
@@ -376,94 +351,42 @@ router.put("/internship",[auth,checkUserRole("student")], asyncErrorHandler( asy
 
 }));
 
-router.post("/summerPracticeEvaluationSurvey/:applicationId", upload.single('SummerPracticeEvaluationSurvey'), [auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
+router.post("/internshipFiles/:applicationId", upload.single('file'), [auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
+	
+	const student = await Student_model.findOne({ where: { id: req.user.id }});
 
 	const applicationId = req.params.applicationId;
 	/* We need to use a script as await fetch(/summerPracticeReport/:applicationId"). So we need to send applicationId
 	to backend from frontend */
-	const student = await Student_model.findOne({ where: { id: req.user.id }});
+	const { fileType } = req.body;  // either "Summer Practice Evaluation Survey" or "Summer Practice Report"
 
 	const file = req.file;
+	const name = file.originalname;
+	const status = null;
 
-	if (!file) {
-		return res.status(400).json({ error: "No file uploaded" });
-	}
-
-  	const binaryData = file.buffer;
-
-	const summerPracticeEvaluationSurvey = await Document_model.findOne({where: {applicationId, fileType: "Summer Practice Evaluation Survey"}});
-
-	if (summerPracticeEvaluationSurvey === null) {
-		await Document_model.create({
-			applicationId,
-			name: file.originalname,
-			fileType:'Summer Practice Evaluation Survey',
-			username: student.username,
-			data: binaryData
-		});
-	}
-	else {
-		await Document_model.update({ data: binaryData, name: file.originalname }, { where: { applicationId, fileType: "Summer Practice Evaluation Survey" } });   
-    }
+	await uploadFile(file, applicationId, student, name, fileType, status, Document_model);
 
 	/* when the student uploads the file again, it would be good to ask "are you sure you want to upload 
 	the summer practice report again". Also users should be able to see the files they uploaded to check if everything okay.*/
 
-	res.status(201).json({ message: "Summer Practice Report is uploaded" });
+	res.status(201).json({ message: "File is uploaded" });
 }));  
 
-/* router.post("/summerPracticeReport/:applicationId") and router.post("/summerPracticeEvaluationSurvey/:applicationId") are
-literally the same thing. I will try to combine them somehow but not now. */
-
-router.post("/summerPracticeReport/:applicationId", upload.single('SummerPracticeReport'), [auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
-	const applicationId = req.params.applicationId;
-	/* We need to use a script as await fetch(/summerPracticeReport/:applicationId"). So we need to send applicationId
-	to backend from frontend */
-	const student = await Student_model.findOne({ where: { id: req.user.id }});
-
-	const file = req.file;
-
-	if (!file) {
-		return res.status(400).json({ error: "No file uploaded" });
-	}
-
-  	const binaryData = file.buffer;
-
-	const summerPracticeReport = await Document_model.findOne({where: {applicationId, fileType: "Summer Practice Report"}});
-
-	if (summerPracticeReport === null) {
-		await Document_model.create({
-			applicationId,
-			name: file.originalname,
-			fileType:'Summer Practice Report',
-			username: student.username,
-			data: binaryData
-		});
-	}
-	else {
-		await Document_model.update({ data: binaryData, name: file.originalname }, { where: { applicationId, fileType: "Summer Practice Report" } });   
-    }
-
-	/* when the student uploads the file again, it would be good to ask "are you sure you want to upload 
-	the summer practice report again". Also users should be able to see the files they uploaded to check if everything okay.*/
-
-	res.status(201).json({ message: "Summer Practice Report is uploaded" });
-    
-}));
-
 // what is this for?
-router.get("/opportunities/download/:studentId/:fileType",[auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
-  const fileType = req.params.fileType;
-  const studentId=req.params.studentId;
-  const takenDocument = await Document_model.findOne({where:{studentId:studentId, fileType:fileType}});
-  let filename= takenDocument.dataValues.name;
-  let binaryData= takenDocument.dataValues.data;
-  const fileExtension = path.extname(filename).toLowerCase();
-  let contentType = 'application/octet-stream'; // Default content type
-  contentType = 'image/jpeg';
-  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-  res.setHeader('Content-Type', contentType);
-  res.send(binaryData);
+router.get("/download/:studentId/:fileType",[auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
+	const userId = req.params.studentId;
+    const fileType = req.params.fileType;
+    const takenDocument = await Document_model.findOne({where:{userId, fileType}});
+    if(!takenDocument){
+        return res.status(404).json({ error: "Error downloading file" });
+    }
+    let filename= takenDocument.dataValues.name;
+    let binaryData= takenDocument.dataValues.data;
+    let contentType = 'application/octet-stream'; // Default content type
+    contentType = 'image/jpeg';
+    res.setHeader('Content-Disposition', 'attachment; filename='+encodeURI(filename));
+    res.setHeader('Content-Type', contentType);
+    res.send(binaryData);
 }));
 
 module.exports= router;

@@ -13,10 +13,9 @@ const Internship = sequelize.define('Internship', {
 	  defaultValue: 'started'
     },
     score: {
-      type: DataTypes.STRING(45),
-      allowNull: false,
-	  defaultValue: '0'
-    },
+		type: DataTypes.STRING(45),
+		defaultValue: null
+	},
     studentName: {
       type: DataTypes.STRING(45),
       allowNull: false
@@ -25,6 +24,10 @@ const Internship = sequelize.define('Internship', {
 	  type: DataTypes.STRING(45),
       allowNull: false,
 	  defaultValue: 0
+	},
+	studentId: {
+		type: DataTypes.STRING(45),
+		defaultValue: null
 	}
   }, {
     tableName: 'internship',

@@ -1,4 +1,5 @@
 const jwt=require("jsonwebtoken");
+const { APP_SECRET } = require("../config");
 
 module.exports=function (req, res, next){
     const token=req.cookies.jwt;
@@ -6,7 +7,7 @@ module.exports=function (req, res, next){
         return res.status(401).send("Yetkiniz yok");
     }
     try {
-        const decodedToken=jwt.verify(token, 'privateKey');  //verify method throws exception if verification fails.
+        const decodedToken=jwt.verify(token, APP_SECRET);  //verify method throws exception if verification fails.
         req.user=decodedToken.id;  //?
         next();
     } catch (ex) {

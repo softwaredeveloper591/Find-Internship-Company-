@@ -1,6 +1,7 @@
 const express = require("express");
 const cookieParser = require('cookie-parser');
 const errorHandler = require("./utils/errorHandler");
+const { PORT } = require('./config');
 
 const app = express();
 
@@ -20,8 +21,8 @@ app.use(secretary);
 
 errorHandler(app);
 
-app.listen(3006, () => {
-		console.log("app is listening on port 3006");
+app.listen(PORT, () => {
+		console.log(`app is listening on port ${PORT}`);
 	}
 )
 .on('error', (error) => {

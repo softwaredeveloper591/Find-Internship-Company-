@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require("jsonwebtoken");
 const bcrypt= require("bcrypt");
 const nodeMailer = require("nodemailer");
+const { APP_SECRET, EMAIL_PASS } = require("../config");
 
 const Student_model= require("../models/student-model");
 const Admin_model= require("../models/admin-model");
@@ -105,12 +106,12 @@ router.post("/forgotPassword", asyncErrorHandler( async (req, res, next) => {
     if (!user) {
       return res.status(404).json({ error: 'No user with that email' });
     }
-    const token = jwt.sign({ id: user.user.id, userType: user.userType }, 'secretKey', { expiresIn: '5m' });
+    const token = jwt.sign({ id: user.user.id, userType: user.userType }, APP_SECRET , { expiresIn: '5m' });
     const transporter = nodeMailer.createTransport({
         service: 'gmail',
     	auth: {
-        	user: 'enesbilalbabaturalpro06@gmail.com', // your Gmail address
-        	pass: 'elde beun xhtc btxu' // your Gmail password or App Password if 2FA is enabled
+        	user: 'enesbilalbabaturalpro06@gmail.com', 
+        	pass: EMAIL_PASS 
     	}
     });
     await transporter.sendMail({
@@ -132,7 +133,7 @@ router.get('/changePassword', (req, res) => {
 
     try {
         // Verify the token
-        const decoded = jwt.verify(token, 'secretKey');
+        const decoded = jwt.verify(token, APP_SECRET );
 
         // If token is valid, render the page with the token
         res.render('changePassword', { token });
@@ -157,7 +158,7 @@ router.post('/changePassword', asyncErrorHandler( async (req, res, next) => {
 	}
 
 	//console.log(decoded);
-	const decoded = jwt.verify(token, 'secretKey');
+	const decoded = jwt.verify(token, APP_SECRET );
     const { id, userType } = decoded;
     let model;
     switch (userType) {
@@ -191,7 +192,7 @@ router.get("/logout", function(req,res){
 });
 
 function createTokenWithIdandUserType(id,userType){       //we can add this function into the models so that every model has its own function.
-	return jwt.sign({id: id, userType:userType},'privateKey');//----------------------------------------------------------------------
+	return jwt.sign({id: id, userType:userType}, APP_SECRET);//----------------------------------------------------------------------
 }
 
 module.exports=router;

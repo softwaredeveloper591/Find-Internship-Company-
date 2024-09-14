@@ -1,8 +1,9 @@
 const { DataTypes}= require("sequelize");
 const sequelize=require("../data/db");
 const Application = require('./application-model');
+const Internship = require('./internship-model');
 
-const Student= sequelize.define('Student', {
+const Student = sequelize.define('Student', {
     id: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -41,5 +42,8 @@ const Student= sequelize.define('Student', {
 
 Application.belongsTo(Student, { foreignKey: 'studentId' });
 Student.hasMany(Application, { foreignKey: 'studentId' });
+
+Internship.belongsTo(Student, { foreignKey: 'studentId' });
+Student.hasOne(Internship, { foreignKey: 'studentId' });
 
 module.exports = Student;

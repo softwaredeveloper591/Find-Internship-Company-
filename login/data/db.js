@@ -1,10 +1,14 @@
 const Sequelize = require("sequelize");
-const sequelize = new Sequelize("internship", "root", "B1rn0Z4!", {
-    host: "host.docker.internal",  // Host machine IP address  // host.docker.internal
-    dialect: "mysql",
-    port: 3306,  // MySQL port on host machine
-    logging: false
-});
+const { DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_DIALECT, DB_PORT } = require("../config");
+
+const sequelize = new Sequelize( DB_NAME, DB_USER, DB_PASSWORD, 
+    {
+        host: DB_HOST,
+        dialect: DB_DIALECT,
+        port: DB_PORT,
+        logging: false
+    }
+);
 
 async function connect() {
     try {

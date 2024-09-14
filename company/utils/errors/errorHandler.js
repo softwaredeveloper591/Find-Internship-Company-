@@ -1,9 +1,10 @@
 const BaseError = require("./customError");
+require("dotenv").config(); 
 
 const Sentry = require("@sentry/node");
 
 Sentry.init({
-  dsn: "https://c5f3589cf7f85b3e309f2c1e2f652e64@o4507821746094080.ingest.de.sentry.io/4507827687129168",
+  dsn: process.env.SENTRY_DSN,
   tracesSampleRate: 1.0,
 });
 
