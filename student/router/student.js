@@ -20,12 +20,14 @@ const checkUserRole= require("../middleware/checkUserRole");
 const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
 const { uploadFile } = require('../utils/fileUploader');
 
-const Student_model= require("../models/student-model");
-const Company_model= require("../models/company-model");
+const Admin_model = require("../models/admin-model");
+const Student_model = require("../models/student-model");
+const Company_model = require("../models/company-model");
 const Announcement_model = require("../models/announcement-model");
 const Document_model = require("../models/document-model");
 const Application_model = require("../models/application-model");
 const Internship_model = require("../models/internship-model");
+const Message_model = require("../models/message-model");
 
 /*let totalAnnouncementsCount = 0;
 
@@ -59,6 +61,30 @@ router.use([auth,checkUserRole("student")],async function(req, res, next){
     next();
 });*/
 
+async function findReceiverByEmail(email) {
+	let receiver = null;
+    const mail = email;
+    const parts = mail.split("@");
+    const domain = parts[1]; 
+
+	if(email === "buketoksuzoglu@iyte.edu.tr") {
+		receiver = await Admin_model.findOne({ where: { email }});
+	}
+    else if(domain === "iyte.edu.tr") {
+		receiver = await Secretary_model.findOne({ where: { email } });
+	}
+	else if (domain === "std.iyte.edu.tr") {
+		receiver = await Student_model.findOne({ where: { email } });
+	}
+	else {
+		receiver = await Company_model.findOne({ where: { email } });
+	}
+
+	if (receiver) return receiver;
+
+	return null;
+}
+
 router.get("/",[auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
     const student = await Student_model.findOne({ where: {id: req.user.id} });
     res.render("student",{ 
@@ -66,6 +92,80 @@ router.get("/",[auth,checkUserRole("student")], asyncErrorHandler( async (req, r
 		dataValues:student.dataValues,
 		//totalAnnouncementsCount
 	});
+}));
+
+router.get("/messages", [auth, checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
+	/* This message section should be at the right bottom of each page. I don't know how to handle this at frontend. We can discuss 
+	it later. */
+    const student = await Student_model.findOne({ where: {id: req.user.id} });
+    const messages = await Message_model.findAll({ where: { to: student.email } });
+        
+	res.status(200).json({ messages });
+}));
+
+router.get("/messages/:id", [auth, checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
+	const id = req.params.id;
+
+	await Message_model.update(
+		{
+			status: "read"
+		},
+		{
+			where: {
+				id
+			}
+		}
+	);
+
+    const message = await Message_model.findAll({ where: { id } });
+ 
+	res.status(200).json({ message });
+}));
+
+router.get("/sentMessages", [auth, checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
+    const student = await Student_model.findOne({ where: {id: req.user.id} });
+    const messages = await Message_model.findAll({ where: { from: student.email } });
+        
+	res.status(200).json({ messages });
+}));
+
+router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
+    const student = await Student_model.findOne({ where: {id: req.user.id} });
+    const { receiverEmail, topic, message } = req.body
+
+	const receiver = await findReceiverByEmail(receiverEmail);
+
+	const file = req.file;
+	let fileName = null;
+	let data = null;
+
+	if(file) {
+		fileName = file.originalname;
+		data = file.buffer;
+	} 
+
+	await Message_model.create(
+		{
+			from: student.email,
+			senderName: student.username,
+			to: receiverEmail,
+			receiverName: receiver.username,
+			topic,
+			message,
+			fileName,
+			data,
+		}
+	);
+        
+	res.status(200).json({ message: "message is sent" }); 
+}));
+
+router.delete("/deleteMessage/:id", [auth, checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
+    const id = req.params.id;
+
+    await Message_model.destroy({ where: {id} });
+        
+	res.status(200).json({ message: "message is deleted" });
 }));
 
 // The page where all file operations are performed
@@ -103,19 +203,15 @@ router.post("/file", upload.single('file'), [auth,checkUserRole("student")], asy
 	const student = await Student_model.findOne({ where: {id: req.user.id} });
 
 	let name = "";
-	let fileType = "";
 
-	const { filetype } = req.body; // this value will change according to file type. (i.e. application form, company form ...)
+	const { fileType } = req.body; // this value will change according to file type. (i.e. application form, company form ...)
 
-	if (filetype === "companyForm") {
+	if (fileType === "Manual Company Form") {
 		name = `${student.username}_CompanyForm`;
-		fileType = 'Manual Company Form';
-	} else if(filetype === "summerPracticeReport") {
+	} else if(fileType === "Manual Summer Practice Report") {
 		name = `${student.username}_SummerPracticeReport`;
-		fileType = 'Manual Summer Practice Report';
-	} else {
+	} else { // Manual Summer Practice Evaluation Survey
 		name = `${student.username}_SummerPracticeEvaluationSurvey`;
-		fileType = 'Manual Summer Practice Evaluation Survey';
 	}
 
 	const file = req.file;

@@ -19,10 +19,32 @@ const Application_model = require("../models/application-model");
 const Student_model = require("../models/student-model");
 const Document_model = require("../models/document-model");
 const Internship_model = require("../models/internship-model");
+const Message_model = require("../models/message-model");
 
 let totalAnnouncementsCount = 0;
 let totalApplicationsCount = 0;
 let totalCompaniesCount = 0;
+
+async function findReceiverByEmail(email) {
+	let receiver = null;
+    const mail = email;
+    const parts = mail.split("@");
+    const domain = parts[1]; 
+
+    if(domain === "iyte.edu.tr") {
+		receiver = await Secretary_model.findOne({ where: { email } });
+	}
+	else if (domain === "std.iyte.edu.tr") {
+		receiver = await Student_model.findOne({ where: { email } });
+	}
+	else {
+		receiver = await Company_model.findOne({ where: { email } });
+	}
+
+	if (receiver) return receiver;
+
+	return null;
+}
 
 async function updateTotalAnnouncementsCount() {
     try {
@@ -138,6 +160,80 @@ router.get("/", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, r
 		totalAnnouncementsCount,
 		totalCompaniesCount
     });
+}));
+
+router.get("/messages", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+	/* This message section should be at the right bottom of each page. I don't know how to handle this at frontend. We can discuss 
+	it later. */
+    const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+    const messages = await Message_model.findAll({ where: { to: admin.email } });
+        
+	res.status(200).json({ messages });
+}));
+
+router.get("/messages/:id", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+	const id = req.params.id;
+
+	await Message_model.update(
+		{
+			status: "read"
+		},
+		{
+			where: {
+				id
+			}
+		}
+	);
+
+    const message = await Message_model.findAll({ where: { id } });
+        
+	res.status(200).json({ message });
+}));
+
+router.get("/sentMessages", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+    const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+    const messages = await Message_model.findAll({ where: { from: admin.email } });
+        
+	res.status(200).json({ messages });
+}));
+
+router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+    const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+    const { receiverEmail, topic, message } = req.body
+
+	const receiver = await findReceiverByEmail(receiverEmail);
+
+	const file = req.file;
+	let fileName = null;
+	let data = null;
+
+	if(file) {
+		fileName = file.originalname;
+		data = file.buffer;
+	} 
+
+	await Message_model.create(
+		{
+			from: admin.email,
+			senderName: admin.username,
+			to: receiverEmail,
+			receiverName: receiver.username,
+			topic,
+			message,
+			fileName,
+			data,
+		}
+	);
+        
+	res.status(200).json({ message: "message is sent" }); 
+}));
+
+router.delete("/deleteMessage/:id", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+    const id = req.params.id;
+
+    await Message_model.destroy({ where: {id} });
+        
+	res.status(200).json({ message: "message is deleted" });
 }));
 
 router.get("/files", [auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
