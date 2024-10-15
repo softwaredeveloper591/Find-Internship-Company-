@@ -11,6 +11,7 @@ const Company_model= require("../models/company-model");
 const Secretary_model = require("../models/secretary-model");
 
 const asyncErrorHandler = require("../utils/asyncErrorHandler");
+const userType = require("../middleware/userType");
 
 async function findUserByEmail(email) {
 	let user = null;
@@ -45,14 +46,18 @@ const handleErrors = (err) => {
     console.log(err.message, err.code);
     let errors = { error: '' };
 
-	if (err.message === "wrong username or password") {
-		errors.error = "wrong username or password";
+	if (err.message === "Wrong username or password") {
+		errors.error = "Wrong username or password";
 	}
 
 	if (err.message === "statusByDIC") {
 		errors.error = "Your registration request is still pending approval.";
 	}
   
+    if(err.message === "Failed to communicate with the server.") {
+        errors.error = "Failed to communicate with the server.";
+    }
+
     // validation errors
     if (err.message.includes('user validation failed')) {
       	// console.log(err);
@@ -66,22 +71,29 @@ const handleErrors = (err) => {
     return errors;
 }
 
-router.get("/",function(req,res){
-    res.render("signin");
+router.get("/", userType, function(req,res) {
+    res.status(200).json({ userType: req.userType});
 });
+
 
 router.post("/", async function(req,res){
     const { email, password } = req.body;
     try {
-		const user = await findUserByEmail(email);
+        let user;
+        try{
+		    user = await findUserByEmail(email);
+        } catch(e){
+            throw Error("Failed to communicate with the server.");
+        }
+
     	if(!user) {
-			throw Error("wrong username or password");
+			throw Error("Wrong username or password");
 		}
 
     	const checkPassword= await bcrypt.compare(password,user.user.password);
 	  
     	if(!checkPassword) {
-			throw Error("wrong username or password");
+			throw Error("Wrong username or password");
 		}
 
 		if (user.userType === "company") {
@@ -118,17 +130,18 @@ router.post("/forgotPassword", asyncErrorHandler( async (req, res, next) => {
         from: '"Buket Erşahin" <enesbilalbabaturalpro06@gmail.com>',
         to: email,
         subject: 'Password Reset Link',
-		html: `<a href="http://localhost/changePassword?token=${token}">Reset Password</a>`
+		html: `<a href="http://localhost:5173/changePassword?token=${token}">Reset Password</a>`
     });
     res.status(200).json({ success: 'Password reset link has been sent.' });  
 }));
 
+// delete, no need
 router.get('/changePassword', (req, res) => {
     const { token } = req.query;
 
     // Check if the token exists
     if (!token) {
-        return res.status(400).send('No token provided.');
+        res.status(400).json( { error: 'No token provided.' });
     }
 
     try {
@@ -136,13 +149,13 @@ router.get('/changePassword', (req, res) => {
         const decoded = jwt.verify(token, APP_SECRET );
 
         // If token is valid, render the page with the token
-        res.render('changePassword', { token });
+        return res.status(200).json({ success: true, token });
     } catch (err) {
         // Handle different errors differently
         if (err.name === 'TokenExpiredError') {
-            res.status(401).send('Token has expired.');
+            res.status(401).json({ error: 'Token has expired.' })
         } else {
-            res.status(400).send('Invalid or expired token');
+            res.status(400).json({ error: 'Invalid or expired token.' });
         }
     }
 });
@@ -158,7 +171,17 @@ router.post('/changePassword', asyncErrorHandler( async (req, res, next) => {
 	}
 
 	//console.log(decoded);
-	const decoded = jwt.verify(token, APP_SECRET );
+    let decoded;
+    try {
+        decoded = jwt.verify(token, APP_SECRET);
+    } catch (err) {
+        if (err.name === 'TokenExpiredError') {
+            res.status(401).json({ error: 'Token has expired.' });
+        } else {
+            res.status(400).json({ error: 'Invalid or expired token.' });
+        }
+    }
+
     const { id, userType } = decoded;
     let model;
     switch (userType) {
@@ -182,7 +205,7 @@ router.post('/changePassword', asyncErrorHandler( async (req, res, next) => {
 	}
     const hashedPassword = await bcrypt.hash(password, 10);
     await model.update( { password: hashedPassword }, { where: { id } } );
-	res.status(200).json({ success: 'password updated succesfully' });
+	res.status(200).json({ success: 'Password updated succesfully.' });
 }));
 
 router.get("/logout", function(req,res){

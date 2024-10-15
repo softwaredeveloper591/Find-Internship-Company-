@@ -9,10 +9,11 @@ const Company_model = require("../models/company-model");
 const Ubys_model = require("../models/ubys-model");
 
 const router = express.Router();
+const userType = require("../middleware/userType");
 
 const handleErrors = (err) => {
 	console.log(err.message, err.code);
-	let errors = { duplicate: '', email: '', password: '', confirmPassword: '' };
+	let errors = { email: '', password: '', confirmPassword: '' };
   
 	if (err.message === "not in ubys database") {
 	  errors.email = "Incorrect student email";
@@ -39,14 +40,14 @@ const handleErrors = (err) => {
 	}
 	
 	if (err.message === 'Validation error') {
-	  errors.duplicate = 'That email is already registered';
+	  errors.email = 'That email is already registered';
 	}
   
 	return errors;
 }
 
-router.get("/", function(req,res) {
-    res.render("signup");
+router.get("/", userType, function(req,res) {
+  res.status(200).json({ userType: req.userType});
 });
 
 router.post("/company",async function(req,res){

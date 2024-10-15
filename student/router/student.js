@@ -87,11 +87,14 @@ async function findReceiverByEmail(email) {
 
 router.get("/",[auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
     const student = await Student_model.findOne({ where: {id: req.user.id} });
-    res.render("student",{ 
+    return res.status(200).json({ userType: "student", dataValues: student.dataValues });
+	/*
+	res.render("student",{ 
 		usertype:"student", 
 		dataValues:student.dataValues,
 		//totalAnnouncementsCount
 	});
+	*/
 }));
 
 router.get("/messages", [auth, checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
@@ -252,11 +255,14 @@ router.get("/opportunities", [auth, checkUserRole("student")], asyncErrorHandler
         ...announcement.dataValues,
 		image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
     }));
+	res.status(200).json( { announcements: formattedAnnouncements });
+	/*
     res.render("opportunities", {
         usertype: "student",
         dataValues: student.dataValues,
         announcements: formattedAnnouncements
     });
+	*/
 }));
 
 router.get("/opportunities/:opportunityId",[auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
@@ -282,11 +288,14 @@ router.get("/opportunities/:opportunityId",[auth,checkUserRole("student")], asyn
 		formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD MM YYYY'),
 		image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
 	};
+	res.status(200).json( { announcement: formattedAnnouncement });
+	/*
     res.render("apply", {
         usertype: "student",
         dataValues: student.dataValues,
         announcement: formattedAnnouncement
     });
+	*/
 }));
 
 router.post("/opportunities/:opportunityId",upload.single('CV'),[auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {

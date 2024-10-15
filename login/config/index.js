@@ -17,5 +17,6 @@ module.exports = {
 	PORT: process.env.PORT,
 	MSG_QUEUE_URL: process.env.MSG_QUEUE_URL,
 	APP_SECRET: process.env.APP_SECRET,
-	SENTRY_DSN: process.env.SENTRY_DSN
+	SENTRY_DSN: process.env.SENTRY_DSN,
+	EMAIL_PASS: process.env.EMAIL_PASS
 };
