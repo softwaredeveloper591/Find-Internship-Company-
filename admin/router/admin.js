@@ -153,13 +153,7 @@ router.get("/", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, r
 			}
 		]
     });
-	res.render("applicationRequests", {
-        usertype: "admin",
-        dataValues: admin.dataValues,
-        applications,
-		totalAnnouncementsCount,
-		totalCompaniesCount
-    });
+	res.status(200).json({ userType: "admin", dataValues: admin.dataValues,applications,totalAnnouncementsCount,totalCompaniesCount });
 }));
 
 router.get("/messages", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
@@ -389,13 +383,7 @@ router.get("/announcementRequests", [auth, checkUserRole("admin")], asyncErrorHa
 		  image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
 		};
 	});
-	res.render("announcementRequests", {
-		usertype: "admin",
-		dataValues: admin.dataValues,
-		announcements: announcementsWithImages,
-		totalApplicationsCount,
-		totalCompaniesCount
-	});
+	res.status(200).json({dataValues: admin.dataValues,announcements: announcementsWithImages});
 }));
 
 router.get("/announcement/:announcementId", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
@@ -419,14 +407,7 @@ router.get("/announcement/:announcementId", [auth, checkUserRole("admin")], asyn
         formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD/MM/YYYY'),
 		image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
     };
-
-    res.render("innerAnnouncement", {
-		usertype: "admin",
-		dataValues: admin.dataValues,
-		announcement: formattedAnnouncement,
-		totalApplicationsCount,
-		totalCompaniesCount
-	});
+	res.status(200).json({dataValues: admin.dataValues, announcement: formattedAnnouncement });
 }));
 
 router.put("/announcement/:announcementId", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
@@ -464,15 +445,16 @@ router.put("/announcement/:announcementId", [auth, checkUserRole("admin")], asyn
 }));
 
 router.get("/companyRequests", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
-    let admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+    // let admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
     const pendingCompanies = await Company_model.findAll({ where: { statusByDIC: false } });
-    res.render("companyRequests", {
+    res.status(200).json({companies: pendingCompanies});
+	/* res.render("companyRequests", {
         usertype: "admin",
         dataValues: admin.dataValues,
         companies: pendingCompanies,
 		totalAnnouncementsCount,
 		totalApplicationsCount
-    });
+    }); */
 }));
 
 router.put("/company/:companyId", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
