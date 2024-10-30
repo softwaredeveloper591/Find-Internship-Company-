@@ -282,26 +282,47 @@ router.get("/opportunities/:opportunityId",[auth,checkUserRole("student")], asyn
 				attributes: ['name']
 			}
 		]
-	}) 
+	});
+
+	const application = await Application_model.findOne({
+		where: {
+			announcementId: opportunityId,
+			studentId: student.id
+		}
+	});
+
+	const timeDifference = announcement.endDate - now;
+	const remainingSeconds = Math.floor(timeDifference / 1000);
+
 	const formattedAnnouncement = {
 		...announcement.dataValues,
-		formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD MM YYYY'),
+		remainingSeconds,
+		isApplied: !!application,
 		image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
 	};
 	res.status(200).json( { announcement: formattedAnnouncement });
-	/*
-    res.render("apply", {
-        usertype: "student",
-        dataValues: student.dataValues,
-        announcement: formattedAnnouncement
-    });
-	*/
+	// 
+    // res.render("apply", {
+    //     usertype: "student",
+    //     dataValues: student.dataValues,
+    //     announcement: formattedAnnouncement
+    // });
+	// 
 }));
 
 router.post("/opportunities/:opportunityId",upload.single('CV'),[auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
 
 	const student = await Student_model.findOne( { where: { id: req.user.id }} );
   	const announcementId = req.params.opportunityId;
+	const isApplied = await Application_model.findOne({
+		where: {
+			announcementId: announcementId,
+			studentId: student.id
+		}
+	});
+	if(!!isApplied) {
+		return res.status(409).json({ error: "Already applied to this announcement." });
+	}
   	
   	const { user_phone, relative_phone } = req.body;
     const templatePath = path.join(__dirname, '../files', 'ApplicationForm.docx');
@@ -326,6 +347,7 @@ router.post("/opportunities/:opportunityId",upload.single('CV'),[auth,checkUserR
       	studentId: student.id,
       	announcementId,
       	status: 0,
+		statusUpdateDate: new Date()
     });
 
     await Document_model.create({
@@ -343,8 +365,8 @@ router.post("/opportunities/:opportunityId",upload.single('CV'),[auth,checkUserR
 	const applicationId = application.id;
 
 	await uploadFile(file, applicationId, student, name, fileType, status, Document_model);
-
-	res.redirect("/student/opportunities");
+	res.status(200).json( { message: "Succesfully applied."});
+	//res.redirect("/student/opportunities");
 }));
 
 router.get("/applications",[auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
@@ -370,12 +392,14 @@ router.get("/applications",[auth,checkUserRole("student")], asyncErrorHandler( a
 		  	}
 		]
 	});
-	res.render("applications", {
-		usertype: "student",
-		dataValues: student.dataValues,
-		applications,
-		//totalAnnouncementsCount
-	});
+	// res.render("applications", {
+	// 	usertype: "student",
+	// 	dataValues: student.dataValues,
+	// 	applications,
+	// 	//totalAnnouncementsCount
+	// });
+
+	res.status(200).json( {applications} );
 }));
 
 router.get("/internship",[auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {

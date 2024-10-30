@@ -149,6 +149,7 @@ router.post("/applications/:applicationId",upload.single('studentFile'),[auth,ch
    	});
 
 	application.status = 3;
+	application.statusUpdateDate = new Date();
 	application.isSentBySecretary = true;
 	await application.save();
 

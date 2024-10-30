@@ -611,6 +611,7 @@ router.put("/applications/:applicationId",upload.single('studentFile'),[auth,che
 
 	sendEmail(application.Student.email, emailSubject, emailBody);
 
+	application.statusUpdateDate = new Date();
 	if (isApproved === "true") {
         application.isApprovedByDIC = true;
 		application.status = 2;

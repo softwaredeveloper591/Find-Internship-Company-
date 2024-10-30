@@ -30,6 +30,14 @@ const Application = sequelize.define('Application', {
 	isSentBySecretary: {
 		type: DataTypes.BOOLEAN,
 		defaultValue: false
+	},
+  applyDate: {
+		type: DataTypes.DATE,
+		allowNull: true,
+	},
+  statusUpdateDate: {
+		type: DataTypes.DATE,
+		allowNull: true
 	}
   }, {
     tableName: 'application',

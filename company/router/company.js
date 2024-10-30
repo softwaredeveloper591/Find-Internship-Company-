@@ -507,7 +507,8 @@ router.put("/applications/:applicationId",upload.single('upload-file'),[auth,che
 	    Best Regards,<br>Admin Team`;
 
 	sendEmail(application.Student.email, emailSubject, emailBody);
-
+	
+	application.statusUpdateDate = new Date();
 	if (isApproved === "true") {
 	    application.isApprovedByCompany = true;
 	    application.status = 1;
