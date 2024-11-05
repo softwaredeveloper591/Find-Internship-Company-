@@ -614,17 +614,15 @@ router.get("/interns", [auth, checkUserRole("admin")], asyncErrorHandler( async 
 		include: [
 			{
 				model: Application_model,
+				attributes: [],
 				include: {
 					model: Announcement_model,
+					attributes: ["announcementName","description","image"],
 					include: {
 						model: Company_model,
-						attributes: ['name']
+						attributes: ['name', 'email']
 					}
 				}
-			},
-			{
-				model: Student_model,
-				attributes: ['username', 'id']
 			}
 		]
 	});
