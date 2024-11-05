@@ -626,8 +626,8 @@ router.get("/interns", [auth, checkUserRole("admin")], asyncErrorHandler( async 
 			}
 		]
 	});
-    
-	res.send(interns); // to test it on postman
+	const internships=interns.get();
+	res.send(internships); // to test it on postman
 
 	/*res.render("applicationRequests", {
         usertype: "admin",
