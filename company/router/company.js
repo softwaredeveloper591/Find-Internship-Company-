@@ -459,19 +459,18 @@ router.post("/applications/:applicationId/fillApplicationForm",[auth,checkUserRo
 	zip.updateFile("word/document.xml", Buffer.from(docxTemplate, "utf-8"));
 
 	const updatedDocxBuffer = zip.toBuffer();
-	const updatedApplicationForm = await Document_model.findOne({where: {applicationId, fileType: "Updated Application Form"}});
+	const updatedApplicationForm = await Document_model.findOne({where: {applicationId, fileType: "Application Form"}});
 
 	if (updatedApplicationForm === null) {
 		await Document_model.create({
 			name:`${document.Application.Student.username}_ApplicationForm.docx`,
 			applicationId,
 			data: updatedDocxBuffer,
-			fileType:'Updated Application Form',
 			username: document.Application.Student.username
 		});
 	}
 	else {
-		await Document_model.update({ data: updatedDocxBuffer }, { where: { applicationId, fileType: "Updated Application Form" } });   
+		await Document_model.update({ data: updatedDocxBuffer }, { where: { applicationId, fileType: "Application Form" } });   
     }
 	res.send("you are okay");
 }));
@@ -484,7 +483,7 @@ router.put("/applications/:applicationId",upload.single('upload-file'),[auth,che
 	let binaryData = null;
 	if (file) {
 	    binaryData = file.buffer;
-	    await Document_model.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "Updated Application Form" } });
+	    await Document_model.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "Application Form" } });
 	}
 
 	const application = await Application_model.findOne({

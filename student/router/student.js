@@ -320,7 +320,7 @@ router.post("/opportunities/:opportunityId",upload.single('CV'),[auth,checkUserR
 			studentId: student.id
 		}
 	});
-	if(!!isApplied) {
+	if(!isApplied) {
 		return res.status(409).json({ error: "Already applied to this announcement." });
 	}
   	

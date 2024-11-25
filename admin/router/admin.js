@@ -383,32 +383,36 @@ router.get("/announcementRequests", [auth, checkUserRole("admin")], asyncErrorHa
 		  image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
 		};
 	});
-	res.status(200).json({dataValues: admin.dataValues,announcements: announcementsWithImages});
+	res.status(200).json({dataValues: admin.dataValues , announcements: announcementsWithImages});
 }));
 
-router.get("/announcement/:announcementId", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
-	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
-	const announcementId = req.params.announcementId.slice(1);
-    const announcement = await Announcement_model.findOne({ 
-		where: {
-			id: announcementId
-		},
-		include: [
-			{
-				model: Company_model,
-				attributes: ['name']
-			}
-		]
-	}); 
+router.get("/announcement/:announcementId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
+    try {
+        const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+        const announcementId = req.params.announcementId; 
+        
+        const announcement = await Announcement_model.findOne({
+            where: { id: announcementId },
+            include: [{ model: Company_model, attributes: ['name'] }]
+        });
 
-	const formattedAnnouncement = {
-        ...announcement.dataValues,
-        formattedStartDate: moment(announcement.startDate).tz('Europe/Istanbul').format('DD/MM/YYYY'),
-        formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD/MM/YYYY'),
-		image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
-    };
-	res.status(200).json({dataValues: admin.dataValues, announcement: formattedAnnouncement });
+        if (!announcement) {
+            return res.status(404).json({ message: 'Announcement not found' });
+        }
+
+        const formattedAnnouncement = {
+            ...announcement.dataValues,
+            formattedStartDate: moment(announcement.startDate).tz('Europe/Istanbul').format('DD/MM/YYYY'),
+            formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD/MM/YYYY'),
+            image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
+        };
+        res.status(200).json({ dataValues: admin.dataValues, announcement: formattedAnnouncement });
+    } catch (error) {
+        console.error('Error fetching announcement:', error); // Hata günlüğe yaz
+        res.status(500).json({ message: 'Internal server error', error: error.message });
+    }
 }));
+
 
 router.put("/announcement/:announcementId", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
     const announcementId = req.params.announcementId;
@@ -480,81 +484,97 @@ router.put("/company/:companyId", [auth, checkUserRole("admin")], asyncErrorHand
     res.status(200).json({ message: "Company registration request approved." });
 }));
 
-router.get("/applicationRequests", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
-   
-    const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
-    const applications = await Application_model.findAll({
-		where: {
-			isApprovedByCompany: true,
-			isApprovedByDIC: null			
-		},
+router.get("/applicationRequests", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
+    try {
+        // Fetch the admin details, excluding the password
+        const admin = await Admin_model.findOne({ 
+            where: { id: req.user.id }, 
+            attributes: { exclude: ['password'] } 
+        });
+        
+        if (!admin) {
+            // If no admin found, return a 404 Not Found status
+            return res.status(404).json({ message: 'Admin not found' });
+        }
+
+        // Fetch the applications with the specified conditions
+        const applications = await Application_model.findAll({
+            where: {
+                isApprovedByCompany: true,
+                isApprovedByDIC: null
+            },
+            include: [
+                {
+                    model: Announcement_model,
+                    include: {
+                        model: Company_model,
+                        attributes: ['name']
+                    }
+                },
+                {
+                    model: Student_model,
+                    attributes: ['username', 'id'] // Corrected the attribute format
+                }
+            ]
+        });
+        // Render the page with the fetched data
+        res.status(200).json({
+            dataValues: admin.dataValues,
+            applications,
+        });
+    } catch (error) {
+        // If an error occurs, log it and return a 500 Internal Server Error
+        console.error('Error fetching application requests:', error);
+        res.status(500).json({ message: 'An error occurred while fetching application requests', error: error.message });
+    }
+}));
+
+
+router.get("/applications/:applicationId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
+    const applicationId = req.params.applicationId.slice(0);
+    const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+    
+    const application = await Application_model.findOne({
+        where: {
+            id: applicationId
+        },
         include: [
-			{
-            	model: Announcement_model,
-				include: {
-					model: Company_model,
-					attributes: ['name']
-				}
-			},
-			{
-				model: Student_model,
-				attributes: ['username'] ['id']
-			}
-		]
+            {
+                model: Announcement_model,
+                include: {
+                    model: Company_model,
+                    attributes: ['name']
+                }
+            },
+            {
+                model: Student_model,
+                attributes: ['username', 'id']
+            }
+        ]
     });
-	res.render("applicationRequests", {
-        usertype: "admin",
-        dataValues: admin.dataValues,
-        applications,
-		totalAnnouncementsCount,
-		totalCompaniesCount
+    // Return JSON response
+    res.status(200).json({
+        application
     });
 }));
 
-router.get("/applications/:applicationId",[auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
-	const applicationId = req.params.applicationId.slice(1);
-    const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
-    const application = await Application_model.findOne({
-		where: {
-			id: applicationId		
-		},
-        include: [
-			{
-            	model: Announcement_model,
-				include: {
-					model: Company_model,
-					attributes: ['name']
-				}
-			},
-			{
-				model: Student_model,
-				attributes: ['username', 'id']
-			}
-		]
-    });
-	res.render("adminInnerApplication", {
-        usertype: "admin",
-        dataValues: admin.dataValues,
-        application,
-		totalAnnouncementsCount,
-		totalCompaniesCount
-    });
-}));
 
 router.get("/applications/download/:applicationId/:fileType",[auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
-    const applicationId = req.params.applicationId;
+	const applicationId = req.params.applicationId;
     const fileType = req.params.fileType;
     const takenDocument = await Document_model.findOne({where:{applicationId, fileType}});
     if(!takenDocument){
         throw new Error("There is no such document.")
     }
+
     let filename= takenDocument.dataValues.name;
     let binaryData= takenDocument.dataValues.data;
     let contentType = 'application/octet-stream'; // Default content type
     contentType = 'image/jpeg';
     res.setHeader('Content-Disposition', 'attachment; filename='+encodeURI(filename));
     res.setHeader('Content-Type', contentType);
-    res.send(binaryData);
+	res.send(binaryData);
+    //res.status(200).json( {binaryData} );
 }));
 
 router.put("/applications/:applicationId",upload.single('studentFile'),[auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
@@ -565,7 +585,9 @@ router.put("/applications/:applicationId",upload.single('studentFile'),[auth,che
 		binaryData = file.buffer;
 		await Document_model.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "Updated Application Form" } });
 	}
-	const { isApproved, feedback } = req.body; 
+	const { isApproved, feedback } = req.body;
+	
+	console.log("Feedback"+feedback); 
 	const application = await Application_model.findOne({
 		where: {
 			id: applicationId
@@ -627,6 +649,7 @@ router.get("/interns", [auth, checkUserRole("admin")], asyncErrorHandler( async 
 		]
 	});
 	const internships=interns.get();
+	console.log(interns);
 	res.send(internships); // to test it on postman
 
 	/*res.render("applicationRequests", {
