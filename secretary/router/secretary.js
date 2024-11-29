@@ -17,7 +17,6 @@ const Document_model= require("../models/document-model");
 const Internship_model = require("../models/internship-model");
 
 router.get("/", [auth, checkUserRole("secretary")], asyncErrorHandler( async (req, res, next) => {
- 
     const secretary = await Secretary_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
 	const applications = await Application_model.findAll({
 		where: {
@@ -39,11 +38,7 @@ router.get("/", [auth, checkUserRole("secretary")], asyncErrorHandler( async (re
 			}
 		]
     });
-    res.render("secretary", {
-        usertype: "secretary",
-        dataValues: secretary.dataValues,
-		applications
-    });
+	res.status(200).json({ userType: "secretary", dataValues: secretary.dataValues,applications});
 }));
 
 router.get("/applicationForms",[auth,checkUserRole("secretary")], asyncErrorHandler( async (req, res, next) => {
@@ -97,7 +92,7 @@ router.post("/employmentCertificate", upload.single('employmentCertificate'), [a
 }));
 
 router.get("/applications/download/:applicationId/:fileType",[auth,checkUserRole("secretary")], asyncErrorHandler( async (req, res, next) => {
-    const applicationId = req.params.applicationId;
+	const applicationId = req.params.applicationId;
     const fileType = req.params.fileType;
     const takenDocument = await Document_model.findOne({where:{applicationId, fileType}});
     if(!takenDocument){
@@ -107,15 +102,14 @@ router.get("/applications/download/:applicationId/:fileType",[auth,checkUserRole
     let binaryData= takenDocument.dataValues.data;
     let contentType = 'application/octet-stream'; // Default content type
     contentType = 'image/jpeg';
+	res.header('Access-Control-Expose-Headers', 'Content-Disposition'); // In order to enable obtaining it in axios request headers, otherwise it is not added into header.
     res.setHeader('Content-Disposition', 'attachment; filename='+encodeURI(filename)); // this doesn't solve the problem completely
     res.setHeader('Content-Type', contentType);										   // the file name is corrupted
     res.send(binaryData);
 }));
 
 router.post("/applications/:applicationId",upload.single('studentFile'),[auth,checkUserRole("secretary")], asyncErrorHandler( async (req, res, next) => {
-	
-	const applicationId=req.params.applicationId.slice(1);
-
+	const applicationId=req.params.applicationId.slice(0);
 	const application = await Application_model.findOne({
 		where: {
 			id: applicationId
@@ -184,8 +178,7 @@ router.post("/applications/:applicationId",upload.single('studentFile'),[auth,ch
 			connection.close();
 		}, 500);
 	});
-
-	res.redirect("/secretary");
+	// res.redirect("/secretary");
 }));
 
 module.exports= router;

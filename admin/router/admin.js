@@ -571,6 +571,7 @@ router.get("/applications/download/:applicationId/:fileType",[auth,checkUserRole
     let binaryData= takenDocument.dataValues.data;
     let contentType = 'application/octet-stream'; // Default content type
     contentType = 'image/jpeg';
+	res.header('Access-Control-Expose-Headers', 'Content-Disposition'); // In order to enable obtaining it in axios request headers, otherwise it is not added into header. 
     res.setHeader('Content-Disposition', 'attachment; filename='+encodeURI(filename));
     res.setHeader('Content-Type', contentType);
 	res.send(binaryData);
@@ -580,6 +581,8 @@ router.get("/applications/download/:applicationId/:fileType",[auth,checkUserRole
 router.put("/applications/:applicationId",upload.single('studentFile'),[auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
 	const applicationId = req.params.applicationId;
   	const file = req.file;
+	console.log(applicationId);
+	console.log(file.name);
 	let binaryData = null;
 	if(file) {
 		binaryData = file.buffer;
