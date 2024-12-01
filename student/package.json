@@ -15,9 +15,9 @@
 		"body-parser": "^1.20.2",
 		"bootstrap": "^5.2.0",
 		"cookie-parser": "^1.4.6",
-		"docx": "^8.5.0",
-		"dotenv": "^16.4.5",
 		"cors": "^2.8.5",
+		"docx": "^9.0.3",
+		"dotenv": "^16.4.5",
 		"ejs": "^3.1.9",
 		"express": "^4.18.1",
 		"express-ejs-layouts": "^2.5.1",
@@ -26,8 +26,8 @@
 		"moment": "^2.30.1",
 		"multer": "^1.4.5-lts.1",
 		"mysql2": "^3.9.2",
-		"sequelize": "^6.37.1",
 		"nodemon": "^3.1.4",
-		"uuid": "^10.0.0"
+		"sequelize": "^6.37.1",
+		"uuid": "^11.0.3"
 	}
 }
