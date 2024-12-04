@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
-const sequelize=require("../data/db");
+const sequelize=require("./data/db");
 
-const Secretary = sequelize.define('Secretary', {
+const Admin = sequelize.define('Admin', {
     id: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -22,8 +22,8 @@ const Secretary = sequelize.define('Secretary', {
       unique: true
     }
   }, {
-    tableName: 'secretary', 
+    tableName: 'admin', 
     timestamps: false 
   });
   
-module.exports = Secretary;
+  module.exports = Admin;
