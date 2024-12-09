@@ -4,9 +4,9 @@ const jwt = require("jsonwebtoken");
 const { isEmail } = require('validator');
 const { APP_SECRET } = require("../config");
 
-const Student_model = require("../models/student-model");
-const Company_model = require("../models/company-model");
-const Ubys_model = require("../models/ubys-model");
+const Student_model = require("../../models/student-model");
+const Company_model = require("../../models/company-model");
+const Ubys_model = require("../../models/ubys-model");
 
 const router = express.Router();
 const userType = require("../middleware/userType");
