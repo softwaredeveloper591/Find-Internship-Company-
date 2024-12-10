@@ -1,36 +1,35 @@
 const { DataTypes}= require("sequelize");
-const sequelize=require("./data/db");
+const sequelize=require("../data/db");
 
-const Ubys= sequelize.define('ubys_student', {
+const Ubys= sequelize.define('ubys', {
+    tc: {
+      type: DataTypes.BIGINT(10),
+        allowNull: false,
+        primaryKey: true,
+      },
       id:{
-		primaryKey: true,
         type: DataTypes.INTEGER,
         allowNull: false
       },
-      student_name: {
+      name: {
         type: DataTypes.STRING(45),
         allowNull: false
       },
-      email: {
+      mail: {
         type: DataTypes.STRING(45),
         allowNull: false,
         unique: true
-      },
-	  department:{
-        type: DataTypes.STRING(45),
-        allowNull: false,
       },
       year:{
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-	  tc:{
-        type: DataTypes.STRING(40),
+      department:{
+        type: DataTypes.STRING(45),
         allowNull: false,
       }
-      
     }, {
-      tableName: 'ubys_student',
+      tableName: 'ubys',
       timestamps: false 
     });
 

@@ -12,14 +12,14 @@ const checkUserRole = require("../middleware/checkUserRole")
 const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
 const { sendEmail } = require("../utils/emailSender");
 
-const Admin_model = require("../../models/admin-model");
-const Company_model = require("../../models/company-model");
-const Announcement_model = require("../../models/announcement-model");
-const Application_model = require("../../models/application-model");
-const Student_model = require("../../models/student-model");
-const Document_model = require("../../models/document-model");
-const Internship_model = require("../../models/internship-model");
-const Message_model = require("../../models/message-model");
+const Admin_model = require("../models/admin-model");
+const Company_model = require("../models/company-model");
+const Announcement_model = require("../models/announcement-model");
+const Application_model = require("../models/application-model");
+const Student_model = require("../models/student-model");
+const Document_model = require("../models/document-model");
+const Internship_model = require("../models/internship-model");
+const Message_model = require("../models/message-model");
 
 let totalAnnouncementsCount = 0;
 let totalApplicationsCount = 0;

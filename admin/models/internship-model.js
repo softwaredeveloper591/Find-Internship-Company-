@@ -1,5 +1,5 @@
 const { DataTypes}= require("sequelize");
-const sequelize=require("./data/db");
+const sequelize=require("../data/db");
 const Application = require('./application-model');
 
 const Internship = sequelize.define('Internship', {
@@ -13,9 +13,9 @@ const Internship = sequelize.define('Internship', {
 	  defaultValue: 'started'
     },
     score: {
-		type: DataTypes.STRING(45),
-		defaultValue: null
-	},
+      type: DataTypes.STRING(45),
+	  defaultValue: null
+    },
     studentName: {
       type: DataTypes.STRING(45),
       allowNull: false

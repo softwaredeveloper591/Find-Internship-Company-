@@ -1,5 +1,5 @@
 const { DataTypes}= require("sequelize");
-const sequelize=require("./data/db");
+const sequelize=require("../data/db");
 const Document = require('./document-model');
 
 const Application = sequelize.define('Application', {
@@ -34,6 +34,7 @@ const Application = sequelize.define('Application', {
   applyDate: {
 		type: DataTypes.DATE,
 		allowNull: true,
+    defaultValue: DataTypes.NOW
 	},
   statusUpdateDate: {
 		type: DataTypes.DATE,
@@ -47,4 +48,4 @@ const Application = sequelize.define('Application', {
 Document.belongsTo(Application, { foreignKey: 'applicationId' });
 Application.hasMany(Document, { foreignKey: 'applicationId' });
 
-  module.exports=Application;
+module.exports = Application;

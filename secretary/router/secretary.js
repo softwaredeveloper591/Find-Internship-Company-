@@ -8,13 +8,13 @@ const auth = require("../middleware/auth");
 const checkUserRole= require("../middleware/checkUserRole");
 const asyncErrorHandler = require("../utils/asyncErrorHandler");
 
-const Secretary_model= require("../../models/secretary-model");
-const Application_model= require("../../models/application-model");
-const Announcement_model= require("../../models/announcement-model");
-const Company_model= require("../../models/company-model");
-const Student_model= require("../../models/student-model");
-const Document_model= require("../../models/document-model");
-const Internship_model = require("../../models/internship-model");
+const Secretary_model= require("../models/secretary-model");
+const Application_model= require("../models/application-model");
+const Announcement_model= require("../models/announcement-model");
+const Company_model= require("../models/company-model");
+const Student_model= require("../models/student-model");
+const Document_model= require("../models/document-model");
+const Internship_model = require("../models/internship-model");
 
 router.get("/", [auth, checkUserRole("secretary")], asyncErrorHandler( async (req, res, next) => {
     const secretary = await Secretary_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
