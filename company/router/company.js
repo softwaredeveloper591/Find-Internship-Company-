@@ -275,7 +275,7 @@ router.get("/internships/:applicationId",[auth,checkUserRole("company")], asyncE
 	// I dont know how this process will be handled at the frontend so I am just writing it like this for now.
 }));
 
-	router.put("/internships/:applicationId",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
+router.put("/internships/:applicationId",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
     const company = await Company_model.findOne({ where: { id: req.user.id } });
 	const applicationId = req.params.applicationId;
 	const { isApproved, feedback } = req.body; // isApproved is a hidden object

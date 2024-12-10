@@ -34,8 +34,7 @@ router.get("/", [auth, checkUserRole("secretary")], asyncErrorHandler( async (re
 			},
 			{
 				model: Student_model,
-				attributes: ['username','id']
-				
+				attributes: ['username'] ['id']
 			}
 		]
     });

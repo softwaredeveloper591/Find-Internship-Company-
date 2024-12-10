@@ -5,10 +5,10 @@ const bcrypt= require("bcrypt");
 const nodeMailer = require("nodemailer");
 const { APP_SECRET, EMAIL_PASS } = require("../config");
 
-const Admin_model= require("../../models/admin-model");
-const Student_model= require("../../models/student-model");
-const Company_model= require("../../models/company-model");
-const Secretary_model = require("../../models/secretary-model");
+const Student_model= require("../models/student-model");
+const Admin_model= require("../models/admin-model");
+const Company_model= require("../models/company-model");
+const Secretary_model = require("../models/secretary-model");
 
 const asyncErrorHandler = require("../utils/asyncErrorHandler");
 const userType = require("../middleware/userType");

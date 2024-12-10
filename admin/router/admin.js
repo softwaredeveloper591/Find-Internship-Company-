@@ -486,15 +486,18 @@ router.put("/company/:companyId", [auth, checkUserRole("admin")], asyncErrorHand
 
 router.get("/applicationRequests", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
     try {
+        // Fetch the admin details, excluding the password
         const admin = await Admin_model.findOne({ 
             where: { id: req.user.id }, 
             attributes: { exclude: ['password'] } 
         });
         
         if (!admin) {
+            // If no admin found, return a 404 Not Found status
             return res.status(404).json({ message: 'Admin not found' });
         }
-		
+
+        // Fetch the applications with the specified conditions
         const applications = await Application_model.findAll({
             where: {
                 isApprovedByCompany: true,
@@ -514,7 +517,7 @@ router.get("/applicationRequests", [auth, checkUserRole("admin")], asyncErrorHan
                 }
             ]
         });
-        
+        // Render the page with the fetched data
         res.status(200).json({
             dataValues: admin.dataValues,
             applications,
@@ -632,7 +635,7 @@ router.put("/applications/:applicationId",upload.single('studentFile'),[auth,che
 router.get("/interns", [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
     const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
 
-	const internship = await Internship_model.findAll({
+	const interns = await Internship_model.findAll({
 		include: [
 			{
 				model: Application_model,
@@ -648,7 +651,9 @@ router.get("/interns", [auth, checkUserRole("admin")], asyncErrorHandler( async 
 			}
 		]
 	});
-	res.send(internship); // to test it on postman
+	const internships=interns.get();
+	console.log(interns);
+	res.send(internships); // to test it on postman
 
 	/*res.render("applicationRequests", {
         usertype: "admin",
