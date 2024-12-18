@@ -64,34 +64,37 @@ router.get("/",[auth,checkUserRole("company")], asyncErrorHandler( async (req, r
 		where: {
 			isApprovedByCompany: null,
 		},
+		attributes:['id', 'applyDate'],
         include: [
 			{
             	model: Announcement_model,
             	where: { companyId: company.id },
-				attributes: ['announcementName']
+				attributes: ['id','announcementName']
 			},
 			{
 				model: Student_model,
-				attributes: ['username', 'id', 'year']
+				attributes: ['id', 'username','year']
 			}
 		]
     });
-    res.render("applications", {
-        usertype: "company",
-        dataValues: company.dataValues,
-        applications,
-		totalInternshipsCount
-    });
+    // res.render("applications", {
+    //     usertype: "company",
+    //     dataValues: company.dataValues,
+    //     applications,
+	// 	totalInternshipsCount
+    // });
+	res.json(applications)
 }));
 
-router.get("/announcement",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
-	const company = await Company_model.findOne({ where: {id: req.user.id} });
-    res.render("companyShareOpportunity",{ 
-		usertype:"company", 
-		dataValues:company.dataValues,
-		totalInternshipsCount
-	});
-}));
+// this endpoint is no longer needed!
+// router.get("/announcement",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
+// 	const company = await Company_model.findOne({ where: {id: req.user.id} });
+//     res.render("companyShareOpportunity",{ 
+// 		usertype:"company", 
+// 		dataValues:company.dataValues,
+// 		totalInternshipsCount
+// 	});
+// }));
 
 router.post('/announcement',upload.single('image'), [auth, checkUserRole('company')], asyncErrorHandler( async (req, res, next) => {
 	const { companyId, announcementName, description, startDate, endDate } = req.body;
@@ -111,34 +114,39 @@ router.post('/announcement',upload.single('image'), [auth, checkUserRole('compan
         startDate: startDateInTurkey,
         endDate: endDateInTurkey
     });
-    res.redirect("/company?action=formfilled");
+    res.status(200).json({ message: "Announcement published successfully" });
 }));
 
 router.get("/announcements",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
-	const company = await Company_model.findOne({ where: {id: req.user.id} });
-	const announcements = await Announcement_model.findAll( { companyId: company.id });
-
-    res.render("announcements",{ 
-		usertype:"company",
-		dataValues: company.dataValues,
-		announcements,
+	const announcements = await Announcement_model.findAll({
+		where:{companyId: req.user.id},
+		attributes: {exclude:['companyId', 'status']}
 	});
+	
+	res.json(announcements);
+    // res.render("announcements",{ 
+	// 	usertype:"company",
+	// 	dataValues: company.dataValues,
+	// 	announcements,
+	// });
 }));
 
 router.get("/announcements/:id",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
 	const announcementId = req.params.id;
-	const announcement = await Announcement_model.findOne( { where: { id: announcementId}} );
+	const announcement = await Announcement_model.findOne( { where: { id: announcementId}});
+	if(!announcement || announcement.companyId!= req.user.id  )
+		return res.status(403).json({ "error": "You do not have permission to access this resource." });
 
 	const formattedAnnouncement = {
 		...announcement.dataValues,
 		formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD MM YYYY'),
 		image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
 	};
-
-    res.render("singleAnnouncement",{ 
-		usertype:"company", 
-		formattedAnnouncement,
-	});
+	res.json(formattedAnnouncement)
+    // res.render("singleAnnouncement",{ 
+	// 	usertype:"company", 
+	// 	formattedAnnouncement,
+	// });
 }));
 
 router.put("/announcements/:id", upload.single('image'), [auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
@@ -147,14 +155,16 @@ router.put("/announcements/:id", upload.single('image'), [auth,checkUserRole("co
 	"edit or something else" button the announcement will be edited and admin will see it as edited at the announcements page*/
 	const announcementId = req.params.id;
 	const announcement = await Announcement_model.findOne( { where: { id: announcementId}} );
+	if(!announcement || announcement.companyId!= req.user.id )
+		return res.status(403).json({ "error": "You do not have permission to access this resource."});
 
-	const { announcementName, description, startDate, endDate } = req.body;
 	let image = null;
 	const file = req.file;
 	if (file) {
 		image = file.buffer;
 	}
 	
+	const { announcementName, description, startDate, endDate } = req.body;
 	const startDateInTurkey = moment.tz(startDate, 'Europe/Istanbul').startOf('day').toDate();
     const endDateInTurkey = moment.tz(endDate, 'Europe/Istanbul').endOf('day').toDate();
 
@@ -175,7 +185,6 @@ router.put("/announcements/:id", upload.single('image'), [auth,checkUserRole("co
 }));
 
 router.get("/applications",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
-    const company = await Company_model.findOne({ where: { id: req.user.id } });
     const applications = await Application_model.findAll({
 		where: {
 			isApprovedByCompany: null,
@@ -183,7 +192,7 @@ router.get("/applications",[auth,checkUserRole("company")], asyncErrorHandler( a
         include: [
 			{
             	model: Announcement_model,
-            	where: { companyId: company.id },
+            	where: { companyId: req.user.id },
 				attributes: ['announcementName']
 			},
 			{
@@ -193,12 +202,14 @@ router.get("/applications",[auth,checkUserRole("company")], asyncErrorHandler( a
 		]
     });
 
-    res.render("applications", {
-        usertype: "company",
-        dataValues: company.dataValues,
-        applications,
-		totalInternshipsCount
-    });
+	res.json(applications);
+	
+    // res.render("applications", {
+    //     usertype: "company",
+    //     dataValues: company.dataValues,
+    //     applications,
+	// 	totalInternshipsCount
+    // });
 }));
 
 router.get("/internships",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
@@ -211,6 +222,7 @@ router.get("/internships",[auth,checkUserRole("company")], asyncErrorHandler( as
 		include: [
 		  	{
 				model: Application_model,
+				attributes: ['id','status'],
 				include: [
 			  		{
 						model: Announcement_model,
@@ -226,7 +238,7 @@ router.get("/internships",[auth,checkUserRole("company")], asyncErrorHandler( as
 		]
 	});
 
-	res.send(interns);
+	res.json(interns);
 
     /*res.render("internships", {
         usertype: "company",
@@ -355,7 +367,7 @@ router.post("/companyForm/:applicationId", upload.single('companyForm'), [auth,c
 
 router.get("/applications/:applicationId",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
     const company = await Company_model.findOne({ where: { id: req.user.id } });
-	const applicationId = req.params.applicationId.slice(1);
+	const applicationId = req.params.applicationId;
     const application = await Application_model.findOne({
 		where: {
 			id: applicationId
@@ -376,6 +388,7 @@ router.get("/applications/:applicationId",[auth,checkUserRole("company")], async
     const document = await Document_model.findOne({
 		where: { applicationId, fileType: "CV" }
 	});
+	if (!document){console.log("there is no document")}
 
     res.render("innerInternshipApplication", {
         usertype: "company",
@@ -476,29 +489,34 @@ router.post("/applications/:applicationId/fillApplicationForm",[auth,checkUserRo
 }));
 
 router.put("/applications/:applicationId",upload.single('upload-file'),[auth,checkUserRole("company")], asyncErrorHandler(async (req, res ,next) => {
+	// const company = await Company_model.findOne({ where: { id: req.user.id } });
 	const applicationId = req.params.applicationId;
 	const { isApproved } = req.body;
 
-	const file = req.file;
-	let binaryData = null;
-	if (file) {
-	    binaryData = file.buffer;
-	    await Document_model.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "Application Form" } });
-	}
-
 	const application = await Application_model.findOne({
-	    where: { id: applicationId },
+		where: { id: applicationId },
 	    include: [
-	        {
-	            model: Student_model,
+			{
+				model: Student_model,
 	            attributes: ['username', 'email']
 	        },
 	        {
-	            model: Announcement_model,
-	            attributes: ['announcementName']
+				model: Announcement_model,
+	            attributes: ['announcementName',"companyId"]
 	        }
 	    ]
 	});
+
+	if (application.get().Announcement.get().companyId!=req.user.id) {
+		return res.status(400).json({ error: "You are not allowed to make changes on that application!" });
+	}
+	
+	const file = req.file;
+	let binaryData = null;
+	if (file) {
+		binaryData = file.buffer;
+		await Document_model.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "Application Form" } });
+	}
 
 	const emailSubject = isApproved === "true" ? 'Application Approved' : 'Application Rejected';
 	const emailBody = `Hello ${application.Student.username},<br><br>

@@ -86,15 +86,12 @@ async function findReceiverByEmail(email) {
 }
 
 router.get("/",[auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
-    const student = await Student_model.findOne({ where: {id: req.user.id} });
-    return res.status(200).json({ userType: "student", dataValues: student.dataValues });
-	/*
-	res.render("student",{ 
-		usertype:"student", 
-		dataValues:student.dataValues,
-		//totalAnnouncementsCount
-	});
-	*/
+    const student = await Student_model.findOne({ 
+		where: {id: req.user.id},
+		attributes: {
+			exclude: ["password"]
+	}});
+    return res.status(200).json({ userType: "student", dataValues: student});
 }));
 
 router.get("/messages", [auth, checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
@@ -236,6 +233,7 @@ router.get("/opportunities", [auth, checkUserRole("student")], asyncErrorHandler
             startDate: {
                 [Sequelize.Op.lte]: now // Ensure the announcement has started
             },
+			//to make sure students don't see the opportunities they have already applied so far. 
             id: {
                 [Op.notIn]: Sequelize.literal(`(
                     SELECT announcementId
@@ -244,10 +242,11 @@ router.get("/opportunities", [auth, checkUserRole("student")], asyncErrorHandler
                 )`)
             }
         },
+		attributes: ["id","announcementName", "image"],
         include: [
             {
                 model: Company_model,
-                attributes: ['name'] ['username']
+                attributes: ['name']
             }
         ]
     });
@@ -256,73 +255,51 @@ router.get("/opportunities", [auth, checkUserRole("student")], asyncErrorHandler
 		image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
     }));
 	res.status(200).json( { announcements: formattedAnnouncements });
-	/*
-    res.render("opportunities", {
-        usertype: "student",
-        dataValues: student.dataValues,
-        announcements: formattedAnnouncements
-    });
-	*/
 }));
 
 router.get("/opportunities/:opportunityId",[auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
     const student = await Student_model.findOne({ where: { id: req.user.id }});
-	const opportunityId = req.params.opportunityId.slice(1);
+	const opportunityId = req.params.opportunityId
 	const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
-    const announcement = await Announcement_model.findOne({ 
-		where: {
-			id: opportunityId,
-			endDate: {
-				[Sequelize.Op.gt]: now // Check if the current time is less than the endDate
-			}
-		},
-		include: [
-			{
-				model: Company_model,
-				attributes: ['name']
-			}
-		]
+	const applications = await Application_model.findAll({where:{announcementId:opportunityId, studentId:student.id}})
+	var announcement;
+	const isApplied=(applications.length!=0);
+	//if students have already applied that opportunity then they can see the opportunities that are outdated.
+	if (isApplied){
+		announcement = await Announcement_model.findOne({ 
+			where: {id: opportunityId},
+			include: [{model: Company_model,attributes: ['name']}]
+		});
+	}
+	else{
+		announcement = await Announcement_model.findOne({ 
+		where: {id: opportunityId,
+			// The announcement must have started and must not be finished yet!
+			startDate:{[Sequelize.Op.lte]: now},
+			endDate: {[Sequelize.Op.gt]: now}},
+		include: [{model: Company_model,attributes: ['name']}]
 	});
-
-	const application = await Application_model.findOne({
-		where: {
-			announcementId: opportunityId,
-			studentId: student.id
-		}
-	});
+	}
+	
+	if(!announcement) return res.status(400).json({ error: "There is no available announcement you are allowed to see." });
 
 	const timeDifference = announcement.endDate - now;
 	const remainingSeconds = Math.floor(timeDifference / 1000);
-
+	console.log(announcement.image)
 	const formattedAnnouncement = {
 		...announcement.dataValues,
 		remainingSeconds,
-		isApplied: !!application,
+		isApplied: !!isApplied,
 		image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
 	};
 	res.status(200).json( { announcement: formattedAnnouncement });
-	// 
-    // res.render("apply", {
-    //     usertype: "student",
-    //     dataValues: student.dataValues,
-    //     announcement: formattedAnnouncement
-    // });
-	// 
 }));
 
 router.post("/opportunities/:opportunityId",upload.single('CV'),[auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
-
 	const student = await Student_model.findOne( { where: { id: req.user.id }} );
   	const announcementId = req.params.opportunityId;
-	const isApplied = await Application_model.findOne({
-		where: {
-			announcementId: announcementId,
-			studentId: student.id
-		}
-	});
-	if(!isApplied) {
-		return res.status(409).json({ error: "Already applied to this announcement." });
-	}
+	const isApplied = await Application_model.findOne({where:{announcementId,studentId: student.id}});
+	if(isApplied) {return res.status(409).json({ error: "Already applied to this announcement." });}
   	
   	const { user_phone, relative_phone } = req.body;
     const templatePath = path.join(__dirname, '../files', 'ApplicationForm.docx');
