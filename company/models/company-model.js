@@ -1,7 +1,4 @@
-const { DataTypes}= require("sequelize");
-const sequelize=require("../data/db");
-const Announcement = require('./announcement-model');
-
+module.exports = (sequelize, DataTypes) => {
 const Company = sequelize.define('Company', {
     id: {
       type: DataTypes.INTEGER,
@@ -38,11 +35,13 @@ const Company = sequelize.define('Company', {
       allowNull: false,
     }
   }, {
-    tableName: 'company', // MySQL tablosunun adı
-    timestamps: false // createdAt ve updatedAt alanlarını otomatik olarak eklememek için
+    tableName: 'company', 
+    timestamps: false 
   });
 
-Announcement.belongsTo(Company, { foreignKey: 'companyId' });
-Company.hasMany(Announcement, { foreignKey: 'companyId' });
+Company.associate = (db) => {
+  Company.hasMany(db.Announcement, {foreignKey: 'companyId'});
+  db.Announcement.belongsTo(Company,{foreignKey: 'companyId'})};
   
-module.exports = Company;
+  return Company;
+};

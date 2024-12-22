@@ -233,6 +233,8 @@ router.get("/opportunities", [auth, checkUserRole("student")], asyncErrorHandler
             startDate: {
                 [Sequelize.Op.lte]: now // Ensure the announcement has started
             },
+			endDate: {[Sequelize.Op.gt]: now},
+			
 			//to make sure students don't see the opportunities they have already applied so far. 
             id: {
                 [Op.notIn]: Sequelize.literal(`(

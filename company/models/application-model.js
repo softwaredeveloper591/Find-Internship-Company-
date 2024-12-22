@@ -1,7 +1,4 @@
-const { DataTypes}= require("sequelize");
-const sequelize=require("../data/db");
-const Document = require('./document-model');
-
+module.exports = (sequelize, DataTypes) => {
 const Application = sequelize.define('Application', {
     id: {
       type: DataTypes.INTEGER,
@@ -44,7 +41,9 @@ const Application = sequelize.define('Application', {
     timestamps: false
   });
 
-Document.belongsTo(Application, { foreignKey: 'applicationId' });
-Application.hasMany(Document, { foreignKey: 'applicationId' });
-
-  module.exports=Application;
+  Application.associate = (db) => {
+    Application.hasMany(db.Document,
+      { foreignKey: 'applicationId' })};
+  
+  return Application;
+};

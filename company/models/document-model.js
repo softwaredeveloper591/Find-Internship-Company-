@@ -1,20 +1,13 @@
-const { DataTypes } = require("sequelize");
-const sequelize = require("../data/db");
-
-const Document = sequelize.define('Document', {
+module.exports = (sequelize, DataTypes) => {
+  const Document = sequelize.define('Document', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     allowNull: false,
     autoIncrement: true
   },
-  applicationId: {
-    type: DataTypes.STRING(100),
-    references: {
-      model: 'Application',
-      key: 'id'
-    },
-	defaultValue: null
+    applicationId: {
+    type: DataTypes.INTEGER,
   },
   name: {
     type: DataTypes.STRING(100),
@@ -44,5 +37,10 @@ const Document = sequelize.define('Document', {
   tableName: 'document',
   timestamps: false
 });
+  
+Document.associate = (db) => {
+  Document.belongsTo(db.Application,
+    { foreignKey: 'applicationId' })};
 
-module.exports = Document;
+return Document;
+};

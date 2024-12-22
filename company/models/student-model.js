@@ -1,8 +1,4 @@
-const { DataTypes}= require("sequelize");
-const sequelize=require("../data/db");
-const Application = require('./application-model');
-const Internship = require('./internship-model');
-
+module.exports = (sequelize, DataTypes) => {
 const Student = sequelize.define('Student', {
     id: {
         type: DataTypes.INTEGER,
@@ -31,7 +27,7 @@ const Student = sequelize.define('Student', {
         allowNull: false,
       },
       password: {
-        type: DataTypes.STRING(45),
+        type: DataTypes.STRING(255),
         allowNull: false,
         unique: true
       }
@@ -40,10 +36,12 @@ const Student = sequelize.define('Student', {
       timestamps: false 
     });
 
-Application.belongsTo(Student, { foreignKey: 'studentId' });
-Student.hasMany(Application, { foreignKey: 'studentId' });
+Student.associate = (db) => {
+  Student.hasMany(db.Application, {foreignKey: 'studentId'});
+  db.Application.belongsTo(Student, {foreignKey: 'studentId'});
 
-Internship.belongsTo(Student, { foreignKey: 'studentId' });
-Student.hasOne(Internship, { foreignKey: 'studentId' });
-
-module.exports = Student;
+  Student.hasOne(db.Internship, {foreignKey: 'studentId'});
+  db.Internship.belongsTo(Student, {foreignKey: 'studentId'});
+};
+  return Student;
+};

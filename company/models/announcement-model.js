@@ -1,7 +1,4 @@
-const { DataTypes}= require("sequelize");
-const sequelize=require("../data/db");
-const Application = require('./application-model');
-
+module.exports = (sequelize, DataTypes) => {
 const Announcement = sequelize.define('Announcement', {
     id: {
       type: DataTypes.INTEGER,
@@ -42,7 +39,13 @@ const Announcement = sequelize.define('Announcement', {
     timestamps: false
   });
 
-Application.belongsTo(Announcement, { foreignKey: 'announcementId' });
-Announcement.hasMany(Application, { foreignKey: 'announcementId' });
+Announcement.associate = (db) => {
+  Announcement.hasMany(db.Application, {
+    foreignKey: 'announcementId'});
 
-module.exports=Announcement;
+  db.Application.belongsTo(Announcement, {
+    foreignKey: 'announcementId'})};
+
+  return Announcement;
+};
+

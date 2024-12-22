@@ -16,13 +16,14 @@ const Application_model = require("../models/application-model");
 const Document_model = require("../models/document-model");
 const Student_model = require("../models/student-model");
 const Internship_model = require("../models/internship-model");
+const db=require("../models/index.js");
 
 let totalApplicationsCount = 0;
 let totalInternshipsCount = 0;
 
 async function updateTotalApplicationsCount() {
     try {
-        totalApplicationsCount = await Application_model.count( 
+        totalApplicationsCount = await db.Application.count( 
 			{ 
 				where: {
 					isApprovedByCompany: null	
@@ -34,14 +35,14 @@ async function updateTotalApplicationsCount() {
     }
 }
 
-router.use(async (req, res, next) => {
-    await updateTotalApplicationsCount();
-    next();
-});
+// router.use(async (req, res, next) => {
+//     await updateTotalApplicationsCount();
+//     next();
+// });
 
 async function updateTotalInternshipsCount() {
     try {
-        totalInternshipsCount = await Application_model.count( 
+        totalInternshipsCount = await db.Application.count( 
 			{ 
 				where: {
 					isSentBySecretary: true	
@@ -53,26 +54,26 @@ async function updateTotalInternshipsCount() {
     }
 }
 
-router.use(async (req, res, next) => {
-    await updateTotalInternshipsCount();
-    next();
-});
+// router.use(async (req, res, next) => {
+//     await updateTotalInternshipsCount();
+//     next();
+// });
 
 router.get("/",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
-    const company = await Company_model.findOne({ where: { id: req.user.id } });
-    const applications = await Application_model.findAll({
+    const company = await db.Company.findOne({ where: { id: req.user.id } });
+    const applications = await db.Application.findAll({
 		where: {
 			isApprovedByCompany: null,
 		},
 		attributes:['id', 'applyDate'],
         include: [
 			{
-            	model: Announcement_model,
+            	model: db.Announcement,
             	where: { companyId: company.id },
 				attributes: ['id','announcementName']
 			},
 			{
-				model: Student_model,
+				model: db.Student,
 				attributes: ['id', 'username','year']
 			}
 		]
@@ -106,7 +107,7 @@ router.post('/announcement',upload.single('image'), [auth, checkUserRole('compan
 
     const startDateInTurkey = moment.tz(startDate, 'Europe/Istanbul').startOf('day').toDate();
     const endDateInTurkey = moment.tz(endDate, 'Europe/Istanbul').endOf('day').toDate();
-    await Announcement_model.create({
+    await db.Announcement.create({
         companyId,
         announcementName,
         description,
@@ -118,7 +119,7 @@ router.post('/announcement',upload.single('image'), [auth, checkUserRole('compan
 }));
 
 router.get("/announcements",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
-	const announcements = await Announcement_model.findAll({
+	const announcements = await db.Announcement.findAll({
 		where:{companyId: req.user.id},
 		attributes: {exclude:['companyId', 'status']}
 	});
@@ -133,7 +134,7 @@ router.get("/announcements",[auth,checkUserRole("company")], asyncErrorHandler( 
 
 router.get("/announcements/:id",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
 	const announcementId = req.params.id;
-	const announcement = await Announcement_model.findOne( { where: { id: announcementId}});
+	const announcement = await db.Announcement.findOne( { where: { id: announcementId}});
 	if(!announcement || announcement.companyId!= req.user.id  )
 		return res.status(403).json({ "error": "You do not have permission to access this resource." });
 
@@ -154,7 +155,7 @@ router.put("/announcements/:id", upload.single('image'), [auth,checkUserRole("co
 	/*I thought companies can edit the announcement directly on the page as on the linkedin profile and when they click the 
 	"edit or something else" button the announcement will be edited and admin will see it as edited at the announcements page*/
 	const announcementId = req.params.id;
-	const announcement = await Announcement_model.findOne( { where: { id: announcementId}} );
+	const announcement = await db.Announcement.findOne( { where: { id: announcementId}} );
 	if(!announcement || announcement.companyId!= req.user.id )
 		return res.status(403).json({ "error": "You do not have permission to access this resource."});
 
@@ -167,7 +168,6 @@ router.put("/announcements/:id", upload.single('image'), [auth,checkUserRole("co
 	const { announcementName, description, startDate, endDate } = req.body;
 	const startDateInTurkey = moment.tz(startDate, 'Europe/Istanbul').startOf('day').toDate();
     const endDateInTurkey = moment.tz(endDate, 'Europe/Istanbul').endOf('day').toDate();
-
 	await announcement.update(
 		{ 
 			announcementName,
@@ -185,18 +185,18 @@ router.put("/announcements/:id", upload.single('image'), [auth,checkUserRole("co
 }));
 
 router.get("/applications",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
-    const applications = await Application_model.findAll({
+    const applications = await db.Application.findAll({
 		where: {
 			isApprovedByCompany: null,
 		},
         include: [
 			{
-            	model: Announcement_model,
+            	model: db.Announcement,
             	where: { companyId: req.user.id },
 				attributes: ['announcementName']
 			},
 			{
-				model: Student_model,
+				model: db.Student,
 				attributes: ['username', 'id', 'year']
 			}
 		]
@@ -216,23 +216,31 @@ router.get("/internships",[auth,checkUserRole("company")], asyncErrorHandler( as
 
 	// There should be the processes of upload company form and download Practice Evaluation Survey at this page
 	// since there will be internships more than one, the internships should be clickable.
-    const company = await Company_model.findOne({ where: { id: req.user.id } });
-
-	const interns = await Internship_model.findAll({
+    const company = await db.Company.findOne({ where: { id: req.user.id } });
+	const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
+	const interns = await db.Internship.findAll({
 		include: [
 		  	{
-				model: Application_model,
+				model: db.Application,
 				attributes: ['id','status'],
+				where:{
+					isSentBySecretary: true,
+				},
 				include: [
-			  		{
-						model: Announcement_model,
+			  		{ //internship's end date must be past by now.
+						model: db.Announcement,
 						where: { companyId: company.id },
-						attributes: ['announcementName']
+						attributes: ['announcementName', 'id']
 			  		},
 			  		{
-						model: Student_model,
+						model: db.Student,
 						attributes: ['username', 'id']
-			 	 	}
+			 	 	},
+					{
+						model: db.Document,
+						where:{ fileType: "Internship Report"}
+						
+					}
 				]	
 		  	}
 		]
@@ -254,6 +262,7 @@ router.get("/internships/:applicationId",[auth,checkUserRole("company")], asyncE
     const company = await Company_model.findOne({ where: { id: req.user.id } });
 	const applicationId = req.params.applicationId;
 
+	
 	const internship = await Internship_model.findOne({
 		where: {
 			id: applicationId		
