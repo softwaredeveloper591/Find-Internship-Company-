@@ -9,6 +9,8 @@ const moment = require('moment-timezone');
 const bodyParser = require('body-parser');
 const AdmZip = require("adm-zip");
 const { v4: uuidv4 } = require('uuid');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+require('dotenv').config();
 
 const app = express();
 
@@ -166,6 +168,51 @@ router.delete("/deleteMessage/:id", [auth, checkUserRole("student")], asyncError
     await Message_model.destroy({ where: {id} });
         
 	res.status(200).json({ message: "message is deleted" });
+}));
+
+
+// AIChatbot için api
+router.post("/chatWithAI", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+    const student = await Student_model.findOne({ where: { id: req.user.id } });
+    const { message: userMessage } = req.body;
+	
+	const genAI = new GoogleGenerativeAI(process.env.AI_API);  				// process.env.AI_API must be in .env file 
+	const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+	const prompt = userMessage; // Message sent by student
+
+	// The code that sends prompt to AI api with exception handling.
+	try {
+		const result = await model.generateContent(prompt);
+
+    	const aiMessage = result.response.text(); // Response received from AI.
+		
+		res.status(200).json({ userMessage, aiMessage}); // Response of AI is returned. 
+	} catch (error) {
+		console.error("Error generating AI content:", error);
+    	res.status(500).json({ error: "Failed to generate content from AI" });
+	}
+
+    // Mesajları veritabanına kaydet
+    // const userMessageEntry = await Message_model.create({
+    //     from: student.email,
+    //     senderName: student.username,
+    //     to: "-",
+    //     receiverName: "AI",
+    //     topic: "Chat with AI",
+    //     message: userMessage
+    // });
+
+    // const aiMessageEntry = await Message_model.create({
+    //     from: "-",
+    //     senderName: "AI",
+    //     to: student.email,
+    //     receiverName: student.username,
+    //     topic: "Chat with AI",
+    //     message: aiMessage
+    // });
+
+    
 }));
 
 // The page where all file operations are performed
