@@ -146,7 +146,7 @@ router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("student
 		data = file.buffer;
 	} 
 
-	await Message_model.create(
+	const createdMessage = await Message_model.create(
 		{
 			from: student.email,
 			senderName: student.username,
@@ -159,7 +159,10 @@ router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("student
 		}
 	);
         
-	res.status(200).json({ message: "message is sent" }); 
+	res.status(200).json({
+		id: createdMessage.id,
+		message: createdMessage.message,
+	});
 }));
 
 router.delete("/deleteMessage/:id", [auth, checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
