@@ -1,7 +1,8 @@
 const { DataTypes} = require("sequelize");
 const sequelize = require("../data/db");
+const conversation = require("./conversation-model");
 
-const Message = sequelize.define('Message', {
+const message = sequelize.define('message', {
 	id: {
 		type: DataTypes.INTEGER,
       	primaryKey: true,
@@ -23,10 +24,15 @@ const Message = sequelize.define('Message', {
       	type: DataTypes.STRING(45),
 	  	allowNull: false,
     },
-	topic: {
-	  	type: DataTypes.STRING(45),
-	  	allowNull: false,
-	},
+	conversation_id:{
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'conversations',
+            key: 'id'
+        },
+        onDelete: 'CASCADE'
+    },
 	message: {
 		type: DataTypes.TEXT,
 		allowNull: false,
@@ -45,7 +51,20 @@ const Message = sequelize.define('Message', {
 	}
   	}, {
   	  	tableName: 'message',
-  	  	timestamps: false
+  	  	timestamps: true
   	});
 
-module.exports = Message;
+conversation.hasMany(message, { foreignKey: 'conversation_id', onDelete: 'CASCADE' });
+message.belongsTo(conversation, { foreignKey: 'conversation_id' });
+module.exports = message;
+
+Promise.all([
+    conversation.sync({ alter: true }),
+    message.sync({ alter: true })
+])
+    .then(() => {
+        console.log('Message and Conversation tables synced successfully');
+    })
+    .catch(err => {
+        console.error('Error syncing tables:', err);
+    });

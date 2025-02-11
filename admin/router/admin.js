@@ -20,6 +20,7 @@ const Student_model = require("../models/student-model");
 const Document_model = require("../models/document-model");
 const Internship_model = require("../models/internship-model");
 const Message_model = require("../models/message-model");
+const Conversation_model = require("../models/conversation-model");
 
 let totalAnnouncementsCount = 0;
 let totalApplicationsCount = 0;
@@ -156,47 +157,164 @@ router.get("/", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, re
 	res.status(200).json({ userType: "admin", dataValues: admin.dataValues, applications, totalAnnouncementsCount, totalCompaniesCount });
 }));
 
-router.get("/messages", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	/* This message section should be at the right bottom of each page. I don't know how to handle this at frontend. We can discuss 
-	it later. */
+router.get("/conversations", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-	const messages = await Message_model.findAll({ where: { to: admin.email } });
-
-	res.status(200).json({ messages });
-}));
-
-router.get("/messages/:id", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	const id = req.params.id;
-
-	await Message_model.update(
-		{
-			status: "read"
+	const conversations = await Conversation_model.findAll({
+		where: {
+		  [Op.or]: [
+			{ user1_email: admin.email, isDeletedByUser1: false },
+			{ user2_email: admin.email, isDeletedByUser2: false }
+		  ]
 		},
-		{
-			where: {
-				id
-			}
-		}
-	);
-
-	const message = await Message_model.findAll({ where: { id } });
-
-	res.status(200).json({ message });
+		attributes: ['id', 'user1_email', 'user1_name', 'user2_email', 'user2_name']
+	  });
+	res.status(200).json({ conversations });
 }));
 
-router.get("/sentMessages", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
+router.post("/conversations", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-	const messages = await Message_model.findAll({ where: { from: admin.email } });
+	const { receiverEmail,receiverName } = req.body;
+	if (admin.email === receiverEmail) {
+        return res.status(400).json({ error: "Users cannot create a conversation with themselves" });
+    }
 
-	res.status(200).json({ messages });
+	const receiver = await findReceiverByEmail(receiverEmail);
+    if (!receiver) {
+        return res.status(400).json({ error: "Receiver email does not exist in the system" });
+    }
+
+	const existingConversation = await Conversation_model.findOne({
+        where: {
+            [Op.or]: [
+                { user1_email: admin.email, user2_email: receiverEmail },
+                { user1_email: receiverEmail, user2_email: admin.email }
+            ]
+        }
+    });
+
+    if (existingConversation) {
+        return res.status(400).json({ error: "Conversation already exists" });
+    }
+
+	const conversations = await Conversation_model.create({
+		user1_email: admin.email,
+		user1_name: admin.username,
+		user2_email: receiverEmail,
+		user2_name: receiverName
+	  },{
+        attributes: ['id', 'user1_email', 'user1_name','user2_email' ,'user2_name']
+    });
+	res.status(200).json({ conversations });
 }));
+
+//for the time being, I don't send the file in the message
+router.get("/conversations/:id", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
+	const conversationId= req.params.id;
+	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const conversation = await Conversation_model.findOne({ where: { id: conversationId } });
+
+    if (!conversation) {
+        return res.status(404).json({ error: "Conversation not found" });
+    }
+    if (![conversation.user1_email, conversation.user2_email].includes(admin.email)) {
+        return res.status(403).json({ error: "You are not a participant in this conversation" });
+    }
+
+	const messages = await Message_model.findAll({
+        where: { conversation_id: conversationId },
+        order: [['createdAt', 'ASC']],
+        attributes: ['id', 'from', 'to', 'message', 'createdAt']
+    });
+
+	if (!messages) {
+        throw new Error('Messages not found');
+    }
+	const unifiedMessages = messages.map(msg => ({
+        id: msg.id,
+        from: msg.from,
+        to: msg.to,
+        message: msg.message,
+        timestamp: msg.createdAt,
+        isSentByAdmin: msg.from === admin.email
+    }));
+
+    res.status(200).json({ messages: unifiedMessages });
+}));
+
+router.delete("/conversations/:id", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
+	const conversationId= req.params.id;
+	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const conversation = await Conversation_model.findByPk(conversationId);
+
+    if (!conversation) {
+        throw new Error('Conversation not found');
+    }
+
+    let updateField, oppositeField;
+
+    if (conversation.user1_email === admin.email) {
+        updateField = 'isDeletedByUser1';
+        oppositeField = 'isDeletedByUser2';
+    } else if (conversation.user2_email === admin.email) {
+        updateField = 'isDeletedByUser2';
+        oppositeField = 'isDeletedByUser1';
+    } else {
+        throw new Error('User does not belong to this conversation');
+    }
+
+    if (conversation[oppositeField]) {
+        await Conversation.destroy({ where: { id: conversationId } });
+    } else {
+        await conversation.update({ [updateField]: true });
+    }
+	res.status(200).json("Conversation deleted successfully");
+}));
+
+// router.get("/messages/:id", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
+// 	const id = req.params.id;
+
+// 	await Message_model.update(
+// 		{
+// 			status: "read"
+// 		},
+// 		{
+// 			where: {
+// 				id
+// 			}
+// 		}
+// 	);
+
+// 	const message = await Message_model.findAll({ where: { id } });
+// 	res.status(200).json({ message });
+// }));
+
+// router.get("/sentMessages", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
+// 	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+// 	const messages = await Message_model.findAll({ where: { from: admin.email } });
+
+// 	res.status(200).json({ messages });
+// }));
 
 router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-	const { receiverEmail, topic, message } = req.body;
+	const {conversationId, message } = req.body;
+	
+	const conversation = await Conversation_model.findOne({ where: { id: conversationId } });
+	if (!conversation) {
+		return res.status(404).json({ errors: "Conversation not found" });
+	}
+		
+	//admin can't create messages in which it's not a part of the conversation
+	let receiverEmail;
+    if (conversation.user1_email === admin.email) {
+        receiverEmail = conversation.user2_email;
+    } else if (conversation.user2_email === admin.email) {
+        receiverEmail = conversation.user1_email;
+    } else {
+        return res.status(403).json({ error: "You are not a participant in this conversation" });
+    }
 
 	const receiver = await findReceiverByEmail(receiverEmail);
-
 	const file = req.file;
 	let fileName = null;
 	let data = null;
@@ -212,7 +330,7 @@ router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("admin")
 			senderName: admin.username,
 			to: receiverEmail,
 			receiverName: receiver.username,
-			topic,
+			conversation_id: conversationId,
 			message,
 			fileName,
 			data,
@@ -222,18 +340,19 @@ router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("admin")
 	// Send only the necessary parts of the message
 	res.status(200).json({
 		id: createdMessage.id,
+		receiver: createdMessage.receiverName,
 		message: createdMessage.message,
 	});
 }));
 
 
-router.delete("/deleteMessage/:id", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	const id = req.params.id;
+// router.delete("/deleteMessage/:id", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
+// 	const id = req.params.id;
 
-	await Message_model.destroy({ where: { id } });
+// 	await Message_model.destroy({ where: { id } });
 
-	res.status(200).json({ message: "message is deleted" });
-}));
+// 	res.status(200).json({ message: "message is deleted" });
+// }));
 
 router.get("/files", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	/* There will be application forms of more than one student, so we need to organize them according to each student
