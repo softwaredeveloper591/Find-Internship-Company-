@@ -21,6 +21,7 @@ const Document_model = require("../models/document-model");
 const Internship_model = require("../models/internship-model");
 const Message_model = require("../models/message-model");
 const Conversation_model = require("../models/conversation-model");
+const Secretary_model = require("../models/secretary-model");
 
 let totalAnnouncementsCount = 0;
 let totalApplicationsCount = 0;
@@ -155,6 +156,14 @@ router.get("/", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, re
 		]
 	});
 	res.status(200).json({ userType: "admin", dataValues: admin.dataValues, applications, totalAnnouncementsCount, totalCompaniesCount });
+}));
+
+router.get("/users", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
+	const secretary = await Secretary_model.findAll({attributes: [ 'username', 'email']});
+	const students = await Student_model.findAll({attributes: [ 'username', 'email']});
+	const companies = await Company_model.findAll({attributes: [ 'username', 'email']});
+	const allUsers = [...secretary, ...students, ...companies];
+	res.status(200).json({ allUsers });
 }));
 
 router.get("/conversations", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
