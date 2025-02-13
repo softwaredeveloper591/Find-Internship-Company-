@@ -60,6 +60,15 @@ async function updateTotalInternshipsCount() {
 // });
 
 router.get("/",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
+    const company = await db.Company.findOne({ 
+		where: {id: req.user.id},
+		attributes: {
+			exclude: ["password"]
+	}});
+    return res.status(200).json({ userType: "company", dataValues: company});
+}));
+
+router.get("/announcements",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
     const company = await db.Company.findOne({ where: { id: req.user.id } });
     const applications = await db.Application.findAll({
 		where: {
@@ -89,7 +98,7 @@ router.get("/",[auth,checkUserRole("company")], asyncErrorHandler( async (req, r
 
 // this endpoint is no longer needed!
 // router.get("/announcement",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
-// 	const company = await Company_model.findOne({ where: {id: req.user.id} });
+// 	const company = await db.Company.findOne({ where: {id: req.user.id} });
 //     res.render("companyShareOpportunity",{ 
 // 		usertype:"company", 
 // 		dataValues:company.dataValues,
@@ -98,7 +107,8 @@ router.get("/",[auth,checkUserRole("company")], asyncErrorHandler( async (req, r
 // }));
 
 router.post('/announcement',upload.single('image'), [auth, checkUserRole('company')], asyncErrorHandler( async (req, res, next) => {
-	const { companyId, announcementName, description, startDate, endDate } = req.body;
+	const companyId = req.user.id;
+	const { announcementName, description, startDate, endDate } = req.body;
 	let image = null;
 	const file = req.file;
 	if (file) {
@@ -187,7 +197,7 @@ router.put("/announcements/:id", upload.single('image'), [auth,checkUserRole("co
 router.get("/applications",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
     const applications = await db.Application.findAll({
 		where: {
-			isApprovedByCompany: null,
+			isApprovedByCompany: null || 0,
 		},
         include: [
 			{
@@ -375,43 +385,55 @@ router.post("/companyForm/:applicationId", upload.single('companyForm'), [auth,c
 }));
 
 router.get("/applications/:applicationId",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
-    const company = await Company_model.findOne({ where: { id: req.user.id } });
+    const company = await db.Company.findOne({ where: { id: req.user.id } });
 	const applicationId = req.params.applicationId;
-    const application = await Application_model.findOne({
+    const application = await db.Application.findOne({
 		where: {
 			id: applicationId
 		},
         include: [
 			{
-            	model: Announcement_model,
+            	model: db.Announcement,
             	where: { companyId: company.id },
 				attributes: ['announcementName']
 			},
 			{
-				model: Student_model,
+				model: db.Student,
 				attributes: ['username']
 			}
 		]
     });
 	
-    const document = await Document_model.findOne({
+    const document = await db.Document.findOne({
 		where: { applicationId, fileType: "CV" }
 	});
 	if (!document){console.log("there is no document")}
 
-    res.render("innerInternshipApplication", {
-        usertype: "company",
-        dataValues: company.dataValues,
-        application,
-        document,
-		totalInternshipsCount
-    });
+	res.json({ application: application, documentId: document.id });
+    // res.render("innerInternshipApplication", {
+    //     usertype: "company",
+    //     dataValues: company.dataValues,
+    //     application,
+    //     document,
+	// 	totalInternshipsCount
+    // });
 }));
 
 router.get('/serveFile/:id', [auth, checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
-    const file = await Document_model.findByPk(req.params.id);
+    const file = await db.Document.findByPk(req.params.id);
     if (file) {
       res.setHeader('Content-Type', 'application/pdf');
+      res.send(file.data);
+    } else {
+      res.status(404).send('File not found');
+    }
+}));
+
+router.get('/downloadFile/:id', [auth, checkUserRole("company")], asyncErrorHandler(async (req, res, next) => {
+    const file = await db.Document.findByPk(req.params.id);
+    if (file) {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename="Application_Document.pdf"');
       res.send(file.data);
     } else {
       res.status(404).send('File not found');
