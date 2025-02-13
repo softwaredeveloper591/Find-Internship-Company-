@@ -240,7 +240,7 @@ router.get("/conversations/:id", [auth, checkUserRole("admin")], asyncErrorHandl
 	const messages = await Message_model.findAll({
         where: { conversation_id: conversationId },
         order: [['createdAt', 'ASC']],
-        attributes: ['id', 'from', 'to', 'message', 'createdAt']
+        attributes: ['id', 'from', 'to', 'message', 'createdAt', 'fileName', 'data']
     });
 
 	if (!messages) {
@@ -252,7 +252,9 @@ router.get("/conversations/:id", [auth, checkUserRole("admin")], asyncErrorHandl
         to: msg.to,
         message: msg.message,
         timestamp: msg.createdAt,
-        isSentByAdmin: msg.from === admin.email
+        isSentByAdmin: msg.from === admin.email,
+		fileName: msg.fileName,
+        data: msg.data ? msg.data.toString('base64') : null
     }));
 
     res.status(200).json({ messages: unifiedMessages });
@@ -716,7 +718,6 @@ router.get("/applications/download/:applicationId/:fileType", [auth, checkUserRo
 	res.setHeader('Content-Disposition', 'attachment; filename=' + encodeURI(filename));
 	res.setHeader('Content-Type', contentType);
 	res.send(binaryData);
-	//res.status(200).json( {binaryData} );
 }));
 
 router.put("/applications/:applicationId", upload.single('studentFile'), [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
