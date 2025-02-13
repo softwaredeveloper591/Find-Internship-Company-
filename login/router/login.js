@@ -103,7 +103,10 @@ router.post("/", async function(req,res){
 		}
 
     	const token= createTokenWithIdandUserType(user.user.id,user.userType);
-    	res.cookie('jwt', token);
+    	res.cookie('jwt', token, {
+            httpOnly: true, // Prevents JavaScript access
+            secure: true, // Ensures it is sent over HTTPS);
+        });
 		res.status(200).json({ user: user.userType });
     } 
 	catch (error) {

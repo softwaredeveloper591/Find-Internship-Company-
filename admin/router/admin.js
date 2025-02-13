@@ -365,13 +365,21 @@ router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("admin")
 }));
 
 
-// router.delete("/deleteMessage/:id", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-// 	const id = req.params.id;
+router.delete("/deleteMessage/:id", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
+	const id = req.params.id;
+	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const message = await Message_model.destroy({ where: { id } });
+	if (!message) {
+        return res.status(404).json({ error: "Message not found with the given id" });
+    }
 
-// 	await Message_model.destroy({ where: { id } });
+	if (message.from !== admin.email && message.to !== admin.email) {
+        return res.status(403).json({ error: "You are not authorized to delete this message!" });
+    }
 
-// 	res.status(200).json({ message: "message is deleted" });
-// }));
+	await message.destroy();
+	res.status(200).json({ message: "Message deleted successfully", deletedMessage: message });
+}));
 
 router.get("/files", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	/* There will be application forms of more than one student, so we need to organize them according to each student
