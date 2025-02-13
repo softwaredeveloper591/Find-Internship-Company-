@@ -202,7 +202,15 @@ router.post("/conversations", [auth, checkUserRole("admin")], asyncErrorHandler(
     });
 
     if (existingConversation) {
-        return res.status(400).json({ error: "Conversation already exists" });
+		if(existingConversation.user1_email === admin.email && existingConversation.isDeletedByUser1){
+			await existingConversation.update({ isDeletedByUser1: false });
+		}
+		else if(existingConversation.user2_email === admin.email && existingConversation.isDeletedByUser2){
+			await existingConversation.update({ isDeletedByUser2: false });
+		}
+		else
+			return res.status(400).json({ error: "Conversation already exists" });
+		return res.status(200).json({ conversations: existingConversation });
     }
 
 	const conversations = await Conversation_model.create({
