@@ -180,7 +180,21 @@ router.get("/conversations", [auth, checkUserRole("admin")], asyncErrorHandler(a
 		},
 		attributes: ['id', 'user1_email', 'user1_name', 'user2_email', 'user2_name']
 	  });
-	res.status(200).json({ conversations });
+
+	  const formattedConversations = conversations.map(conv => {
+		if (conv.user2_email === admin.email) {
+			return {
+				id: conv.id,
+				user1_email: conv.user2_email,
+				user1_name: conv.user2_name,
+				user2_email: conv.user1_email,
+				user2_name: conv.user1_name
+			};
+		}
+		return conv;
+	});
+
+	res.status(200).json({ conversations: formattedConversations });
 }));
 
 router.post("/conversations", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
