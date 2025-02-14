@@ -58,13 +58,3 @@ conversation.hasMany(message, { foreignKey: 'conversation_id', onDelete: 'CASCAD
 message.belongsTo(conversation, { foreignKey: 'conversation_id' });
 module.exports = message;
 
-Promise.all([
-    conversation.sync({ alter: true }),
-    message.sync({ alter: true })
-])
-    .then(() => {
-        console.log('Message and Conversation tables synced successfully');
-    })
-    .catch(err => {
-        console.error('Error syncing tables:', err);
-    });

@@ -24,4 +24,4 @@ const Admin = sequelize.define('Admin', {
     timestamps: false 
   });
   
-  module.exports = Admin;}
+  return Admin;}

@@ -1,6 +1,6 @@
 
 module.exports = (sequelize, DataTypes) => {
-const Conversation = sequelize.define('conversation', {
+const Conversation = sequelize.define('Conversation', {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -32,6 +32,7 @@ const Conversation = sequelize.define('conversation', {
     }
 }, {
     timestamps: true, // Enable timestamps
+    tableName: 'conversation',
     updatedAt: false, // Disable updatedAt
     indexes: [
         {

@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-const Message = sequelize.define('message', {
+const Message = sequelize.define('Message', {
 	id: {
 		type: DataTypes.INTEGER,
       	primaryKey: true,
