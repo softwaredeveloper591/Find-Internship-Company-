@@ -7,6 +7,7 @@ const amqp = require('amqplib/callback_api');
 const auth = require("../middleware/auth"); 
 const checkUserRole= require("../middleware/checkUserRole");
 const asyncErrorHandler = require("../utils/asyncErrorHandler");
+const { Op } = require("sequelize");
 
 const Secretary_model= require("../models/secretary-model");
 const Application_model= require("../models/application-model");
