@@ -224,7 +224,6 @@ router.post("/conversations", [auth, checkUserRole("admin")], asyncErrorHandler(
 	res.status(200).json({ conversations });
 }));
 
-//for the time being, I don't send the file in the message
 router.get("/conversations/:id", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	const conversationId= req.params.id;
 	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
@@ -252,7 +251,7 @@ router.get("/conversations/:id", [auth, checkUserRole("admin")], asyncErrorHandl
         to: msg.to,
         message: msg.message,
         timestamp: msg.createdAt,
-        isSentByAdmin: msg.from === admin.email,
+        isSentByUser: msg.from === admin.email,
 		fileName: msg.fileName,
         data: msg.data ? msg.data.toString('base64') : null
     }));
@@ -282,37 +281,12 @@ router.delete("/conversations/:id", [auth, checkUserRole("admin")], asyncErrorHa
     }
 
     if (conversation[oppositeField]) {
-        await Conversation.destroy({ where: { id: conversationId } });
+        await conversation.destroy({ where: { id: conversationId } });
     } else {
         await conversation.update({ [updateField]: true });
     }
 	res.status(200).json("Conversation deleted successfully");
 }));
-
-// router.get("/messages/:id", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-// 	const id = req.params.id;
-
-// 	await Message_model.update(
-// 		{
-// 			status: "read"
-// 		},
-// 		{
-// 			where: {
-// 				id
-// 			}
-// 		}
-// 	);
-
-// 	const message = await Message_model.findAll({ where: { id } });
-// 	res.status(200).json({ message });
-// }));
-
-// router.get("/sentMessages", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-// 	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-// 	const messages = await Message_model.findAll({ where: { from: admin.email } });
-
-// 	res.status(200).json({ messages });
-// }));
 
 router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });

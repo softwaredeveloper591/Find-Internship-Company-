@@ -54,6 +54,27 @@ async function updateTotalInternshipsCount() {
     }
 }
 
+async function findReceiverByEmail(email) {
+	let receiver = null;
+	const mail = email;
+	const parts = mail.split("@");
+	const domain = parts[1];
+
+	if (domain === "iyte.edu.tr") {
+		receiver = await db.Secretary.findOne({ where: { email } });
+	}
+	else if (domain === "std.iyte.edu.tr") {
+		receiver = await db.Student.findOne({ where: { email } });
+	}
+	else {
+		receiver = await db.Company.findOne({ where: { email } });
+	}
+
+	if (receiver) return receiver;
+
+	return null;
+}
+
 // router.use(async (req, res, next) => {
 //     await updateTotalInternshipsCount();
 //     next();
@@ -586,6 +607,200 @@ router.get("/applications/download/:applicationId/:fileType",[auth,checkUserRole
     res.setHeader('Content-Disposition', 'attachment; filename='+encodeURI(filename));
     res.setHeader('Content-Type', contentType);
     res.send(binaryData);
+}));
+
+router.get("/users", [auth, checkUserRole("company")], asyncErrorHandler(async (req, res, next) => {
+	const secretary = await db.Secretary.findAll({attributes: [ 'username', 'email']});
+	const students = await db.Student.findAll({attributes: [ 'username', 'email']});
+	const companies = await db.Company.findAll({attributes: [ 'username', 'email']});
+	const allUsers = [...secretary, ...students, ...companies];
+	res.status(200).json({ allUsers });
+}));
+
+router.get("/conversations", [auth, checkUserRole("company")], asyncErrorHandler(async (req, res, next) => {
+	const company = await db.Company.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const conversations = await db.Conversation.findAll({
+		where: {
+		  [Op.or]: [
+			{ user1_email: company.email, isDeletedByUser1: false },
+			{ user2_email: company.email, isDeletedByUser2: false }
+		  ]
+		},
+		attributes: ['id', 'user1_email', 'user1_name', 'user2_email', 'user2_name']
+	  });
+	res.status(200).json({ conversations });
+}));
+
+router.post("/conversations", [auth, checkUserRole("company")], asyncErrorHandler(async (req, res, next) => {
+	const company = await db.Company.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const { receiverEmail,receiverName } = req.body;
+	if (company.email === receiverEmail) {
+        return res.status(400).json({ error: "Users cannot create a conversation with themselves" });
+    }
+
+	const receiver = await findReceiverByEmail(receiverEmail);
+    if (!receiver) {
+        return res.status(400).json({ error: "Receiver email does not exist in the system" });
+    }
+
+	const existingConversation = await db.Conversation.findOne({
+        where: {
+            [Op.or]: [
+                { user1_email: company.email, user2_email: receiverEmail },
+                { user1_email: receiverEmail, user2_email: company.email }
+            ]
+        }
+    });
+
+    if (existingConversation) {
+		if(existingConversation.user1_email === company.email && existingConversation.isDeletedByUser1){
+			await existingConversation.update({ isDeletedByUser1: false });
+		}
+		else if(existingConversation.user2_email === company.email && existingConversation.isDeletedByUser2){
+			await existingConversation.update({ isDeletedByUser2: false });
+		}
+		else
+			return res.status(400).json({ error: "Conversation already exists" });
+		return res.status(200).json({ conversations: existingConversation });
+    }
+
+	const conversations = await db.Conversation.create({
+		user1_email: company.email,
+		user1_name: company.username,
+		user2_email: receiverEmail,
+		user2_name: receiverName
+	  },{
+        attributes: ['id', 'user1_email', 'user1_name','user2_email' ,'user2_name']
+    });
+	res.status(200).json({ conversations });
+}));
+
+router.get("/conversations/:id", [auth, checkUserRole("company")], asyncErrorHandler(async (req, res, next) => {
+	const conversationId= req.params.id;
+	const company = await db.Company.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const conversation = await db.Conversation.findOne({ where: { id: conversationId } });
+
+    if (!conversation) {
+        return res.status(404).json({ error: "Conversation not found" });
+    }
+    if (![conversation.user1_email, conversation.user2_email].includes(company.email)) {
+        return res.status(403).json({ error: "You are not a participant in this conversation" });
+    }
+
+	const messages = await db.Message.findAll({
+        where: { conversation_id: conversationId },
+        order: [['createdAt', 'ASC']],
+        attributes: ['id', 'from', 'to', 'message', 'createdAt', 'fileName', 'data']
+    });
+
+	const unifiedMessages = messages.map(msg => ({
+        id: msg.id,
+        from: msg.from,
+        to: msg.to,
+        message: msg.message,
+        timestamp: msg.createdAt,
+        isSentByUser: msg.from === company.email,
+		fileName: msg.fileName,
+        data: msg.data ? msg.data.toString('base64') : null
+    }));
+
+    res.status(200).json({ messages: unifiedMessages });
+}));
+
+router.delete("/conversations/:id", [auth, checkUserRole("company")], asyncErrorHandler(async (req, res, next) => {
+	const conversationId= req.params.id;
+	const company = await db.Company.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const conversation = await db.Conversation.findByPk(conversationId);
+
+    if (!conversation) {
+        throw new Error('Conversation not found');
+    }
+
+    let updateField, oppositeField;
+
+    if (conversation.user1_email === company.email) {
+        updateField = 'isDeletedByUser1';
+        oppositeField = 'isDeletedByUser2';
+    } else if (conversation.user2_email === company.email) {
+        updateField = 'isDeletedByUser2';
+        oppositeField = 'isDeletedByUser1';
+    } else {
+        throw new Error('User does not belong to this conversation');
+    }
+
+    if (conversation[oppositeField]) {
+        await conversation.destroy({ where: { id: conversationId } });
+    } else {
+        await conversation.update({ [updateField]: true });
+    }
+	res.status(200).json("Conversation deleted successfully");
+}));
+
+router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("company")], asyncErrorHandler(async (req, res, next) => {
+	const company = await db.Company.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const {conversationId, message } = req.body;
+	
+	const conversation = await db.Conversation.findOne({ where: { id: conversationId } });
+	if (!conversation) {
+		return res.status(404).json({ errors: "Conversation not found" });
+	}
+		
+	//user can't create messages in which it's not a part of the conversation
+	let receiverEmail;
+    if (conversation.user1_email === company.email) {
+        receiverEmail = conversation.user2_email;
+    } else if (conversation.user2_email === company.email) {
+        receiverEmail = conversation.user1_email;
+    } else {
+        return res.status(403).json({ error: "You are not a participant in this conversation" });
+    }
+
+	const receiver = await findReceiverByEmail(receiverEmail);
+	const file = req.file;
+	let fileName = null;
+	let data = null;
+
+	if (file) {
+		fileName = file.originalname;
+		data = file.buffer;
+	}
+
+	const createdMessage = await db.Message.create(
+		{
+			from: company.email,
+			senderName: company.username,
+			to: receiverEmail,
+			receiverName: receiver.username,
+			conversation_id: conversationId,
+			message,
+			fileName,
+			data,
+		}
+	);
+
+	// Send only the necessary parts of the message
+	res.status(200).json({
+		id: createdMessage.id,
+		receiver: createdMessage.receiverName,
+		message: createdMessage.message,
+	});
+}));
+
+router.delete("/deleteMessage/:id", [auth, checkUserRole("company")], asyncErrorHandler(async (req, res, next) => {
+	const id = req.params.id;
+	const company = await db.Company.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const message = await db.Message.findOne({ where: { id } });
+	
+	if (!message) {
+        return res.status(404).json({ error: "Message not found with the given id" });
+    }
+	
+	if (message.from !== company.email && message.to !== company.email) {
+        return res.status(403).json({ error: "You are not authorized to delete this message!" });
+    }
+
+	await message.destroy();
+	res.status(200).json({ message: "Message deleted successfully", deletedMessage: message });
 }));
 
 module.exports= router;
