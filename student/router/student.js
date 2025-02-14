@@ -99,75 +99,6 @@ router.get("/",[auth,checkUserRole("student")], asyncErrorHandler( async (req, r
     return res.status(200).json({ userType: "student", dataValues: student});
 }));
 
-router.get("/messages", [auth, checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
-	/* This message section should be at the right bottom of each page. I don't know how to handle this at frontend. We can discuss 
-	it later. */
-    const student = await Student_model.findOne({ where: {id: req.user.id} });
-    const messages = await Message_model.findAll({ where: { to: student.email } });
-        
-	res.status(200).json({ messages });
-}));
-
-router.get("/messages/:id", [auth, checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
-	const id = req.params.id;
-
-	await Message_model.update(
-		{
-			status: "read"
-		},
-		{
-			where: {
-				id
-			}
-		}
-	);
-
-    const message = await Message_model.findAll({ where: { id } });
- 
-	res.status(200).json({ message });
-}));
-
-router.get("/sentMessages", [auth, checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
-    const student = await Student_model.findOne({ where: {id: req.user.id} });
-    const messages = await Message_model.findAll({ where: { from: student.email } });
-        
-	res.status(200).json({ messages });
-}));
-
-router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
-    const student = await Student_model.findOne({ where: {id: req.user.id} });
-    const { receiverEmail, topic, message } = req.body
-
-	const receiver = await findReceiverByEmail(receiverEmail);
-
-	const file = req.file;
-	let fileName = null;
-	let data = null;
-
-	if(file) {
-		fileName = file.originalname;
-		data = file.buffer;
-	} 
-
-	const createdMessage = await Message_model.create(
-		{
-			from: student.email,
-			senderName: student.username,
-			to: receiverEmail,
-			receiverName: receiver.username,
-			topic,
-			message,
-			fileName,
-			data,
-		}
-	);
-        
-	res.status(200).json({
-		id: createdMessage.id,
-		message: createdMessage.message,
-	});
-}));
-
 router.delete("/deleteMessage/:id", [auth, checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
     const id = req.params.id;
 
@@ -556,22 +487,41 @@ router.get("/users", [auth, checkUserRole("student")], asyncErrorHandler(async (
 	const students = await Student_model.findAll({attributes: [ 'username', 'email']});
 	const companies = await Company_model.findAll({attributes: [ 'username', 'email']});
 	const admin = await Admin_model.findAll({attributes: [ 'username', 'email']});
-	const allUsers = [...secretary, ...students, ...companies, admin];
+	const allUsers = [...secretary, ...companies, ...admin];
 	res.status(200).json({ allUsers });
 }));
 
 router.get("/conversations", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
-	const student = await Student_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-	const conversations = await Conversation_model.findAll({
-		where: {
-		  [Op.or]: [
-			{ user1_email: student.email, isDeletedByUser1: false },
-			{ user2_email: student.email, isDeletedByUser2: false }
-		  ]
-		},
-		attributes: ['id', 'user1_email', 'user1_name', 'user2_email', 'user2_name']
-	  });
-	res.status(200).json({ conversations });
+    const student = await Student_model.findOne({ 
+        where: { id: req.user.id }, 
+        attributes: { exclude: ['password'] } 
+    });
+
+    const conversations = await Conversation_model.findAll({
+        where: {
+            [Op.or]: [
+                { user1_email: student.email, isDeletedByUser1: false },
+                { user2_email: student.email, isDeletedByUser2: false }
+            ]
+        },
+        attributes: ['id', 'user1_email', 'user1_name', 'user2_email', 'user2_name']
+    });
+
+    // To obtain requesting student as the user1 in the conversation
+    const formattedConversations = conversations.map(conv => {
+        if (conv.user2_email === student.email) {
+            return {
+                id: conv.id,
+                user1_email: conv.user2_email,
+                user1_name: conv.user2_name,
+                user2_email: conv.user1_email,
+                user2_name: conv.user1_name
+            };
+        }
+        return conv;
+    });
+
+    res.status(200).json({ conversations: formattedConversations });
 }));
 
 router.post("/conversations", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
@@ -697,12 +647,12 @@ router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("student
     } else {
         return res.status(403).json({ error: "You are not a participant in this conversation" });
     }
-
+	
 	const receiver = await findReceiverByEmail(receiverEmail);
 	const file = req.file;
 	let fileName = null;
 	let data = null;
-
+	
 	if (file) {
 		fileName = file.originalname;
 		data = file.buffer;
