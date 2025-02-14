@@ -33,14 +33,14 @@ async function findReceiverByEmail(email) {
 	const parts = mail.split("@");
 	const domain = parts[1];
 
-	if (domain === "iyte.edu.tr") {
+	if (mail === "buketoksuzoglu@iyte.edu.tr") {
+		receiver = await Admin_model.findOne({ where: { email } });
+	}
+	else if (domain === "iyte.edu.tr") {
 		receiver = await Secretary_model.findOne({ where: { email } });
 	}
 	else if (domain === "std.iyte.edu.tr") {
 		receiver = await Student_model.findOne({ where: { email } });
-	}
-	else if (mail === "buketoksuzoglu@iyte.edu.tr") {
-		receiver = await Admin_model.findOne({ where: { email } });
 	}
 	else {
 		receiver = await Company_model.findOne({ where: { email } });
