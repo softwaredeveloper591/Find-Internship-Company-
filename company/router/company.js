@@ -66,6 +66,9 @@ async function findReceiverByEmail(email) {
 	else if (domain === "std.iyte.edu.tr") {
 		receiver = await db.Student.findOne({ where: { email } });
 	}
+	else if (mail === "buketoksuzoglu@iyte.edu.tr") {
+		receiver = await db.Admin.findOne({ where: { email } });
+	}
 	else {
 		receiver = await db.Company.findOne({ where: { email } });
 	}
@@ -613,7 +616,8 @@ router.get("/users", [auth, checkUserRole("company")], asyncErrorHandler(async (
 	const secretary = await db.Secretary.findAll({attributes: [ 'username', 'email']});
 	const students = await db.Student.findAll({attributes: [ 'username', 'email']});
 	const companies = await db.Company.findAll({attributes: [ 'username', 'email']});
-	const allUsers = [...secretary, ...students, ...companies];
+	const admin = await db.Admin.findOne({attributes: [ 'username', 'email']});
+	const allUsers = [...secretary, ...students, ...companies , admin];
 	res.status(200).json({ allUsers });
 }));
 
