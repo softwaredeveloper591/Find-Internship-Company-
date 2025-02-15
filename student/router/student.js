@@ -99,46 +99,57 @@ router.get("/",[auth,checkUserRole("student")], asyncErrorHandler( async (req, r
     return res.status(200).json({ userType: "student", dataValues: student});
 }));
 
-router.delete("/deleteMessage/:id", [auth, checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
-    const id = req.params.id;
-
-    await Message_model.destroy({ where: {id} });
-        
-	res.status(200).json({ message: "message is deleted" });
-}));
-
 
 // AIChatbot için api
 router.post("/chatWithAI", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
     const student = await Student_model.findOne({ where: { id: req.user.id } });
     const { message: userMessage } = req.body;
+	const conversationId =req.body.conversationId;
 	
 	const genAI = new GoogleGenerativeAI(process.env.AI_API);  				// process.env.AI_API must be in .env file 
 	const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 	const prompt = userMessage; // Message sent by student
+	
+	const conversationExists = await Conversation_model.findByPk(conversationId);
+	if (!conversationExists) {
+		return res.status(404).json({ error: "Conversation not found" });
+	}
 
-	// The code that sends prompt to AI api with exception handling.
+	if (conversationExists.user1_email !== student.email) {
+		return res.status(403).json({ error: "You are not authorized to send messages in this conversation" });
+	}
+	
+	const studentMessageDb = Message_model.create({
+		from: student.email,
+		senderName: student.username,
+		to: "-",
+		receiverName: "AI",
+		conversation_id: conversationId,
+		message: userMessage
+	});
+
 	try {
 		const result = await model.generateContent(prompt);
-
     	const aiMessage = result.response.text(); // Response received from AI.
+
+		const aiMessageDb = await Message_model.create({
+		    from: "-",
+		    senderName:"AI",
+		    to: student.email,
+		    receiverName: student.username,
+		    conversation_id: conversationId,
+		    message: aiMessage
+		});
 		
-		res.status(200).json({ userMessage, aiMessage}); // Response of AI is returned. 
+		await studentMessageDb;
+
+		res.status(200).json({ userMessage:studentMessageDb.message , aiMessage:aiMessageDb.message}); // Response of AI is returned. 
 	} catch (error) {
 		console.error("Error generating AI content:", error);
     	res.status(500).json({ error: "Failed to generate content from AI" });
 	}
 
-    // Mesajları veritabanına kaydet
-    // const userMessageEntry = await Message_model.create({
-    //     from: student.email,
-    //     senderName: student.username,
-    //     to: "-",
-    //     receiverName: "AI",
-    //     topic: "Chat with AI",
-    //     message: userMessage
-    // });
 
     // const aiMessageEntry = await Message_model.create({
     //     from: "-",
@@ -151,6 +162,53 @@ router.post("/chatWithAI", [auth, checkUserRole("student")], asyncErrorHandler(a
 
     
 }));
+
+
+router.get("/conversation/ai", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+    const student = await Student_model.findOne({ 
+        where: { id: req.user.id }, 
+        attributes: { exclude: ['password'] } 
+    });
+
+    const conversation = await Conversation_model.findAll({
+        where: {
+            [Op.or]: [
+                { user1_email: student.email, isDeletedByUser1: false },
+            ]
+        },
+        attributes: ['id', 'user1_email', 'user1_name', 'user2_email', 'user2_name']
+    });
+    return res.status(200).json(conversation);
+}));
+
+router.post("/conversation/ai", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+	const student = await Student_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const receiverEmail= "-";
+	const receiverName  =  "AI";
+
+	const existingConversation = await Conversation_model.findOne({
+        where: {
+            [Op.or]: [
+                { user1_email: student.email, user2_name: receiverName },
+            ]
+        }
+    });
+
+    if (existingConversation) {
+		return res.status(400).json({ error: "Conversation already exists" });
+    }
+
+	const conversations = await Conversation_model.create({
+		user1_email: student.email,
+		user1_name: student.username,
+		user2_email: receiverEmail,
+		user2_name: receiverName
+	  },{
+        attributes: ['id', 'user1_email', 'user1_name','user2_email' ,'user2_name']
+    });
+	res.status(200).json({ conversations });
+}));
+
 
 // The page where all file operations are performed
 router.get("/files", [auth,checkUserRole("student")], asyncErrorHandler( async (req, res, next) => {
@@ -500,8 +558,9 @@ router.get("/conversations", [auth, checkUserRole("student")], asyncErrorHandler
     const conversations = await Conversation_model.findAll({
         where: {
             [Op.or]: [
-                { user1_email: student.email, isDeletedByUser1: false },
-                { user2_email: student.email, isDeletedByUser2: false }
+				// We don't want to show the conversation with AI
+				{ user1_email: student.email, isDeletedByUser1: false , user2_name: { [Op.not]: "AI" } },
+                { user2_email: student.email, isDeletedByUser2: false, user2_name: { [Op.not]: "AI" } }
             ]
         },
         attributes: ['id', 'user1_email', 'user1_name', 'user2_email', 'user2_name']
@@ -614,15 +673,22 @@ router.delete("/conversations/:id", [auth, checkUserRole("student")], asyncError
     if (conversation.user1_email === student.email) {
         updateField = 'isDeletedByUser1';
         oppositeField = 'isDeletedByUser2';
+		// if the conversation is with AI, it will be deleted from the database without waiting for the other user
+		if(conversation.user2_name === "AI"){
+			await conversation.destroy({ where: { id: conversationId } });
+			return res.status(200).json("Conversation deleted successfully");
+		}
     } else if (conversation.user2_email === student.email) {
         updateField = 'isDeletedByUser2';
         oppositeField = 'isDeletedByUser1';
     } else {
-        throw new Error('User does not belong to this conversation');
+	 	return res.status(403).json({ error: "You are not authorized to delete this conversation!" });											
     }
 
+	// if both users delete the conversation, it will be deleted from the database
     if (conversation[oppositeField]) {
         await conversation.destroy({ where: { id: conversationId } });
+	// if only one user deletes the conversation, the conversation will be marked  as deleted by that user
     } else {
         await conversation.update({ [updateField]: true });
     }
