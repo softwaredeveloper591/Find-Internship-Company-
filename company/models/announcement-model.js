@@ -18,7 +18,7 @@ const Announcement = sequelize.define('Announcement', {
       allowNull: false
     },
 	image: {
-		type: DataTypes.STRING(100),
+		type: DataTypes.BLOB('small'),
 		defaultValue: null
 	},
 	startDate: {

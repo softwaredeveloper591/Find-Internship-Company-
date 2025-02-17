@@ -34,9 +34,9 @@ Object.values(db).forEach(model => {
     model.associate(db);
 });
 
-// sequelize.sync({ alter: true }) 
-//   .then(() => console.log('Database synchronized'))
-//   .catch(err => console.error('Error synchronizing database:', err));
+  // db['Announcement'].sync({ alter: true }) 
+  //   .then(() => console.log('Database synchronized'))
+  //   .catch(err => console.error('Error synchronizing database:', err));
 
 async function connect() {
   try {
@@ -46,6 +46,8 @@ async function connect() {
       console.log("Connection error", error);
   }
 }
+
+
 
 connect();
 module.exports = db;

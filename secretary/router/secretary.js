@@ -3,6 +3,8 @@ const router = express.Router();
 const multer = require("multer");
 const upload = multer();
 const amqp = require('amqplib/callback_api');
+const bcrypt = require("bcrypt");
+
 
 const auth = require("../middleware/auth");
 const checkUserRole = require("../middleware/checkUserRole");
@@ -43,6 +45,56 @@ async function findReceiverByEmail(email) {
 
 	return null;
 }
+
+router.get("/personalInfo",[auth,checkUserRole("secretary")], asyncErrorHandler( async (req, res, next) => {
+    const secretary = await Secretary_model.findOne({ 
+		where: {id: req.user.id},
+		attributes: {
+			exclude: ["password"]
+	}});
+    return res.status(200).json(secretary);
+}));
+
+router.post('/personalInfo',[auth,checkUserRole("secretary")], asyncErrorHandler( async (req, res, next) => {
+	const secretary = await Secretary_model.findOne({ 
+		where: {id: req.user.id}});
+    const { firstName, lastName, email, currentPassword, password, confirmPassword } = req.body;
+	
+	if (!firstName && !lastName && !email && !password) {
+        return res.status(400).json({ error: 'At least one field must be provided for update' });
+    }
+
+    const updates = {};
+    if (firstName && lastName) updates.username= `${firstName} ${lastName}`;
+	if (email) updates.email = email;
+
+	let hashedPassword;
+	if (password) {
+		if (password.length < 6) {
+			return res.status(404).json({ error: 'Minimum password length is 6 characters' });
+		}
+
+		if (password !== confirmPassword) {
+			return res.status(404).json({ error: 'Passwords do not match' });
+		}
+
+		const checkPassword= await bcrypt.compare(currentPassword,secretary.password);
+		if(!checkPassword) {
+			return res.status(400).json({ error: 'Current password entered wrong!' });
+		}
+
+		const checkPassword2= await bcrypt.compare(password,secretary.password);
+		if(checkPassword2) {
+			return res.status(400).json({ error: 'New password must be different from the current password.' });
+		}
+		hashedPassword = await bcrypt.hash(password, 10);
+	}
+
+	if(hashedPassword){updates.password = hashedPassword;}
+
+    await secretary.update(updates);
+	res.status(200).json({ success: 'User information updated succesfully.' });
+}));
 
 
 router.get("/", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
