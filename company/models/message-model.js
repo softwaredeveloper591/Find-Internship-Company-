@@ -42,10 +42,10 @@ const Message = sequelize.define('Message', {
 		type: DataTypes.BLOB('medium'),
 		defaultValue: null
 	},
-	status: {
-		type: DataTypes.STRING(45),
-		defaultValue: null
-	}
+	is_read: {
+			type: DataTypes.BOOLEAN,
+			defaultValue: false
+		}
   	}, {
   	  	tableName: 'message',
   	  	timestamps: true

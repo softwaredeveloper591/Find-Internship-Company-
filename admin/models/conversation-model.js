@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require("../data/db"); 
 
-const conversation = sequelize.define('conversation', {
+const conversation = sequelize.define('Conversation', {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -30,9 +30,28 @@ const conversation = sequelize.define('conversation', {
     isDeletedByUser2: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
-    }
+    },
+    user1_new_messages: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        validate: {
+            min: 0 
+        }
+    },
+    user2_new_messages: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        validate: {
+            min: 0 
+        }
+    },
+    last_message_time: {
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
 }, {
     timestamps: true, // Enable timestamps
+    tableName: 'conversations',
     updatedAt: false, // Disable updatedAt
     indexes: [
         {

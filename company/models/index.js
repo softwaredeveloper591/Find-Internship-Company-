@@ -34,9 +34,12 @@ Object.values(db).forEach(model => {
     model.associate(db);
 });
 
-  // db['Announcement'].sync({ alter: true }) 
-  //   .then(() => console.log('Database synchronized'))
-  //   .catch(err => console.error('Error synchronizing database:', err));
+Promise.all([
+  db.Conversation.sync({ alter: true }),
+  db.Message.sync({ alter: true })
+])
+  .then(() => console.log('Database synchronized'))
+  .catch(err => console.error('Error synchronizing database:', err));
 
 async function connect() {
   try {

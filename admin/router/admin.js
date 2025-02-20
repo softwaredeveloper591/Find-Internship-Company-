@@ -239,7 +239,10 @@ router.get("/conversations", [auth, checkUserRole("admin")], asyncErrorHandler(a
 				user1_email: conv.user2_email,
 				user1_name: conv.user2_name,
 				user2_email: conv.user1_email,
-				user2_name: conv.user1_name
+				user2_name: conv.user1_name,
+				user1_new_messages: conv.user2_new_messages,
+				user2_new_messages: conv.user1_new_messages,
+				last_message_time: conv.last_message_time
 			};
 		}
 		return conv;
@@ -307,12 +310,9 @@ router.get("/conversations/:id", [auth, checkUserRole("admin")], asyncErrorHandl
 	const messages = await Message_model.findAll({
         where: { conversation_id: conversationId },
         order: [['createdAt', 'ASC']],
-        attributes: ['id', 'from', 'to', 'message', 'createdAt', 'fileName', 'data']
+        attributes: ['id', 'from', 'to', 'message', 'createdAt', 'fileName', 'data', 'is_read']
     });
 
-	if (!messages) {
-        throw new Error('Messages not found');
-    }
 	const unifiedMessages = messages.map(msg => ({
         id: msg.id,
         from: msg.from,
@@ -321,7 +321,8 @@ router.get("/conversations/:id", [auth, checkUserRole("admin")], asyncErrorHandl
         timestamp: msg.createdAt,
         isSentByUser: msg.from === admin.email,
 		fileName: msg.fileName,
-        data: msg.data ? msg.data.toString('base64') : null
+        data: msg.data ? msg.data.toString('base64') : null,
+		is_read: msg.is_read
     }));
 
     res.status(200).json({ messages: unifiedMessages });
@@ -369,6 +370,7 @@ router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("admin")
 	let receiverEmail;
     if (conversation.user1_email === admin.email) {
         receiverEmail = conversation.user2_email;
+	
     } else if (conversation.user2_email === admin.email) {
         receiverEmail = conversation.user1_email;
     } else {
@@ -397,7 +399,15 @@ router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("admin")
 			data,
 		}
 	);
-
+	
+	if (conversation.user1_email === admin.email) {
+		const numberOfNewMessages = conversation.user2_new_messages + 1;
+		conversation.update({ last_message_time: createdMessage.createdAt, user2_new_messages: numberOfNewMessages });
+    } else if (conversation.user2_email === admin.email) {
+		const numberOfNewMessages = conversation.user1_new_messages + 1;
+		conversation.update({ last_message_time: createdMessage.createdAt, user1_new_messages: numberOfNewMessages });
+    }
+	
 	// Send only the necessary parts of the message
 	res.status(200).json({
 		id: createdMessage.id,
@@ -422,6 +432,27 @@ router.delete("/deleteMessage/:id", [auth, checkUserRole("admin")], asyncErrorHa
 
 	await message.destroy();
 	res.status(200).json({ message: "Message deleted successfully", deletedMessage: message });
+}));
+
+router.put("/updateMessage/:id", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
+	const id = req.params.id;
+	const isRead= true;
+
+	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const message = await Message_model.findOne({ where: { id } });
+	
+	if (!message) {
+        return res.status(404).json({ error: "Message not found with the given id" });
+    }
+	
+	if (message.from !== admin.email && message.to !== admin.email) {
+        return res.status(403).json({ error: "You are not authorized to update this message!" });
+    }
+
+	await message.update({ is_read: isRead });
+	const conversation = await Conversation_model.findOne({ where: { id: message.conversation_id } });
+	conversation.user1_email === admin.email ? conversation.update({ user1_new_messages: 0 }) : conversation.update({ user2_new_messages: 0 });
+	res.status(200).json({ message: "Message updated successfully", Message: message.message });
 }));
 
 router.get("/files", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {

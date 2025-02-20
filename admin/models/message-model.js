@@ -2,7 +2,7 @@ const { DataTypes} = require("sequelize");
 const sequelize = require("../data/db");
 const conversation = require("./conversation-model");
 
-const message = sequelize.define('message', {
+const message = sequelize.define('Message', {
 	id: {
 		type: DataTypes.INTEGER,
       	primaryKey: true,
@@ -35,7 +35,7 @@ const message = sequelize.define('message', {
     },
 	message: {
 		type: DataTypes.TEXT,
-		allowNull: false,
+		allowNull: false, 
 	},
 	fileName: {
 		type: DataTypes.STRING(45),
@@ -45,9 +45,9 @@ const message = sequelize.define('message', {
 		type: DataTypes.BLOB('medium'),
 		defaultValue: null
 	},
-	status: {
-		type: DataTypes.STRING(45),
-		defaultValue: null
+	is_read: {
+		type: DataTypes.BOOLEAN,
+		defaultValue: false
 	}
   	}, {
   	  	tableName: 'message',

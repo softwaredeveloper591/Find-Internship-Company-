@@ -29,10 +29,28 @@ const Conversation = sequelize.define('Conversation', {
     isDeletedByUser2: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
-    }
+    },
+    user1_new_messages: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0,
+            validate: {
+                min: 0 
+            }
+        },
+    user2_new_messages: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        validate: {
+            min: 0 
+        }
+    },
+    last_message_time: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
 }, {
     timestamps: true, // Enable timestamps
-    tableName: 'conversation',
+    tableName: 'conversations',
     updatedAt: false, // Disable updatedAt
     indexes: [
         {
