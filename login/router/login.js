@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt= require("bcrypt");
 const nodeMailer = require("nodemailer");
 const { APP_SECRET, EMAIL_PASS } = require("../config");
+const auth = require("../middleware/auth");
 
 const Student_model= require("../models/student-model");
 const Admin_model= require("../models/admin-model");
@@ -116,7 +117,7 @@ router.post("/", async function(req,res){
 });
 
 router.post("/forgotPassword", asyncErrorHandler( async (req, res, next) => {
-	const { email } = req.body;
+	const { email } = req.body; 
     const user = await findUserByEmail(email);
     if (!user) {
       return res.status(404).json({ error: 'No user with that email' });
@@ -211,9 +212,8 @@ router.post('/changePassword', asyncErrorHandler( async (req, res, next) => {
 	res.status(200).json({ success: 'Password updated succesfully.' });
 }));
 
-router.get("/logout", function(req,res){
+router.get("/logout",auth, function(req,res){
     res.clearCookie('jwt');
-
     res.redirect('/');
 });
 
