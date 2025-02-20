@@ -805,16 +805,14 @@ router.get("/applications/download/:applicationId/:fileType", [auth, checkUserRo
 router.put("/applications/:applicationId", upload.single('studentFile'), [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	const applicationId = req.params.applicationId;
 	const file = req.file;
-	console.log(applicationId);
-	console.log(file.name);
+
 	let binaryData = null;
 	if (file) {
 		binaryData = file.buffer;
-		await Document_model.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "Updated Application Form" } });
+		await Document_model.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "Application Form" } });
 	}
 	const { isApproved, feedback } = req.body;
 
-	console.log("Feedback" + feedback);
 	const application = await Application_model.findOne({
 		where: {
 			id: applicationId
