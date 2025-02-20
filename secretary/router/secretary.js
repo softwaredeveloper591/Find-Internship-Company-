@@ -103,7 +103,7 @@ router.get("/", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req
 		where: {
 			isApprovedByCompany: true,
 			isApprovedByDIC: true,
-			isSentBySecretary: false
+			isSentBySecretary: null
 		},
 		include: [
 			{
@@ -176,6 +176,7 @@ router.get("/applications/download/:applicationId/:fileType", [auth, checkUserRo
 	const applicationId = req.params.applicationId;
 	const fileType = req.params.fileType;
 	const takenDocument = await Document_model.findOne({ where: { applicationId, fileType } });
+	
 	if (!takenDocument) {
 		return res.status(404).json({ errors: "Error downloading file" });
 	}
