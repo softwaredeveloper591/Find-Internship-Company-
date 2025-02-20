@@ -800,10 +800,10 @@ router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("company
 		}
 	);
 
-	if (conversation.user1_email === admin.email) {
+	if (conversation.user1_email === company.email) {
 		const numberOfNewMessages = conversation.user2_new_messages + 1;
 		conversation.update({ last_message_time: createdMessage.createdAt, user2_new_messages: numberOfNewMessages });
-    } else if (conversation.user2_email === admin.email) {
+    } else if (conversation.user2_email === company.email) {
 		const numberOfNewMessages = conversation.user1_new_messages + 1;
 		conversation.update({ last_message_time: createdMessage.createdAt, user1_new_messages: numberOfNewMessages });
     }
@@ -834,7 +834,7 @@ router.delete("/deleteMessage/:id", [auth, checkUserRole("company")], asyncError
 }));
 
 
-router.put("/updateMessage/:id", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
+router.put("/updateMessage/:id", [auth, checkUserRole("company")], asyncErrorHandler(async (req, res, next) => {
 	const id = req.params.id;
 	const isRead=true;
 

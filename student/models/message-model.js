@@ -28,7 +28,7 @@ const message = sequelize.define('message', {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-            model: 'conversations',
+            model: 'conversations', 
             key: 'id'
         },
         onDelete: 'CASCADE'
@@ -45,9 +45,9 @@ const message = sequelize.define('message', {
 		type: DataTypes.BLOB('medium'),
 		defaultValue: null
 	},
-	status: {
-		type: DataTypes.STRING(45),
-		defaultValue: null
+	is_read: {
+		type: DataTypes.BOOLEAN,
+		defaultValue: false
 	}
   	}, {
   	  	tableName: 'message',

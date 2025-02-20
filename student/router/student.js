@@ -581,7 +581,10 @@ router.get("/conversations", [auth, checkUserRole("student")], asyncErrorHandler
 				user1_email: conv.user2_email,
 				user1_name: conv.user2_name,
 				user2_email: conv.user1_email,
-				user2_name: conv.user1_name
+				user2_name: conv.user1_name,
+				user1_new_messages: conv.user2_new_messages,
+				user2_new_messages: conv.user1_new_messages,
+				last_message_time: conv.last_message_time
 			};
 		}
 		return conv;
@@ -649,7 +652,7 @@ router.get("/conversations/:id", [auth, checkUserRole("student")], asyncErrorHan
 	const messages = await Message_model.findAll({
 		where: { conversation_id: conversationId },
 		order: [['createdAt', 'ASC']],
-		attributes: ['id', 'from', 'to', 'message', 'createdAt', 'fileName', 'data']
+		attributes: ['id', 'from', 'to', 'message', 'createdAt', 'fileName', 'data', 'is_read']
 	});
 
 	const unifiedMessages = messages.map(msg => ({
@@ -660,7 +663,8 @@ router.get("/conversations/:id", [auth, checkUserRole("student")], asyncErrorHan
 		timestamp: msg.createdAt,
 		isSentByUser: msg.from === student.email,
 		fileName: msg.fileName,
-		data: msg.data ? msg.data.toString('base64') : null
+		data: msg.data ? msg.data.toString('base64') : null,
+		is_read: msg.is_read
 	}));
 
 	res.status(200).json({ messages: unifiedMessages });
@@ -744,6 +748,14 @@ router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("student
 		}
 	);
 
+	if (conversation.user1_email === student.email) {
+		const numberOfNewMessages = conversation.user2_new_messages + 1;
+		conversation.update({ last_message_time: createdMessage.createdAt, user2_new_messages: numberOfNewMessages });
+    } else if (conversation.user2_email === student.email) {
+		const numberOfNewMessages = conversation.user1_new_messages + 1;
+		conversation.update({ last_message_time: createdMessage.createdAt, user1_new_messages: numberOfNewMessages });
+    }
+
 	// Send only the necessary parts of the message
 	res.status(200).json({
 		id: createdMessage.id,
@@ -767,6 +779,27 @@ router.delete("/deleteMessage/:id", [auth, checkUserRole("student")], asyncError
 
 	await message.destroy();
 	res.status(200).json({ message: "Message deleted successfully", deletedMessage: message });
+}));
+
+router.put("/updateMessage/:id", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+	const id = req.params.id;
+	const isRead= true;
+
+	const student = await Student_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const message = await Message_model.findOne({ where: { id } });
+	
+	if (!message) {
+        return res.status(404).json({ error: "Message not found with the given id" });
+    }
+	
+	if (message.from !== student.email && message.to !== student.email) {
+        return res.status(403).json({ error: "You are not authorized to update this message!" });
+    }
+
+	await message.update({ is_read: isRead });
+	const conversation = await Conversation_model.findOne({ where: { id: message.conversation_id } });
+	conversation.user1_email === student.email ? conversation.update({ user1_new_messages: 0 }) : conversation.update({ user2_new_messages: 0 });
+	res.status(200).json({ message: "Message updated successfully", Message: message.message });
 }));
 
 module.exports = router;
