@@ -14,6 +14,7 @@
 		"amqplib": "^0.10.4",
 		"body-parser": "^1.20.2",
 		"bootstrap": "^5.2.0",
+		"bcrypt": "^5.1.1",
 		"cookie-parser": "^1.4.6",
 		"docx": "^9.0.3",
 		"dotenv": "^16.4.5",
