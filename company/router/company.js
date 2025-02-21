@@ -4,6 +4,7 @@ const moment = require('moment-timezone');
 const multer= require("multer");
 const upload = multer();
 const AdmZip = require("adm-zip");
+const mime = require('mime-types');
 
 const auth = require("../middleware/auth");  
 const checkUserRole = require("../middleware/checkUserRole");
@@ -221,7 +222,7 @@ router.put("/announcements/:id", upload.single('image'), [auth,checkUserRole("co
 router.get("/applications",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
     const applications = await db.Application.findAll({
 		where: {
-			isApprovedByCompany: null || 0,
+			isApprovedByCompany: null,
 		},
         include: [
 			{
@@ -452,36 +453,25 @@ router.get('/serveFile/:id', [auth, checkUserRole("company")], asyncErrorHandler
       res.status(404).send('File not found');
     }
 }));
-
-router.get('/downloadFile/:id', [auth, checkUserRole("company")], asyncErrorHandler(async (req, res, next) => {
-    const file = await db.Document.findByPk(req.params.id);
-    if (file) {
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'attachment; filename="Application_Document.pdf"');
-      res.send(file.data);
-    } else {
-      res.status(404).send('File not found');
-    }
-}));
   
 router.post("/applications/:applicationId/fillApplicationForm",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
 	let { internStartDate, internEndDate, internDuration, dutyAndTitle, workOnSaturday, workOnHoliday, day, sgk } = req.body;
 	let y1,n1,y2,n2,y3,n3;
 	const applicationId = req.params.applicationId;
 
-	const document = await Document_model.findOne({
+	const document = await db.Document.findOne({
 		where: { applicationId, fileType: "Application Form" },
 		include: {
-			model: Application_model,
+			model: db.Application,
 			include: [
 				{
-					model: Announcement_model,
+					model: db.Announcement,
 					include: {
-						model: Company_model
+						model: db.Company
 					}
 				},
 				{
-					model: Student_model
+					model: db.Student
 				}
 			]
 		}
@@ -527,10 +517,10 @@ router.post("/applications/:applicationId/fillApplicationForm",[auth,checkUserRo
 	zip.updateFile("word/document.xml", Buffer.from(docxTemplate, "utf-8"));
 
 	const updatedDocxBuffer = zip.toBuffer();
-	const updatedApplicationForm = await Document_model.findOne({where: {applicationId, fileType: "Application Form"}});
+	const updatedApplicationForm = await db.Document.findOne({where: {applicationId, fileType: "Application Form"}});
 
 	if (updatedApplicationForm === null) {
-		await Document_model.create({
+		await db.Document.create({
 			name:`${document.Application.Student.username}_ApplicationForm.docx`,
 			applicationId,
 			data: updatedDocxBuffer,
@@ -538,9 +528,9 @@ router.post("/applications/:applicationId/fillApplicationForm",[auth,checkUserRo
 		});
 	}
 	else {
-		await Document_model.update({ data: updatedDocxBuffer }, { where: { applicationId, fileType: "Application Form" } });   
+		await db.Document.update({ data: updatedDocxBuffer }, { where: { applicationId, fileType: "Application Form" } });   
     }
-	res.send("you are okay");
+	return res.status(200).json({ message: "Application filled successfully." });
 }));
 
 router.put("/applications/:applicationId",upload.single('upload-file'),[auth,checkUserRole("company")], asyncErrorHandler(async (req, res ,next) => {
@@ -548,15 +538,15 @@ router.put("/applications/:applicationId",upload.single('upload-file'),[auth,che
 	const applicationId = req.params.applicationId;
 	const { isApproved } = req.body;
 
-	const application = await Application_model.findOne({
+	const application = await db.Application.findOne({
 		where: { id: applicationId },
 	    include: [
 			{
-				model: Student_model,
+				model: db.Student,
 	            attributes: ['username', 'email']
 	        },
 	        {
-				model: Announcement_model,
+				model: db.Announcement,
 	            attributes: ['announcementName',"companyId"]
 	        }
 	    ]
@@ -570,7 +560,7 @@ router.put("/applications/:applicationId",upload.single('upload-file'),[auth,che
 	let binaryData = null;
 	if (file) {
 		binaryData = file.buffer;
-		await Document_model.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "Application Form" } });
+		await db.Document.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "Application Form" } });
 	}
 
 	const emailSubject = isApproved === "true" ? 'Application Approved' : 'Application Rejected';
@@ -597,15 +587,14 @@ router.put("/applications/:applicationId",upload.single('upload-file'),[auth,che
 router.get("/applications/download/:applicationId/:fileType",[auth,checkUserRole("company")], asyncErrorHandler(async (req, res , next) => {
 	const applicationId = req.params.applicationId;
     const fileType = req.params.fileType;
-    const takenDocument = await Document_model.findOne({where:{applicationId:applicationId, fileType:fileType}});
+    const takenDocument = await db.Document.findOne({where:{applicationId:applicationId, fileType:fileType}});
     if(!takenDocument){
         return res.status(400).json({ error: "You need to fill the form before downloading the application form." });
     }
 
     let filename= takenDocument.dataValues.name;
     let binaryData= takenDocument.dataValues.data;
-    let contentType = 'application/octet-stream'; // Default content type
-    contentType = 'image/jpeg';
+    const contentType = mime.lookup(filename) || 'application/octet-stream';
 
     res.setHeader('Content-Disposition', 'attachment; filename='+encodeURI(filename));
     res.setHeader('Content-Type', contentType);

@@ -337,7 +337,7 @@ router.get("/opportunities/:opportunityId", [auth, checkUserRole("student")], as
 
 	const timeDifference = announcement.endDate - now;
 	const remainingSeconds = Math.floor(timeDifference / 1000);
-	console.log(announcement.image)
+	
 	const formattedAnnouncement = {
 		...announcement.dataValues,
 		remainingSeconds,
