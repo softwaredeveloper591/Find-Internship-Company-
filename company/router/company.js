@@ -619,7 +619,7 @@ router.get("/conversations", [auth, checkUserRole("company")], asyncErrorHandler
 			{ user2_email: company.email, isDeletedByUser2: false }
 		  ]
 		},
-		attributes: ['id', 'user1_email', 'user1_name', 'user2_email', 'user2_name', 'user1_newMessages', 'user2_new_messages', 'last_message_time']
+		attributes: ['id', 'user1_email', 'user1_name', 'user2_email', 'user2_name', 'user1_new_messages', 'user2_new_messages', 'last_message_time']
 	  });
 
 	  const formattedConversations = conversations.map(conv => {
