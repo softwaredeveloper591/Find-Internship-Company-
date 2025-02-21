@@ -570,7 +570,7 @@ router.get("/conversations", [auth, checkUserRole("student")], asyncErrorHandler
 				{ user2_email: student.email, isDeletedByUser2: false, user2_name: { [Op.not]: "AI" } }
 			]
 		},
-		attributes: ['id', 'user1_email', 'user1_name', 'user2_email', 'user2_name']
+		attributes: ['id', 'user1_email', 'user1_name', 'user2_email', 'user2_name', 'user1_newMessages', 'user2_new_messages', 'last_message_time']
 	});
 
 	// To obtain requesting student as the user1 in the conversation

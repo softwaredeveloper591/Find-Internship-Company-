@@ -229,7 +229,7 @@ router.get("/conversations", [auth, checkUserRole("admin")], asyncErrorHandler(a
 			{ user2_email: admin.email, isDeletedByUser2: false }
 		  ]
 		},
-		attributes: ['id', 'user1_email', 'user1_name', 'user2_email', 'user2_name']
+		attributes: ['id', 'user1_email', 'user1_name', 'user2_email', 'user2_name', 'user1_newMessages', 'user2_new_messages', 'last_message_time']
 	  });
 
 	  const formattedConversations = conversations.map(conv => {

@@ -284,7 +284,7 @@ router.get("/conversations", [auth, checkUserRole("secretary")], asyncErrorHandl
 				{ user2_email: secretary.email, isDeletedByUser2: false }
 			]
 		},
-		attributes: ['id', 'user1_email', 'user1_name', 'user2_email', 'user2_name']
+		attributes: ['id', 'user1_email', 'user1_name', 'user2_email', 'user2_name','user1_newMessages', 'user2_new_messages', 'last_message_time']
 	});
 
 	// In order to obtain all the time user 1 as the secretary
