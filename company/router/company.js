@@ -5,6 +5,7 @@ const multer= require("multer");
 const upload = multer();
 const AdmZip = require("adm-zip");
 const mime = require('mime-types');
+const { Op } = require('sequelize');
 
 const auth = require("../middleware/auth");  
 const checkUserRole = require("../middleware/checkUserRole");
@@ -17,6 +18,8 @@ const Application_model = require("../models/application-model");
 const Document_model = require("../models/document-model");
 const Student_model = require("../models/student-model");
 const Internship_model = require("../models/internship-model");
+const Message_model = require("../models/message-model");
+const Conversation_model = require("../models/conversation-model");
 const db=require("../models/index.js");
 
 let totalApplicationsCount = 0;
