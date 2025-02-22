@@ -62,16 +62,16 @@ async function findReceiverByEmail(email) {
 	const domain = parts[1];
 
 	if (mail === "buketoksuzoglu@iyte.edu.tr") {
-		receiver = await Admin_model.findOne({ where: { email } });
+		receiver = await db.Admin.findOne({ where: { email } });
 	}
 	else if (domain === "iyte.edu.tr") {
-		receiver = await Secretary_model.findOne({ where: { email } });
+		receiver = await db.Secretary.findOne({ where: { email } });
 	}
 	else if (domain === "std.iyte.edu.tr") {
-		receiver = await Student_model.findOne({ where: { email } });
+		receiver = await db.Secretary.findOne({ where: { email } });
 	}
 	else {
-		receiver = await Company_model.findOne({ where: { email } });
+		receiver = await db.Company.findOne({ where: { email } });
 	}
 
 	if (receiver) return receiver;
@@ -828,7 +828,7 @@ router.put("/updateMessage/:id", [auth, checkUserRole("company")], asyncErrorHan
 	const isRead=true;
 
 	const company = await db.Company.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-	const message = await Message_model.findOne({ where: { id } });
+	const message = await db.Message.findOne({ where: { id } });
 	
 	if (!message) {
         return res.status(404).json({ error: "Message not found with the given id" });
