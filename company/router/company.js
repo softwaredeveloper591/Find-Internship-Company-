@@ -821,6 +821,17 @@ router.delete("/deleteMessage/:id", [auth, checkUserRole("company")], asyncError
         return res.status(403).json({ error: "You are not authorized to delete this message!" });
     }
 
+	if (message.is_read === false) {
+		const conversation = await Conversation_model.findOne({ where: { id: message.conversation_id } });
+        if (conversation.user1_email === company.email) {
+            const numberOfNewMessages = conversation.user2_new_messages - 1;
+            await conversation.update({ user2_new_messages: numberOfNewMessages });
+        } else if (conversation.user2_email === company.email) {
+            const numberOfNewMessages = conversation.user1_new_messages - 1;
+            await conversation.update({ user1_new_messages: numberOfNewMessages });
+        }
+    }
+
 	await message.destroy();
 	res.status(200).json({ message: "Message deleted successfully", deletedMessage: message });
 }));
@@ -828,8 +839,7 @@ router.delete("/deleteMessage/:id", [auth, checkUserRole("company")], asyncError
 
 router.put("/updateMessage/:id", [auth, checkUserRole("company")], asyncErrorHandler(async (req, res, next) => {
 	const id = req.params.id;
-	const isRead=true;
-
+	
 	const company = await db.Company.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
 	const message = await db.Message.findOne({ where: { id } });
 	
@@ -837,12 +847,12 @@ router.put("/updateMessage/:id", [auth, checkUserRole("company")], asyncErrorHan
         return res.status(404).json({ error: "Message not found with the given id" });
     }
 	
-	if (message.from !== company.email && message.to !== company.email) {
+	if (message.to !== company.email) {
         return res.status(403).json({ error: "You are not authorized to update this message!" });
     }
 	
 	
-	await message.update({ is_read: isRead });
+	await message.update({ is_read: true });
 	const conversation = await db.Conversation.findOne({ where: { id: message.conversation_id } });
 	conversation.user1_email === company.email ? conversation.update({ user1_new_messages: 0 }) : conversation.update({ user2_new_messages: 0 });
 	res.status(200).json({ message: "Message updated successfully", Message: message.message });

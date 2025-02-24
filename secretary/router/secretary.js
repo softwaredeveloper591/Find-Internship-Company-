@@ -484,13 +484,23 @@ router.delete("/deleteMessage/:id", [auth, checkUserRole("secretary")], asyncErr
 		return res.status(403).json({ error: "You are not authorized to delete this message!" });
 	}
 
+	if (message.is_read === false) {
+		const conversation = await Conversation_model.findOne({ where: { id: message.conversation_id } });
+        if (conversation.user1_email === secretary.email) {
+            const numberOfNewMessages = conversation.user2_new_messages - 1;
+            await conversation.update({ user2_new_messages: numberOfNewMessages });
+        } else if (conversation.user2_email === secretary.email) {
+            const numberOfNewMessages = conversation.user1_new_messages - 1;
+            await conversation.update({ user1_new_messages: numberOfNewMessages });
+        }
+    }
+
 	await message.destroy();
 	res.status(200).json({ message: "Message deleted successfully", deletedMessage: message });
 }));
 
 router.put("/updateMessage/:id", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
 	const id = req.params.id;
-	const isRead= true;
 
 	const secretary = await Secretary_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
 	const message = await Message_model.findOne({ where: { id } });
@@ -499,11 +509,11 @@ router.put("/updateMessage/:id", [auth, checkUserRole("secretary")], asyncErrorH
         return res.status(404).json({ error: "Message not found with the given id" });
     }
 	
-	if (message.from !== secretary.email && message.to !== secretary.email) {
+	if (message.to !== secretary.email) {
         return res.status(403).json({ error: "You are not authorized to update this message!" });
     }
 
-	await message.update({ is_read: isRead });
+	await message.update({ is_read: true });
 	const conversation = await Conversation_model.findOne({ where: { id: message.conversation_id } });
 	conversation.user1_email === secretary.email ? conversation.update({ user1_new_messages: 0 }) : conversation.update({ user2_new_messages: 0 });
 	res.status(200).json({ message: "Message updated successfully", Message: message.message });
