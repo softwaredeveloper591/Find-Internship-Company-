@@ -22,7 +22,8 @@ app.use(cookieParser());
 
 app.set("view engine", "ejs");
 
-const student = require("./router/student");
+const student = require("./router/studentRouter");
+
 app.use(student);
 
 errorHandler(app);

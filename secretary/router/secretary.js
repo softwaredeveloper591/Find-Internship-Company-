@@ -11,16 +11,7 @@ const checkUserRole = require("../middleware/checkUserRole");
 const asyncErrorHandler = require("../utils/asyncErrorHandler");
 const { Op } = require("sequelize");
 
-const Secretary_model = require("../models/secretary-model");
-const Application_model = require("../models/application-model");
-const Announcement_model = require("../models/announcement-model");
-const Company_model = require("../models/company-model");
-const Student_model = require("../models/student-model");
-const Document_model = require("../models/document-model");
-const Internship_model = require("../models/internship-model");
-const Admin_model = require("../models/admin-model");
-const Conversation_model = require("../models/conversation-model");
-const Message_model = require("../models/message-model");
+const db = require("../data/db");
 
 async function findReceiverByEmail(email) {
 	let receiver = null;
@@ -29,16 +20,16 @@ async function findReceiverByEmail(email) {
 	const domain = parts[1];
 
 	if (mail === "buketoksuzoglu@iyte.edu.tr") {
-		receiver = await Admin_model.findOne({ where: { email } });
+		receiver = await db.Admin.findOne({ where: { email } });
 	}
 	else if (domain === "iyte.edu.tr") {
-		receiver = await Secretary_model.findOne({ where: { email } });
+		receiver = await db.Secretary.findOne({ where: { email } });
 	}
 	else if (domain === "std.iyte.edu.tr") {
-		receiver = await Student_model.findOne({ where: { email } });
+		receiver = await db.Student.findOne({ where: { email } });
 	}
 	else {
-		receiver = await Company_model.findOne({ where: { email } });
+		receiver = await db.Company.findOne({ where: { email } });
 	}
 
 	if (receiver) return receiver;
@@ -47,7 +38,7 @@ async function findReceiverByEmail(email) {
 }
 
 router.get("/personalInfo",[auth,checkUserRole("secretary")], asyncErrorHandler( async (req, res, next) => {
-    const secretary = await Secretary_model.findOne({ 
+    const secretary = await db.Secretary.findOne({ 
 		where: {id: req.user.id},
 		attributes: {
 			exclude: ["password"]
@@ -56,7 +47,7 @@ router.get("/personalInfo",[auth,checkUserRole("secretary")], asyncErrorHandler(
 }));
 
 router.post('/personalInfo',[auth,checkUserRole("secretary")], asyncErrorHandler( async (req, res, next) => {
-	const secretary = await Secretary_model.findOne({ 
+	const secretary = await db.Secretary.findOne({ 
 		where: {id: req.user.id}});
     const { firstName, lastName, email, currentPassword, password, confirmPassword } = req.body;
 	
@@ -98,8 +89,8 @@ router.post('/personalInfo',[auth,checkUserRole("secretary")], asyncErrorHandler
 
 
 router.get("/", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
-	const secretary = await Secretary_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-	const applications = await Application_model.findAll({
+	const secretary = await db.Secretary.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const applications = await db.Application.findAll({
 		where: {
 			isApprovedByCompany: true,
 			isApprovedByDIC: true,
@@ -107,14 +98,14 @@ router.get("/", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req
 		},
 		include: [
 			{
-				model: Announcement_model,
+				model: db.Announcement,
 				include: {
-					model: Company_model,
+					model: db.Company,
 					attributes: ['name']
 				}
 			},
 			{
-				model: Student_model,
+				model: db.Student,
 				attributes: ['username']['id']
 			}
 		]
@@ -126,8 +117,8 @@ router.get("/applicationForms", [auth, checkUserRole("secretary")], asyncErrorHa
 	/* There will be application forms of more than one student, so we need to organize them according to each student
 	(i.e according to different applicationIds) to be able to seperate them from each other. This way we can get the applicationId 
 	of the file a student sent and secretary can send employment certificate to the student with the same applicationId. */
-	const secretary = await Secretary_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-	const applicationForms = await Document_model.findAll({ where: { fileType: "Updated Manual Application Form" } });
+	const secretary = await db.Secretary.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const applicationForms = await db.Document.findAll({ where: { fileType: "Updated Manual Application Form" } });
 
 	res.send(applicationForms);
 
@@ -141,7 +132,7 @@ router.get("/applicationForms", [auth, checkUserRole("secretary")], asyncErrorHa
 router.post("/employmentCertificate", upload.single('employmentCertificate'), [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
 	const { applicationId, id } = req.body; //can get both from the document table 
 
-	const student = await Student_model.findOne({ where: { id } });
+	const student = await db.Student.findOne({ where: { id } });
 
 	const file = req.file;
 	let binaryData = null;
@@ -150,7 +141,7 @@ router.post("/employmentCertificate", upload.single('employmentCertificate'), [a
 	}
 	binaryData = file.buffer;
 
-	await Document_model.update(
+	await db.Document.update(
 		{
 			status: "checkedBySecretary"
 		},
@@ -159,7 +150,7 @@ router.post("/employmentCertificate", upload.single('employmentCertificate'), [a
 		}
 	);
 
-	await Document_model.create({
+	await db.Document.create({
 		applicationId,
 		name: file.originalname,
 		fileType: 'Manual Employment Certificate',
@@ -175,7 +166,7 @@ router.post("/employmentCertificate", upload.single('employmentCertificate'), [a
 router.get("/applications/download/:applicationId/:fileType", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
 	const applicationId = req.params.applicationId;
 	const fileType = req.params.fileType;
-	const takenDocument = await Document_model.findOne({ where: { applicationId, fileType } });
+	const takenDocument = await db.Document.findOne({ where: { applicationId, fileType } });
 	
 	if (!takenDocument) {
 		return res.status(404).json({ errors: "Error downloading file" });
@@ -192,19 +183,19 @@ router.get("/applications/download/:applicationId/:fileType", [auth, checkUserRo
 
 router.post("/applications/:applicationId", upload.single('studentFile'), [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
 	const applicationId = req.params.applicationId.slice(0);
-	const application = await Application_model.findOne({
+	const application = await db.Application.findOne({
 		where: {
 			id: applicationId
 		},
 		include: [
 			{
-				model: Student_model
+				model: db.Student
 			},
 			{
-				model: Announcement_model,
+				model: db.Announcement,
 				include: [
 					{
-						model: Company_model
+						model: db.Company
 					}
 				]
 			}
@@ -216,7 +207,7 @@ router.post("/applications/:applicationId", upload.single('studentFile'), [auth,
 	const fileType = "Employment Certificate";
 	const name = file.originalname;
 
-	await Document_model.create({
+	await db.Document.create({
 		name,
 		applicationId,
 		data: binaryData,
@@ -229,7 +220,7 @@ router.post("/applications/:applicationId", upload.single('studentFile'), [auth,
 	application.isSentBySecretary = true;
 	await application.save();
 
-	await Internship_model.create({
+	await db.Internship.create({
 		id: applicationId,
 		studentName: application.Student.username,
 		studentId: application.Student.id
@@ -264,20 +255,20 @@ router.post("/applications/:applicationId", upload.single('studentFile'), [auth,
 }));
 
 router.get("/users", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
-	const students = await Student_model.findAll({ attributes: ['username', 'email'] });
-	const companies = await Company_model.findAll({ attributes: ['username', 'email'] });
-	const admin = await Admin_model.findAll({ attributes: ['username', 'email'] });
+	const students = await db.Student.findAll({ attributes: ['username', 'email'] });
+	const companies = await db.Company.findAll({ attributes: ['username', 'email'] });
+	const admin = await db.Admin.findAll({ attributes: ['username', 'email'] });
 	const allUsers = [...students, ...companies, ...admin];
 	res.status(200).json({ allUsers });
 }));
 
 router.get("/conversations", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
-	const secretary = await Secretary_model.findOne({
+	const secretary = await db.Secretary.findOne({
 		where: { id: req.user.id },
 		attributes: { exclude: ['password'] }
 	});
 
-	const conversations = await Conversation_model.findAll({
+	const conversations = await db.Conversations.findAll({
 		where: {
 			[Op.or]: [
 				{ user1_email: secretary.email, isDeletedByUser1: false },
@@ -309,7 +300,7 @@ router.get("/conversations", [auth, checkUserRole("secretary")], asyncErrorHandl
 
 
 router.post("/conversations", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
-	const secretary = await Secretary_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const secretary = await db.Secretary.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
 	const { receiverEmail, receiverName } = req.body;
 	if (secretary.email === receiverEmail) {
 		return res.status(400).json({ error: "Users cannot create a conversation with themselves" });
@@ -320,7 +311,7 @@ router.post("/conversations", [auth, checkUserRole("secretary")], asyncErrorHand
 		return res.status(400).json({ error: "Receiver email does not exist in the system" });
 	}
 
-	const existingConversation = await Conversation_model.findOne({
+	const existingConversation = await db.Conversations.findOne({
 		where: {
 			[Op.or]: [
 				{ user1_email: secretary.email, user2_email: receiverEmail },
@@ -341,7 +332,7 @@ router.post("/conversations", [auth, checkUserRole("secretary")], asyncErrorHand
 		return res.status(200).json({ conversations: existingConversation });
 	}
 
-	const conversations = await Conversation_model.create({
+	const conversations = await db.Conversations.create({
 		user1_email: secretary.email,
 		user1_name: secretary.username,
 		user2_email: receiverEmail,
@@ -354,8 +345,8 @@ router.post("/conversations", [auth, checkUserRole("secretary")], asyncErrorHand
 
 router.get("/conversations/:id", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
 	const conversationId = req.params.id;
-	const secretary = await Secretary_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-	const conversation = await Conversation_model.findOne({ where: { id: conversationId } });
+	const secretary = await db.Secretary.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const conversation = await db.Conversations.findOne({ where: { id: conversationId } });
 
 	if (!conversation) {
 		return res.status(404).json({ error: "Conversation not found" });
@@ -364,7 +355,7 @@ router.get("/conversations/:id", [auth, checkUserRole("secretary")], asyncErrorH
 		return res.status(403).json({ error: "You are not a participant in this conversation" });
 	}
 
-	const messages = await Message_model.findAll({
+	const messages = await db.Message.findAll({
 		where: { conversation_id: conversationId },
 		order: [['createdAt', 'ASC']],
 		attributes: ['id', 'from', 'to', 'message', 'createdAt', 'fileName', 'data', 'is_read']
@@ -387,8 +378,8 @@ router.get("/conversations/:id", [auth, checkUserRole("secretary")], asyncErrorH
 
 router.delete("/conversations/:id", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
 	const conversationId = req.params.id;
-	const secretary = await Secretary_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-	const conversation = await Conversation_model.findByPk(conversationId);
+	const secretary = await db.Secretary.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const conversation = await db.Conversations.findByPk(conversationId);
 
 	if (!conversation) {
 		throw new Error('Conversation not found');
@@ -415,10 +406,10 @@ router.delete("/conversations/:id", [auth, checkUserRole("secretary")], asyncErr
 }));
 
 router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
-	const secretary = await Secretary_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const secretary = await db.Secretary.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
 	const { conversationId, message } = req.body;
 
-	const conversation = await Conversation_model.findOne({ where: { id: conversationId } });
+	const conversation = await db.Conversations.findOne({ where: { id: conversationId } });
 	if (!conversation) {
 		return res.status(404).json({ errors: "Conversation not found" });
 	}
@@ -443,7 +434,7 @@ router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("secreta
 		data = file.buffer;
 	}
 
-	const createdMessage = await Message_model.create(
+	const createdMessage = await db.Message.create(
 		{
 			from: secretary.email,
 			senderName: secretary.username,
@@ -473,8 +464,8 @@ router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("secreta
 
 router.delete("/deleteMessage/:id", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
 	const id = req.params.id;
-	const secretary = await Secretary_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-	const message = await Message_model.findOne({ where: { id } });
+	const secretary = await db.Secretary.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const message = await db.Message.findOne({ where: { id } });
 
 	if (!message) {
 		return res.status(404).json({ error: "Message not found with the given id" });
@@ -485,7 +476,7 @@ router.delete("/deleteMessage/:id", [auth, checkUserRole("secretary")], asyncErr
 	}
 
 	if (message.is_read === false) {
-		const conversation = await Conversation_model.findOne({ where: { id: message.conversation_id } });
+		const conversation = await db.Conversations.findOne({ where: { id: message.conversation_id } });
         if (conversation.user1_email === secretary.email) {
             const numberOfNewMessages = conversation.user2_new_messages - 1;
             await conversation.update({ user2_new_messages: numberOfNewMessages });
@@ -502,8 +493,8 @@ router.delete("/deleteMessage/:id", [auth, checkUserRole("secretary")], asyncErr
 router.put("/updateMessage/:id", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
 	const id = req.params.id;
 
-	const secretary = await Secretary_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-	const message = await Message_model.findOne({ where: { id } });
+	const secretary = await db.Secretary.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const message = await db.Message.findOne({ where: { id } });
 	
 	if (!message) {
         return res.status(404).json({ error: "Message not found with the given id" });
@@ -514,7 +505,7 @@ router.put("/updateMessage/:id", [auth, checkUserRole("secretary")], asyncErrorH
     }
 
 	await message.update({ is_read: true });
-	const conversation = await Conversation_model.findOne({ where: { id: message.conversation_id } });
+	const conversation = await db.Conversations.findOne({ where: { id: message.conversation_id } });
 	conversation.user1_email === secretary.email ? conversation.update({ user1_new_messages: 0 }) : conversation.update({ user2_new_messages: 0 });
 	res.status(200).json({ message: "Message updated successfully", Message: message.message });
 }));

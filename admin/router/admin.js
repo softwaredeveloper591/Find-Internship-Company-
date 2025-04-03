@@ -12,16 +12,7 @@ const checkUserRole = require("../middleware/checkUserRole")
 const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
 const { sendEmail } = require("../utils/emailSender");
 
-const Admin_model = require("../models/admin-model");
-const Company_model = require("../models/company-model");
-const Announcement_model = require("../models/announcement-model");
-const Application_model = require("../models/application-model");
-const Student_model = require("../models/student-model");
-const Document_model = require("../models/document-model");
-const Internship_model = require("../models/internship-model");
-const Message_model = require("../models/message-model");
-const Conversation_model = require("../models/conversation-model");
-const Secretary_model = require("../models/secretary-model");
+const db = require("../data/db");
 
 let totalAnnouncementsCount = 0;
 let totalApplicationsCount = 0;
@@ -34,16 +25,16 @@ async function findReceiverByEmail(email) {
 	const domain = parts[1];
 
 	if (mail === "buketoksuzoglu@iyte.edu.tr") {
-		receiver = await Admin_model.findOne({ where: { email } });
+		receiver = await db.Admin.findOne({ where: { email } });
 	}
 	else if (domain === "iyte.edu.tr") {
-		receiver = await Secretary_model.findOne({ where: { email } });
+		receiver = await db.Secretary.findOne({ where: { email } });
 	}
 	else if (domain === "std.iyte.edu.tr") {
-		receiver = await Student_model.findOne({ where: { email } });
+		receiver = await db.Student.findOne({ where: { email } });
 	}
 	else {
-		receiver = await Company_model.findOne({ where: { email } });
+		receiver = await db.Company.findOne({ where: { email } });
 	}
 
 	if (receiver) return receiver;
@@ -54,7 +45,7 @@ async function findReceiverByEmail(email) {
 async function updateTotalAnnouncementsCount() {
 	try {
 		const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
-		totalAnnouncementsCount = await Announcement_model.count(
+		totalAnnouncementsCount = await db.Announcement.count(
 			{
 				where: {
 					status: {
@@ -78,7 +69,7 @@ router.use(async (req, res, next) => {
 
 async function updateTotalApplicationsCount() {
 	try {
-		totalApplicationsCount = await Application_model.count(
+		totalApplicationsCount = await db.Application.count(
 			{
 				where: {
 					isApprovedByCompany: true,
@@ -98,7 +89,7 @@ router.use(async (req, res, next) => {
 
 async function updateTotalCompaniesCount() {
 	try {
-		totalCompaniesCount = await Company_model.count(
+		totalCompaniesCount = await db.Company.count(
 			{
 				where: {
 					statusByDIC: false
@@ -118,7 +109,7 @@ router.use(async (req, res, next) => {
 async function deactivateExpiredAnnouncements() {
 	try {
 		const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
-		const result = await Announcement_model.update(
+		const result = await db.Announcement.update(
 			{ status: "inactive" }, // Set status to false
 			{
 				where: {
@@ -139,7 +130,7 @@ cron.schedule('0 0 * * *', deactivateExpiredAnnouncements);
 
 
 router.get("/personalInfo",[auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
-    const admin = await Admin_model.findOne({ 
+    const admin = await db.Admin.findOne({ 
 		where: {id: req.user.id},
 		attributes: {
 			exclude: ["password"]
@@ -148,7 +139,7 @@ router.get("/personalInfo",[auth,checkUserRole("admin")], asyncErrorHandler( asy
 }));
 
 router.post('/personalInfo',[auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
-	const admin = await Admin_model.findOne({ 
+	const admin = await db.Admin.findOne({ 
 		where: {id: req.user.id}});
     const { firstName, lastName, email, currentPassword, password, confirmPassword } = req.body;
 	
@@ -189,22 +180,22 @@ router.post('/personalInfo',[auth,checkUserRole("admin")], asyncErrorHandler( as
 }));
 
 router.get("/", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-	const applications = await Application_model.findAll({
+	const admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const applications = await db.Application.findAll({
 		where: {
 			isApprovedByCompany: true,
 			isApprovedByDIC: null
 		},
 		include: [
 			{
-				model: Announcement_model,
+				model: db.Announcement,
 				include: {
-					model: Company_model,
+					model: db.Company,
 					attributes: ['name']
 				}
 			},
 			{
-				model: Student_model,
+				model: db.Student,
 				attributes: ['username']['id']
 			}
 		]
@@ -213,16 +204,16 @@ router.get("/", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, re
 }));
 
 router.get("/users", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	const secretary = await Secretary_model.findAll({attributes: [ 'username', 'email']});
-	const students = await Student_model.findAll({attributes: [ 'username', 'email']});
-	const companies = await Company_model.findAll({attributes: [ 'username', 'email']});
+	const secretary = await db.Secretary.findAll({attributes: [ 'username', 'email']});
+	const students = await db.Student.findAll({attributes: [ 'username', 'email']});
+	const companies = await db.Company.findAll({attributes: [ 'username', 'email']});
 	const allUsers = [...secretary, ...students, ...companies];
 	res.status(200).json({ allUsers });
 }));
 
 router.get("/conversations", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-	const conversations = await Conversation_model.findAll({
+	const admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const conversations = await db.Conversations.findAll({
 		where: {
 		  [Op.or]: [
 			{ user1_email: admin.email, isDeletedByUser1: false },
@@ -252,7 +243,7 @@ router.get("/conversations", [auth, checkUserRole("admin")], asyncErrorHandler(a
 }));
 
 router.post("/conversations", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
 	const { receiverEmail,receiverName } = req.body;
 	if (admin.email === receiverEmail) {
         return res.status(400).json({ error: "Users cannot create a conversation with themselves" });
@@ -263,7 +254,7 @@ router.post("/conversations", [auth, checkUserRole("admin")], asyncErrorHandler(
         return res.status(400).json({ error: "Receiver email does not exist in the system" });
     }
 
-	const existingConversation = await Conversation_model.findOne({
+	const existingConversation = await db.Conversations.findOne({
         where: {
             [Op.or]: [
                 { user1_email: admin.email, user2_email: receiverEmail },
@@ -284,7 +275,7 @@ router.post("/conversations", [auth, checkUserRole("admin")], asyncErrorHandler(
 		return res.status(200).json({ conversations: existingConversation });
     }
 
-	const conversations = await Conversation_model.create({
+	const conversations = await db.Conversations.create({
 		user1_email: admin.email,
 		user1_name: admin.username,
 		user2_email: receiverEmail,
@@ -297,8 +288,8 @@ router.post("/conversations", [auth, checkUserRole("admin")], asyncErrorHandler(
 
 router.get("/conversations/:id", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	const conversationId= req.params.id;
-	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-	const conversation = await Conversation_model.findOne({ where: { id: conversationId } });
+	const admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const conversation = await db.Conversations.findOne({ where: { id: conversationId } });
 
     if (!conversation) {
         return res.status(404).json({ error: "Conversation not found" });
@@ -307,7 +298,7 @@ router.get("/conversations/:id", [auth, checkUserRole("admin")], asyncErrorHandl
         return res.status(403).json({ error: "You are not a participant in this conversation" });
     }
 
-	const messages = await Message_model.findAll({
+	const messages = await db.Message.findAll({
         where: { conversation_id: conversationId },
         order: [['createdAt', 'ASC']],
         attributes: ['id', 'from', 'to', 'message', 'createdAt', 'fileName', 'data', 'is_read']
@@ -330,8 +321,8 @@ router.get("/conversations/:id", [auth, checkUserRole("admin")], asyncErrorHandl
 
 router.delete("/conversations/:id", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	const conversationId= req.params.id;
-	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-	const conversation = await Conversation_model.findByPk(conversationId);
+	const admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const conversation = await db.Conversations.findByPk(conversationId);
 
     if (!conversation) {
         throw new Error('Conversation not found');
@@ -358,10 +349,10 @@ router.delete("/conversations/:id", [auth, checkUserRole("admin")], asyncErrorHa
 }));
 
 router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
 	const {conversationId, message } = req.body;
 	
-	const conversation = await Conversation_model.findOne({ where: { id: conversationId } });
+	const conversation = await db.Conversations.findOne({ where: { id: conversationId } });
 	if (!conversation) {
 		return res.status(404).json({ errors: "Conversation not found" });
 	}
@@ -387,7 +378,7 @@ router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("admin")
 		data = file.buffer;
 	}
 
-	const createdMessage = await Message_model.create(
+	const createdMessage = await db.Message.create(
 		{
 			from: admin.email,
 			senderName: admin.username,
@@ -419,8 +410,8 @@ router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("admin")
 
 router.delete("/deleteMessage/:id", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	const id = req.params.id;
-	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-	const message = await Message_model.findOne({ where: { id } });
+	const admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const message = await db.Message.findOne({ where: { id } });
 	
 	if (!message) {
         return res.status(404).json({ error: "Message not found with the given id" });
@@ -431,7 +422,7 @@ router.delete("/deleteMessage/:id", [auth, checkUserRole("admin")], asyncErrorHa
     }
 
     if (message.is_read === false) {
-		const conversation = await Conversation_model.findOne({ where: { id: message.conversation_id } });
+		const conversation = await db.Conversations.findOne({ where: { id: message.conversation_id } });
         if (conversation.user1_email === admin.email) {
             const numberOfNewMessages = conversation.user2_new_messages - 1;
             await conversation.update({ user2_new_messages: numberOfNewMessages });
@@ -448,8 +439,8 @@ router.delete("/deleteMessage/:id", [auth, checkUserRole("admin")], asyncErrorHa
 router.put("/updateMessage/:id", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	const id = req.params.id;
 
-	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-	const message = await Message_model.findOne({ where: { id } });
+	const admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const message = await db.Message.findOne({ where: { id } });
 	
 	if (!message) {
         return res.status(404).json({ error: "Message not found with the given id" });
@@ -460,7 +451,7 @@ router.put("/updateMessage/:id", [auth, checkUserRole("admin")], asyncErrorHandl
     }
 
 	await message.update({ is_read: true });
-	const conversation = await Conversation_model.findOne({ where: { id: message.conversation_id } });
+	const conversation = await db.Conversations.findOne({ where: { id: message.conversation_id } });
 	conversation.user1_email === admin.email ? conversation.update({ user1_new_messages: 0 }) : conversation.update({ user2_new_messages: 0 });
 	res.status(200).json({ message: "Message updated successfully", Message: message.message });
 }));
@@ -472,9 +463,9 @@ router.get("/files", [auth, checkUserRole("admin")], asyncErrorHandler(async (re
 	// also each application form of a student should be organized according to applicationId.
 	/* there should be a part to show internship files too and this part should also separate from each other according to file type 
 	for admin to be able to send feedback for each of them separately. */
-	const admin = await Admin_model.findOne({ where: { id: req.user.id } });
+	const admin = await db.Admin.findOne({ where: { id: req.user.id } });
 
-	const applicationForms = await Document_model.findAll({
+	const applicationForms = await db.Document.findAll({
 		where: {
 			fileType: "Manual Application Form",
 			[Op.or]: [
@@ -508,7 +499,7 @@ router.put("/feedback/:studentId", [auth, checkUserRole("admin")], asyncErrorHan
 	const studentId = req.params.studentId;
 	const { applicationId, feedback } = req.body; // we need applicationId to update document table
 
-	await Document_model.update(
+	await db.Document.update(
 		{
 			status: "checkedByAdmin"
 		},
@@ -519,7 +510,7 @@ router.put("/feedback/:studentId", [auth, checkUserRole("admin")], asyncErrorHan
 
 	// checked files should be signed as "feedback is sent" so admin can understand which files are checked.
 
-	const student = await Student_model.findOne({ where: { id: studentId } });
+	const student = await db.Student.findOne({ where: { id: studentId } });
 
 	const emailSubject = 'Application Form Checked';
 	const emailBody = `Hello ${student.username},<br><br>
@@ -547,7 +538,7 @@ router.put("/applicationForms/:applicationId", upload.single('ApplicationForm'),
 
 	const binaryData = file.buffer;
 
-	await Document_model.update(
+	await db.Document.update(
 		{
 			name: file.originalname,
 			data: binaryData, fileType: "Updated Manual Application Form"
@@ -565,7 +556,7 @@ router.put("/deleteApplicationForm/:applicationId", [auth, checkUserRole("admin"
 	for secretary to download. */
 
 	const applicationId = req.params.applicationId;
-	await Document_model.update({ status: "deleted" }, { where: { applicationId } });
+	await db.Document.update({ status: "deleted" }, { where: { applicationId } });
 
 	res.status(200).json({ message: "Application form deleted" });
 }));
@@ -575,7 +566,7 @@ router.put("/deleteApplicationForm/:applicationId", [auth, checkUserRole("admin"
 /*router.get("/documents/download/:id/:fileType",[auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
 	const id = req.params.id;
 	const fileType = req.params.fileType;
-	const takenDocument = await Document_model.findOne({where:{id, fileType}});
+	const takenDocument = await db.Document.findOne({where:{id, fileType}});
 	if(!takenDocument){
 		throw new Error("There is no such document.")
 	}
@@ -589,10 +580,10 @@ router.put("/deleteApplicationForm/:applicationId", [auth, checkUserRole("admin"
 }));*/
 
 router.get("/announcementRequests", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
 	const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
 
-	const announcements = await Announcement_model.findAll({
+	const announcements = await db.Announcement.findAll({
 		where: {
 			status: {
 				[Sequelize.Op.in]: ["pending", "edited"] // Match status to either "pending" or "edited"
@@ -607,7 +598,7 @@ router.get("/announcementRequests", [auth, checkUserRole("admin")], asyncErrorHa
 		},
 		include: [
 			{
-				model: Company_model,
+				model: db.Company,
 				attributes: ['name']
 			}
 		]
@@ -623,12 +614,12 @@ router.get("/announcementRequests", [auth, checkUserRole("admin")], asyncErrorHa
 
 router.get("/announcement/:announcementId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	try {
-		const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+		const admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
 		const announcementId = req.params.announcementId;
 
-		const announcement = await Announcement_model.findOne({
+		const announcement = await db.Announcement.findOne({
 			where: { id: announcementId },
-			include: [{ model: Company_model, attributes: ['name'] }]
+			include: [{ model: db.Company, attributes: ['name'] }]
 		});
 
 		if (!announcement) {
@@ -653,13 +644,13 @@ router.put("/announcement/:announcementId", [auth, checkUserRole("admin")], asyn
 	const announcementId = req.params.announcementId;
 	const { isApproved, feedback } = req.body;
 
-	const announcement = await Announcement_model.findOne({
+	const announcement = await db.Announcement.findOne({
 		where: {
 			id: announcementId
 		},
 		include: [
 			{
-				model: Company_model,
+				model: db.Company,
 				attributes: ['username', 'email']
 			}
 		]
@@ -675,7 +666,7 @@ router.put("/announcement/:announcementId", [auth, checkUserRole("admin")], asyn
 	sendEmail(announcement.Company.email, emailSubject, emailBody);
 
 	if (!isApproved) {
-		await Announcement_model.destroy({ where: { id: announcement.id } });
+		await db.Announcement.destroy({ where: { id: announcement.id } });
 		return res.status(200).json({ message: "Announcement rejected and removed from the system." });
 	}
 	announcement.status = "approved";
@@ -684,8 +675,8 @@ router.put("/announcement/:announcementId", [auth, checkUserRole("admin")], asyn
 }));
 
 router.get("/companyRequests", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	// let admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
-	const pendingCompanies = await Company_model.findAll({ where: { statusByDIC: false } });
+	// let admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+	const pendingCompanies = await db.Company.findAll({ where: { statusByDIC: false } });
 	res.status(200).json({ companies: pendingCompanies });
 	/* res.render("companyRequests", {
 		usertype: "admin",
@@ -699,7 +690,7 @@ router.get("/companyRequests", [auth, checkUserRole("admin")], asyncErrorHandler
 router.put("/company/:companyId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	const companyId = req.params.companyId;
 	const { isApproved } = req.body;
-	const company = await Company_model.findOne({ where: { id: companyId } });
+	const company = await db.Company.findOne({ where: { id: companyId } });
 	if (!company) {
 		return res.status(404).json({ errors: "Company not found." });
 	}
@@ -722,7 +713,7 @@ router.put("/company/:companyId", [auth, checkUserRole("admin")], asyncErrorHand
 router.get("/applicationRequests", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	try {
 		// Fetch the admin details, excluding the password
-		const admin = await Admin_model.findOne({
+		const admin = await db.Admin.findOne({
 			where: { id: req.user.id },
 			attributes: { exclude: ['password'] }
 		});
@@ -733,21 +724,21 @@ router.get("/applicationRequests", [auth, checkUserRole("admin")], asyncErrorHan
 		}
 
 		// Fetch the applications with the specified conditions
-		const applications = await Application_model.findAll({
+		const applications = await db.Application.findAll({
 			where: {
 				isApprovedByCompany: true,
 				isApprovedByDIC: null
 			},
 			include: [
 				{
-					model: Announcement_model,
+					model: db.Announcement,
 					include: {
-						model: Company_model,
+						model: db.Company,
 						attributes: ['name']
 					}
 				},
 				{
-					model: Student_model,
+					model: db.Student,
 					attributes: ['username', 'id'] // Corrected the attribute format
 				}
 			]
@@ -767,22 +758,22 @@ router.get("/applicationRequests", [auth, checkUserRole("admin")], asyncErrorHan
 
 router.get("/applications/:applicationId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	const applicationId = req.params.applicationId.slice(0);
-	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
 
-	const application = await Application_model.findOne({
+	const application = await db.Application.findOne({
 		where: {
 			id: applicationId
 		},
 		include: [
 			{
-				model: Announcement_model,
+				model: db.Announcement,
 				include: {
-					model: Company_model,
+					model: db.Company,
 					attributes: ['name']
 				}
 			},
 			{
-				model: Student_model,
+				model: db.Student,
 				attributes: ['username', 'id']
 			}
 		]
@@ -797,7 +788,7 @@ router.get("/applications/:applicationId", [auth, checkUserRole("admin")], async
 router.get("/applications/download/:applicationId/:fileType", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	const applicationId = req.params.applicationId;
 	const fileType = req.params.fileType;
-	const takenDocument = await Document_model.findOne({ where: { applicationId, fileType } });
+	const takenDocument = await db.Document.findOne({ where: { applicationId, fileType } });
 	if (!takenDocument) {
 		throw new Error("There is no such document.")
 	}
@@ -819,30 +810,31 @@ router.put("/applications/:applicationId", upload.single('studentFile'), [auth, 
 	let binaryData = null;
 	if (file) {
 		binaryData = file.buffer;
-		await Document_model.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "Application Form" } });
+		await db.Document.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "Application Form" } });
 	}
 	const { isApproved, feedback } = req.body;
 
-	const application = await Application_model.findOne({
+	const application = await db.Application.findOne({
 		where: {
 			id: applicationId
 		},
 		include: [
 			{
-				model: Student_model,
+				model: db.Student,
 				attributes: ['username', 'email']
 			},
 			{
-				model: Announcement_model,
+				model: db.Announcement,
 				include: [
 					{
-						model: Company_model
+						model: db.Company
 					}
 				],
 				attributes: ['announcementName']
 			}
 		]
 	});
+	
 	const emailSubject = isApproved === "true" ? 'Application Approved' : 'Application Rejected';
 	const emailBody = `Hello ${application.Student.username},<br><br>
 		Your application titled "${application.Announcement.announcementName}" has been ${isApproved === "true" ? "approved" : `rejected and will be removed from our system. <br><br> ${feedback ? `Feedback: <br> ${feedback}.` : ""}`} <br><br>
@@ -865,18 +857,18 @@ router.put("/applications/:applicationId", upload.single('studentFile'), [auth, 
 }));
 
 router.get("/interns", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
 
-	const interns = await Internship_model.findAll({
+	const interns = await db.Internship.findAll({
 		include: [
 			{
-				model: Application_model,
+				model: db.Application,
 				attributes: [],
 				include: {
-					model: Announcement_model,
+					model: db.Announcement,
 					attributes: ["announcementName", "description", "image"],
 					include: {
-						model: Company_model,
+						model: db.Company,
 						attributes: ['name', 'email']
 					}
 				}
@@ -900,27 +892,27 @@ router.get("/interns", [auth, checkUserRole("admin")], asyncErrorHandler(async (
 router.get("/interns/:applicationId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	// there will be all files off the student at this page
 	// admin should be able to see if the internship of the student rejected by the company.
-	const admin = await Admin_model.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
 	const applicationId = req.params.applicationId;
 
-	const intern = await Internship_model.findOne({
+	const intern = await db.Internship.findOne({
 		where: {
 			id: applicationId
 		},
 		include: [
 			{
-				model: Application_model,
+				model: db.Application,
 				include: [
 					{
-						model: Announcement_model,
+						model: db.Announcement,
 						include:
 						{
-							model: Company_model,
+							model: db.Company,
 							attributes: ['name']
 						}
 					},
 					{
-						model: Student_model,
+						model: db.Student,
 						attributes: ['username', 'id']
 					}
 				]
@@ -948,7 +940,7 @@ router.put("/interns/:applicationId", [auth, checkUserRole("admin")], asyncError
 	const applicationId = req.params.applicationId;
 	const { score, feedback } = req.body;
 
-	const internship = await Internship_model.findOne({ where: { id: applicationId } });
+	const internship = await db.Internship.findOne({ where: { id: applicationId } });
 
 	if (feedback !== null) {
 		// I forgot to add feedback :d

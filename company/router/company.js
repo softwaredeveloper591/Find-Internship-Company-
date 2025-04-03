@@ -12,15 +12,7 @@ const checkUserRole = require("../middleware/checkUserRole");
 const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
 const { sendEmail } = require("../utils/emailSender");
 
-const Company_model= require("../models/company-model");
-const Announcement_model = require("../models/announcement-model");
-const Application_model = require("../models/application-model");
-const Document_model = require("../models/document-model");
-const Student_model = require("../models/student-model");
-const Internship_model = require("../models/internship-model");
-const Message_model = require("../models/message-model");
-const Conversation_model = require("../models/conversation-model");
-const db=require("../models/index.js");
+const db=require("../data/db");
 
 let totalApplicationsCount = 0;
 let totalInternshipsCount = 0;
@@ -71,7 +63,7 @@ async function findReceiverByEmail(email) {
 		receiver = await db.Secretary.findOne({ where: { email } });
 	}
 	else if (domain === "std.iyte.edu.tr") {
-		receiver = await db.Secretary.findOne({ where: { email } });
+		receiver = await db.Student.findOne({ where: { email } });
 	}
 	else {
 		receiver = await db.Company.findOne({ where: { email } });
@@ -96,44 +88,6 @@ router.get("/",[auth,checkUserRole("company")], asyncErrorHandler( async (req, r
     return res.status(200).json({ userType: "company", dataValues: company});
 }));
 
-router.get("/announcements",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
-    const company = await db.Company.findOne({ where: { id: req.user.id } });
-    const applications = await db.Application.findAll({
-		where: {
-			isApprovedByCompany: null,
-		},
-		attributes:['id', 'applyDate'],
-        include: [
-			{
-            	model: db.Announcement,
-            	where: { companyId: company.id },
-				attributes: ['id','announcementName']
-			},
-			{
-				model: db.Student,
-				attributes: ['id', 'username','year']
-			}
-		]
-    });
-    // res.render("applications", {
-    //     usertype: "company",
-    //     dataValues: company.dataValues,
-    //     applications,
-	// 	totalInternshipsCount
-    // });
-	res.json(applications)
-}));
-
-// this endpoint is no longer needed!
-// router.get("/announcement",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
-// 	const company = await db.Company.findOne({ where: {id: req.user.id} });
-//     res.render("companyShareOpportunity",{ 
-// 		usertype:"company", 
-// 		dataValues:company.dataValues,
-// 		totalInternshipsCount
-// 	});
-// }));
-
 router.post('/announcement',upload.single('image'), [auth, checkUserRole('company')], asyncErrorHandler( async (req, res, next) => {
 	const companyId = req.user.id;
 	const { announcementName, description, startDate, endDate } = req.body;
@@ -156,23 +110,19 @@ router.post('/announcement',upload.single('image'), [auth, checkUserRole('compan
     res.status(200).json({ message: "Announcement published successfully" });
 }));
 
+// this is for company to be able to see their announcements
 router.get("/announcements",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
 	const announcements = await db.Announcement.findAll({
 		where:{companyId: req.user.id},
 		attributes: {exclude:['companyId', 'status']}
 	});
 	
-	res.json(announcements);
-    // res.render("announcements",{ 
-	// 	usertype:"company",
-	// 	dataValues: company.dataValues,
-	// 	announcements,
-	// });
+	res.status(200).json({ announcements });
 }));
 
 router.get("/announcements/:id",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
 	const announcementId = req.params.id;
-	const announcement = await db.Announcement.findOne( { where: { id: announcementId}});
+	const announcement = await db.Announcement.findOne( { where: { id: announcementId }});
 	if(!announcement || announcement.companyId!= req.user.id  )
 		return res.status(403).json({ "error": "You do not have permission to access this resource." });
 
@@ -182,16 +132,10 @@ router.get("/announcements/:id",[auth,checkUserRole("company")], asyncErrorHandl
 		image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
 	};
 	res.json(formattedAnnouncement)
-    // res.render("singleAnnouncement",{ 
-	// 	usertype:"company", 
-	// 	formattedAnnouncement,
-	// });
 }));
 
 router.put("/announcements/:id", upload.single('image'), [auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
-
-	/*I thought companies can edit the announcement directly on the page as on the linkedin profile and when they click the 
-	"edit or something else" button the announcement will be edited and admin will see it as edited at the announcements page*/
+	//This update is wrong.
 	const announcementId = req.params.id;
 	const announcement = await db.Announcement.findOne( { where: { id: announcementId}} );
 	if(!announcement || announcement.companyId!= req.user.id )
@@ -218,8 +162,6 @@ router.put("/announcements/:id", upload.single('image'), [auth,checkUserRole("co
 	);
 
 	res.status(200).json({ message: "Announcement updated successfully" });
-
-	// we can directly save the default announcement image to the table instead of pulling it from the pictures every time
 }));
 
 router.get("/applications",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
@@ -240,176 +182,7 @@ router.get("/applications",[auth,checkUserRole("company")], asyncErrorHandler( a
 		]
     });
 
-	res.json(applications);
-	
-    // res.render("applications", {
-    //     usertype: "company",
-    //     dataValues: company.dataValues,
-    //     applications,
-	// 	totalInternshipsCount
-    // });
-}));
-
-router.get("/internships",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
-
-	// There should be the processes of upload company form and download Practice Evaluation Survey at this page
-	// since there will be internships more than one, the internships should be clickable.
-    const company = await db.Company.findOne({ where: { id: req.user.id } });
-	const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
-	const interns = await db.Internship.findAll({
-		include: [
-		  	{
-				model: db.Application,
-				attributes: ['id','status'],
-				where:{
-					isSentBySecretary: true,
-				},
-				include: [
-			  		{ //internship's end date must be past by now.
-						model: db.Announcement,
-						where: { companyId: company.id },
-						attributes: ['announcementName', 'id']
-			  		},
-			  		{
-						model: db.Student,
-						attributes: ['username', 'id']
-			 	 	},
-					{
-						model: db.Document,
-						where:{ fileType: "Internship Report"}
-						
-					}
-				]	
-		  	}
-		]
-	});
-
-	res.json(interns);
-
-    /*res.render("internships", {
-        usertype: "company",
-        dataValues: company.dataValues,
-        interns,
-		totalApplicationsCount
-    });*/
-}));
-
-router.get("/internships/:applicationId",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
-	/* The internships that rejected or internships for which feedback sent should be clear 
-	for company to understand the status of the intern. */
-    const company = await Company_model.findOne({ where: { id: req.user.id } });
-	const applicationId = req.params.applicationId;
-
-	
-	const internship = await Internship_model.findOne({
-		where: {
-			id: applicationId		
-		},
-        include: [
-			{
-				model: Application_model,
-				include: [
-					{
-						model: Announcement_model,
-						attributes: ['announcementName']
-					},
-					{
-						model: Student_model,
-						attributes: ['username','id']
-					}
-				]
-			}
-		]
-    });
-
-	res.send(internship); // to test it on postman
-
-    /*res.render("singleInternship", {
-        usertype: "company",
-        dataValues: company.dataValues,
-        application,
-		totalApplicationsCount
-    });*/
-
-	// I dont know how this process will be handled at the frontend so I am just writing it like this for now.
-}));
-
-router.put("/internships/:applicationId",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
-    const company = await Company_model.findOne({ where: { id: req.user.id } });
-	const applicationId = req.params.applicationId;
-	const { isApproved, feedback } = req.body; // isApproved is a hidden object
-
-	const internship = await Internship_model.findOne(
-		{ 
-			where: 
-			{ 
-				id: applicationId
-			},
-			include: [
-				{
-					model: Student_model,
-					attributes: ['email']
-				}
-			]
-		},	
-	);
-
-	if (isApproved === "true") {
-		internship.isApproved = "approvedByCompany";
-	    await internship.save();
-	    return res.status(200).json({ message: "Summer practice report approved." });
-	} else if(isApproved === "false") {
-		// company must enter a feedback to inform student what the problem is for this option.
-		const emailSubject = 'Summer Practice Report Rejected';
-		const emailBody = `Hello ${internship.studentName},<br><br>
-	    Your summer practice report has been rejected by ${company.name}.<br><br> Feedback: <br> ${feedback}. <br><br>
-	    Best Regards,<br>Admin Team`;
-
-		sendEmail(internship.Student.email, emailSubject, emailBody);
-
-		internship.isApproved = "feedbackSent";
-		await internship.save();
-		// there should be a feedback for this option to inform students why they got rejected.
-		// students can be rejected because of a mistake in the file so they can be able to send the file again.
-	    return res.status(200).json({ message: `Summer practice report rejected and ${internship.studentName} is informed` });
-	}
-	else {
-		// also there should be an option for company to reject the internship of the student definitly. 
-		internship.isApproved = "rejected";
-		await internship.save();
-		return res.status(200).json({ message: "Internship is rejected." });
-	}
-
-}));
-
-router.post("/companyForm/:applicationId", upload.single('companyForm'), [auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
-	const company = await Company_model.findOne({ where: { id: req.user.id } });
-	const applicationId = req.params.applicationId;
-    
-	const file = req.file;
-
-	if (!file) {
-		return res.status(400).json({ error: "No file uploaded" });
-	}
-
-  	const binaryData = file.buffer;
-
-	const companyForm = await Document_model.findOne({where: {applicationId, fileType: "Company Form"}});
-
-	if (companyForm === null) {
-	  await Document_model.create({
-			applicationId,
-		  	name: file.originalname,
-			fileType:'Company Form',
-		  	username: company.username, // I thought using the company name would be better for this file
-		  	data: binaryData,
-	  });
-	}
-	else {
-	  await Document_model.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "Company Form" } });   
-	}
-
-	return res.status(201).json({ message: "Company Form is uploaded" });
+	return res.status(200).json({ applications });
 }));
 
 router.get("/applications/:applicationId",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
@@ -438,25 +211,8 @@ router.get("/applications/:applicationId",[auth,checkUserRole("company")], async
 	if (!document){console.log("there is no document")}
 
 	res.json({ application: application, documentId: document.id });
-    // res.render("innerInternshipApplication", {
-    //     usertype: "company",
-    //     dataValues: company.dataValues,
-    //     application,
-    //     document,
-	// 	totalInternshipsCount
-    // });
 }));
 
-router.get('/serveFile/:id', [auth, checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
-    const file = await db.Document.findByPk(req.params.id);
-    if (file) {
-      res.setHeader('Content-Type', 'application/pdf');
-      res.send(file.data);
-    } else {
-      res.status(404).send('File not found');
-    }
-}));
-  
 router.post("/applications/:applicationId/fillApplicationForm",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
 	let { internStartDate, internEndDate, internDuration, dutyAndTitle, workOnSaturday, workOnHoliday, day, sgk } = req.body;
 	let y1,n1,y2,n2,y3,n3;
@@ -537,7 +293,7 @@ router.post("/applications/:applicationId/fillApplicationForm",[auth,checkUserRo
 }));
 
 router.put("/applications/:applicationId",upload.single('upload-file'),[auth,checkUserRole("company")], asyncErrorHandler(async (req, res ,next) => {
-	// const company = await Company_model.findOne({ where: { id: req.user.id } });
+	// const company = await db.Commpany.findOne({ where: { id: req.user.id } });
 	const applicationId = req.params.applicationId;
 	const { isApproved } = req.body;
 
@@ -602,6 +358,171 @@ router.get("/applications/download/:applicationId/:fileType",[auth,checkUserRole
     res.setHeader('Content-Disposition', 'attachment; filename='+encodeURI(filename));
     res.setHeader('Content-Type', contentType);
     res.send(binaryData);
+}));
+
+router.get("/internships",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
+
+	// There should be the processes of upload company form and download Practice Evaluation Survey at this page
+	// since there will be internships more than one, the internships should be clickable.
+    const company = await db.Company.findOne({ where: { id: req.user.id } });
+	const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
+	const interns = await db.Internship.findAll({
+		include: [
+		  	{
+				model: db.Application,
+				attributes: ['id','status'],
+				where:{
+					isSentBySecretary: true,
+				},
+				include: [
+			  		{ //internship's end date must be past by now.
+						model: db.Announcement,
+						where: { companyId: company.id },
+						attributes: ['announcementName', 'id']
+			  		},
+			  		{
+						model: db.Student,
+						attributes: ['username', 'id']
+			 	 	},
+					{
+						model: db.Document,
+						where:{ fileType: "Internship Report"}
+						
+					}
+				]	
+		  	}
+		]
+	});
+
+	res.json(interns);
+}));
+
+router.get("/internships/:applicationId",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
+	/* The internships that rejected or internships for which feedback sent should be clear 
+	for company to understand the status of the intern. */
+    const company = await db.Commpany.findOne({ where: { id: req.user.id } });
+	const applicationId = req.params.applicationId;
+
+	
+	const internship = await db.Internship.findOne({
+		where: {
+			id: applicationId		
+		},
+        include: [
+			{
+				model: db.Application,
+				include: [
+					{
+						model: db.Announcement,
+						attributes: ['announcementName']
+					},
+					{
+						model: db.Student,
+						attributes: ['username','id']
+					}
+				]
+			}
+		]
+    });
+
+	res.send(internship); // to test it on postman
+
+    /*res.render("singleInternship", {
+        usertype: "company",
+        dataValues: company.dataValues,
+        application,
+		totalApplicationsCount
+    });*/
+
+	// I dont know how this process will be handled at the frontend so I am just writing it like this for now.
+}));
+
+router.put("/internships/:applicationId",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
+    const company = await db.Commpany.findOne({ where: { id: req.user.id } });
+	const applicationId = req.params.applicationId;
+	const { isApproved, feedback } = req.body; // isApproved is a hidden object
+
+	const internship = await db.Internship.findOne(
+		{ 
+			where: 
+			{ 
+				id: applicationId
+			},
+			include: [
+				{
+					model: db.Student,
+					attributes: ['email']
+				}
+			]
+		},	
+	);
+
+	if (isApproved === "true") {
+		internship.isApproved = "approvedByCompany";
+	    await internship.save();
+	    return res.status(200).json({ message: "Summer practice report approved." });
+	} else if(isApproved === "false") {
+		// company must enter a feedback to inform student what the problem is for this option.
+		const emailSubject = 'Summer Practice Report Rejected';
+		const emailBody = `Hello ${internship.studentName},<br><br>
+	    Your summer practice report has been rejected by ${company.name}.<br><br> Feedback: <br> ${feedback}. <br><br>
+	    Best Regards,<br>Admin Team`;
+
+		sendEmail(internship.Student.email, emailSubject, emailBody);
+
+		internship.isApproved = "feedbackSent";
+		await internship.save();
+		// there should be a feedback for this option to inform students why they got rejected.
+		// students can be rejected because of a mistake in the file so they can be able to send the file again.
+	    return res.status(200).json({ message: `Summer practice report rejected and ${internship.studentName} is informed` });
+	}
+	else {
+		// also there should be an option for company to reject the internship of the student definitly. 
+		internship.isApproved = "rejected";
+		await internship.save();
+		return res.status(200).json({ message: "Internship is rejected." });
+	}
+
+}));
+
+router.post("/companyForm/:applicationId", upload.single('companyForm'), [auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
+	const company = await db.Commpany.findOne({ where: { id: req.user.id } });
+	const applicationId = req.params.applicationId;
+    
+	const file = req.file;
+
+	if (!file) {
+		return res.status(400).json({ error: "No file uploaded" });
+	}
+
+  	const binaryData = file.buffer;
+
+	const companyForm = await db.Document.findOne({where: {applicationId, fileType: "Company Form"}});
+
+	if (companyForm === null) {
+	  await db.Document.create({
+			applicationId,
+		  	name: file.originalname,
+			fileType:'Company Form',
+		  	username: company.username, // I thought using the company name would be better for this file
+		  	data: binaryData,
+	  });
+	}
+	else {
+	  await db.Document.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "Company Form" } });   
+	}
+
+	return res.status(201).json({ message: "Company Form is uploaded" });
+}));
+
+router.get('/serveFile/:id', [auth, checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
+    const file = await db.Document.findByPk(req.params.id);
+    if (file) {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.send(file.data);
+    } else {
+      res.status(404).send('File not found');
+    }
 }));
 
 router.get("/users", [auth, checkUserRole("company")], asyncErrorHandler(async (req, res, next) => {
@@ -822,7 +743,7 @@ router.delete("/deleteMessage/:id", [auth, checkUserRole("company")], asyncError
     }
 
 	if (message.is_read === false) {
-		const conversation = await Conversation_model.findOne({ where: { id: message.conversation_id } });
+		const conversation = await db.Conversations.findOne({ where: { id: message.conversation_id } });
         if (conversation.user1_email === company.email) {
             const numberOfNewMessages = conversation.user2_new_messages - 1;
             await conversation.update({ user2_new_messages: numberOfNewMessages });

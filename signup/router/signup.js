@@ -4,9 +4,7 @@ const jwt = require("jsonwebtoken");
 const { isEmail } = require('validator');
 const { APP_SECRET } = require("../config");
 
-const Student_model = require("../models/student-model");
-const Company_model = require("../models/company-model");
-const Ubys_model = require("../models/ubys-model");
+const db = require("../data/db");
 
 const router = express.Router();
 const userType = require("../middleware/userType");
@@ -67,7 +65,7 @@ router.post("/company",async function(req,res){
                 throw Error('Passwords do not match');
             }
 
-            await Company_model.create({
+            await db.Company.create({
                 name,
                 username,
                 email,
@@ -98,7 +96,7 @@ router.post("/student",async function(req,res){
 			throw Error('not a std mail');
 		}
     
-    const Student = await Ubys_model.findOne({ where: { email }});
+    const Student = await db.Ubys_Student.findOne({ where: { email }});
 		if(!Student) {
 			throw Error('not in ubys database');
 		}
@@ -115,7 +113,7 @@ router.post("/student",async function(req,res){
     if (password !== confirmPassword) {
       throw Error('Passwords do not match');
   	}
-        const newStudent = await Student_model.create({ 
+        const newStudent = await db.Student.create({ 
             id: ubysStudent.id,
 			username: ubysStudent.student_name,
 			email,

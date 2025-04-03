@@ -6,10 +6,7 @@ const nodeMailer = require("nodemailer");
 const { APP_SECRET, EMAIL_PASS } = require("../config");
 const auth = require("../middleware/auth");
 
-const Student_model= require("../models/student-model");
-const Admin_model= require("../models/admin-model");
-const Company_model= require("../models/company-model");
-const Secretary_model = require("../models/secretary-model");
+const db = require("../data/db");
 
 const asyncErrorHandler = require("../utils/asyncErrorHandler");
 const userType = require("../middleware/userType");
@@ -22,19 +19,19 @@ async function findUserByEmail(email) {
     const domain = parts[1]; 
 
     if (email === "buketoksuzoglu@iyte.edu.tr") {
-      	user = await Admin_model.findOne({ where: { email } });
+      	user = await db.Admin.findOne({ where: { email } });
 		userType = "admin";
     }
 	else if(domain === "iyte.edu.tr") {
-		user = await Secretary_model.findOne({ where: { email } });
+		user = await db.Secretary.findOne({ where: { email } });
 		userType = "secretary";
 	}
 	else if (domain === "std.iyte.edu.tr") {
-		user = await Student_model.findOne({ where: { email } });
+		user = await db.Student.findOne({ where: { email } });
 		userType = "student";
 	}
 	else {
-		user = await Company_model.findOne({ where: { email } });
+		user = await db.Company.findOne({ where: { email } });
 		userType = "company";
 	}
 
@@ -83,8 +80,8 @@ router.post("/", async function(req,res){
         let user;
         try{
 		    user = await findUserByEmail(email);
-        } catch(e){
-            throw Error("Failed to communicate with the server.");
+        } catch(error){
+            console.log(error);
         }
 
     	if(!user) {
@@ -190,13 +187,13 @@ router.post('/changePassword', asyncErrorHandler( async (req, res, next) => {
     let model;
     switch (userType) {
         case 'admin':
-            model = Admin_model;
+            model = db.Admin;
             break;
         case 'student':
-            model = Student_model;
+            model = db.Student;
             break;
         case 'company':
-            model = Company_model;
+            model = db.Company;
             break;
         default:
             return res.status(400).json({ error: 'Invalid user type' });

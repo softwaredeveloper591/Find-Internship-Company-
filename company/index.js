@@ -28,7 +28,7 @@ app.use(company);
 errorHandler(app);
 
 app.listen(PORT, () => {
-	console.log(`app is listening on port ${PORT}`);
+		console.log(`app is listening on port ${PORT}`);
 	}
 )
 .on('error', (error) => {
