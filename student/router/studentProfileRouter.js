@@ -6,27 +6,27 @@ const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
 const profileController = require("../controllers/studentProfileController");
 
 // Get profile
-router.get("/", [auth, checkUserRole("student")], asyncErrorHandler(profileController.getProfile));
-router.post("/", [auth, checkUserRole("student")], asyncErrorHandler(profileController.createProfile))
+router.get("/", asyncErrorHandler(profileController.getProfile));
+router.post("/", asyncErrorHandler(profileController.createProfile))
 
 // Update bio
-router.put("/bio", [auth, checkUserRole("student")], asyncErrorHandler(profileController.updateBio));
+router.put("/bio", asyncErrorHandler(profileController.updateBio));
 
 // Update photo
-router.put("/photo", [auth, checkUserRole("student")], asyncErrorHandler(profileController.updatePhoto));
+router.put("/photo", asyncErrorHandler(profileController.updatePhoto));
 
 // Add, edit, delete experiences
-router.post("/experience", [auth, checkUserRole("student")], asyncErrorHandler(profileController.addExperience));
-router.put("/experience/:id", [auth, checkUserRole("student")], asyncErrorHandler(profileController.editExperience));
-router.delete("/experience/:id", [auth, checkUserRole("student")], asyncErrorHandler(profileController.deleteExperience));
+router.post("/experience", asyncErrorHandler(profileController.addExperience));
+router.put("/experience/:id", asyncErrorHandler(profileController.editExperience));
+router.delete("/experience/:id", asyncErrorHandler(profileController.deleteExperience));
 
 // Add, edit, delete certificates
-router.post("/certificate", [auth, checkUserRole("student")], asyncErrorHandler(profileController.addCertificate));
-router.put("/certificate/:id", [auth, checkUserRole("student")], asyncErrorHandler(profileController.editCertificate));
-router.delete("/certificate/:id", [auth, checkUserRole("student")], asyncErrorHandler(profileController.deleteCertificate));
+router.post("/certificate", asyncErrorHandler(profileController.addCertificate));
+router.put("/certificate/:id", asyncErrorHandler(profileController.editCertificate));
+router.delete("/certificate/:id", asyncErrorHandler(profileController.deleteCertificate));
 
 // Add, delete skills
-router.post("/skill", [auth, checkUserRole("student")], asyncErrorHandler(profileController.addSkill));
-router.delete("/skill/:id", [auth, checkUserRole("student")], asyncErrorHandler(profileController.deleteSkill));
+router.post("/skill", asyncErrorHandler(profileController.addSkill));
+router.delete("/skill/:id", asyncErrorHandler(profileController.deleteSkill));
 
 module.exports = router;
