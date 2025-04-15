@@ -71,6 +71,18 @@ services:
       - .:/app
       - /app/secretary/node_modules
 
+  message:
+    build:
+      dockerfile: Dockerfile
+      context: ./message
+    container_name: message
+    ports:
+      - "3007:3007"
+    restart: always
+    volumes:
+      - .:/app
+      - /app/message/node_modules
+
   notification:
     build:
       dockerfile: Dockerfile
