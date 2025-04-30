@@ -12,13 +12,11 @@ const { v4: uuidv4 } = require('uuid');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 require('dotenv').config();
 
-const app = express();
-
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
 const auth = require("../middleware/auth");
 const checkUserRole = require("../middleware/checkUserRole");
+router.use(auth, checkUserRole("student"));
+
+
 const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
 const { uploadFile } = require('../utils/fileUploader');
 const profileRouter = require("./studentProfileRouter"); // Import profile router
@@ -81,7 +79,7 @@ async function findReceiverByEmail(email) {
 	return null;
 }
 
-router.get("/", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.get("/", asyncErrorHandler(async (req, res, next) => {
 	const student = await db.Student.findOne({
 		where: { id: req.user.id },
 		attributes: {
@@ -91,7 +89,7 @@ router.get("/", [auth, checkUserRole("student")], asyncErrorHandler(async (req, 
 	return res.status(200).json({ userType: "student", dataValues: student });
 }));
 
-router.post("/createStudentInfo",[auth, checkUserRole("student")],asyncErrorHandler(async (req, res, next) => {
+router.post("/createStudentInfo",asyncErrorHandler(async (req, res, next) => {
 	const id = req.user.id;
     const body = { studentId: id, ...req.body }; // Merge user ID with request body
 
@@ -100,7 +98,7 @@ router.post("/createStudentInfo",[auth, checkUserRole("student")],asyncErrorHand
     return res.status(200).json({ message: "Student info created successfully." });
 }));
 
-router.put("/updateStudentInfo", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.put("/updateStudentInfo", asyncErrorHandler(async (req, res, next) => {
     const id = req.user.id; 
     const updates = req.body; 
 
@@ -124,7 +122,7 @@ router.put("/updateStudentInfo", [auth, checkUserRole("student")], asyncErrorHan
 }));
 
 // AIChatbot için api
-router.post("/chatWithAI", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.post("/chatWithAI", asyncErrorHandler(async (req, res, next) => {
 	const student = await db.Student.findOne({ where: { id: req.user.id } });
 	const userMessage = req.body.userMessage;
 	const conversationId = req.body.conversationId;
@@ -187,7 +185,7 @@ router.post("/chatWithAI", [auth, checkUserRole("student")], asyncErrorHandler(a
 }));
 
 
-router.get("/conversation/ai",[auth, checkUserRole("student")],asyncErrorHandler(async (req, res, next) => {
+router.get("/conversation/ai", asyncErrorHandler(async (req, res, next) => {
 	const student = await db.Student.findOne({
 		where: { id: req.user.id },
 		attributes: { exclude: ["password"] },
@@ -208,7 +206,7 @@ router.get("/conversation/ai",[auth, checkUserRole("student")],asyncErrorHandler
 );
 
 
-router.post("/conversation/ai", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.post("/conversation/ai", asyncErrorHandler(async (req, res, next) => {
 	const student = await db.Student.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
 	const receiverEmail = "-";
 	const receiverName = "AI";
@@ -239,7 +237,7 @@ router.post("/conversation/ai", [auth, checkUserRole("student")], asyncErrorHand
 
 
 // The page where all file operations are performed
-router.get("/files", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.get("/files", asyncErrorHandler(async (req, res, next) => {
 	const student = await db.Student.findOne({ where: { id: req.user.id } });
 	const applicationForms = await db.Document.findAll({ where: { userId: student.id } });
 
@@ -253,7 +251,7 @@ router.get("/files", [auth, checkUserRole("student")], asyncErrorHandler(async (
 
 }));
 
-router.post("/applicationForm", upload.single('ApplicationForm'), [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.post("/applicationForm", upload.single('ApplicationForm'), asyncErrorHandler(async (req, res, next) => {
 	const student = await db.Student.findOne({ where: { id: req.user.id } });
 
 	const applicationId = uuidv4();
@@ -267,7 +265,7 @@ router.post("/applicationForm", upload.single('ApplicationForm'), [auth, checkUs
 	res.status(201).json({ message: "Application Form uploaded successfully" });
 }));
 
-router.post("/file", upload.single('file'), [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.post("/file", upload.single('file'),  asyncErrorHandler(async (req, res, next) => {
 	/* since students send only one file for each file after internship starts and admin doesn't send back any of them, 
 	there is no need to use an applicationId for this files. */
 	const student = await db.Student.findOne({ where: { id: req.user.id } });
@@ -293,7 +291,7 @@ router.post("/file", upload.single('file'), [auth, checkUserRole("student")], as
 	res.status(201).json({ message: "File uploaded successfully" });
 }));
 
-router.get("/opportunities", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.get("/opportunities", asyncErrorHandler(async (req, res, next) => {
 
 	const student = await db.Student.findOne({ where: { id: req.user.id } });
 	const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
@@ -330,7 +328,7 @@ router.get("/opportunities", [auth, checkUserRole("student")], asyncErrorHandler
 	res.status(200).json({ announcements: formattedAnnouncements });
 }));
 
-router.get("/opportunities/:opportunityId", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.get("/opportunities/:opportunityId", asyncErrorHandler(async (req, res, next) => {
 	const student = await db.Student.findOne({ where: { id: req.user.id } });
 	const opportunityId = req.params.opportunityId
 	const now = moment.tz('Europe/Istanbul').toDate(); 
@@ -370,7 +368,7 @@ router.get("/opportunities/:opportunityId", [auth, checkUserRole("student")], as
 	res.status(200).json({ announcement: formattedAnnouncement });
 }));
 
-router.post("/opportunities/:opportunityId", upload.single('CV'), [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.post("/opportunities/:opportunityId", upload.single('CV'), asyncErrorHandler(async (req, res, next) => {
 	const student = await db.Student.findOne({ where: { id: req.user.id } });
 	const announcementId = req.params.opportunityId;
 	const isApplied = await db.Application.findOne({ where: { announcementId, studentId: student.id } });
@@ -421,7 +419,7 @@ router.post("/opportunities/:opportunityId", upload.single('CV'), [auth, checkUs
 	//res.redirect("/student/opportunities");
 }));
 
-router.get("/applications", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.get("/applications", asyncErrorHandler(async (req, res, next) => {
 	const student = await db.Student.findOne({ where: { id: req.user.id } });
 	const applications = await db.Application.findAll({
 		where: {
@@ -454,7 +452,7 @@ router.get("/applications", [auth, checkUserRole("student")], asyncErrorHandler(
 	res.status(200).json({ applications });
 }));
 
-router.get("/internship", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.get("/internship", asyncErrorHandler(async (req, res, next) => {
 
 	/* I don't know how we will determine the end of the internship. There are two options. 
 	First, we can ask the student if it is over, then the student can upload the necessary files. 
@@ -509,7 +507,7 @@ router.get("/internship", [auth, checkUserRole("student")], asyncErrorHandler(as
 	// Should we check if the internship is over before the student do these processes?
 }));
 
-router.put("/internship", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.put("/internship", asyncErrorHandler(async (req, res, next) => {
 	// when students click the button to end the internship, this router will work
 
 	const { finished, applicationId } = req.body;
@@ -532,7 +530,7 @@ router.put("/internship", [auth, checkUserRole("student")], asyncErrorHandler(as
 
 }));
 
-router.post("/internshipFiles/:applicationId", upload.single('file'), [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.post("/internshipFiles/:applicationId", upload.single('file'), asyncErrorHandler(async (req, res, next) => {
 
 	const student = await db.Student.findOne({ where: { id: req.user.id } });
 
@@ -554,7 +552,7 @@ router.post("/internshipFiles/:applicationId", upload.single('file'), [auth, che
 }));
 
 // what is this for?
-router.get("/download/:studentId/:fileType", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.get("/download/:studentId/:fileType", asyncErrorHandler(async (req, res, next) => {
 	const userId = req.params.studentId;
 	const fileType = req.params.fileType;
 	const takenDocument = await db.Document.findOne({ where: { userId, fileType } });
@@ -571,7 +569,7 @@ router.get("/download/:studentId/:fileType", [auth, checkUserRole("student")], a
 }));
 
 
-router.get("/users", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.get("/users", asyncErrorHandler(async (req, res, next) => {
 	const secretary = await db.Secretary.findAll({ attributes: ['username', 'email'] });
 	const companies = await db.Company.findAll({ attributes: ['username', 'email'] });
 	const admin = await db.Admin.findAll({ attributes: ['username', 'email'] });
@@ -579,7 +577,7 @@ router.get("/users", [auth, checkUserRole("student")], asyncErrorHandler(async (
 	res.status(200).json({ allUsers });
 }));
 
-router.get("/conversations", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.get("/conversations", asyncErrorHandler(async (req, res, next) => {
 	const student = await db.Student.findOne({
 		where: { id: req.user.id },
 		attributes: { exclude: ['password'] }
@@ -616,7 +614,7 @@ router.get("/conversations", [auth, checkUserRole("student")], asyncErrorHandler
 	res.status(200).json({ conversations: formattedConversations });
 }));
 
-router.post("/conversations", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.post("/conversations", asyncErrorHandler(async (req, res, next) => {
 	const student = await db.Student.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
 	const { receiverEmail, receiverName } = req.body;
 	if (student.email === receiverEmail) {
@@ -660,7 +658,7 @@ router.post("/conversations", [auth, checkUserRole("student")], asyncErrorHandle
 	res.status(200).json({ conversations });
 }));
 
-router.get("/conversations/:id", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.get("/conversations/:id", asyncErrorHandler(async (req, res, next) => {
 	const conversationId = req.params.id;
 	const student = await db.Student.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
 	const conversation = await db.Conversations.findOne({ where: { id: conversationId } });
@@ -693,7 +691,7 @@ router.get("/conversations/:id", [auth, checkUserRole("student")], asyncErrorHan
 	res.status(200).json({ messages: unifiedMessages });
 }));
 
-router.delete("/conversations/:id", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.delete("/conversations/:id", asyncErrorHandler(async (req, res, next) => {
 	const conversationId = req.params.id;
 	const student = await db.Student.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
 	const conversation = await db.Conversations.findByPk(conversationId);
@@ -729,7 +727,7 @@ router.delete("/conversations/:id", [auth, checkUserRole("student")], asyncError
 	res.status(200).json("Conversation deleted successfully");
 }));
 
-router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.post("/sendMessage", upload.single('file'), asyncErrorHandler(async (req, res, next) => {
 	const student = await db.Student.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
 	const { conversationId, message } = req.body;
 
@@ -787,7 +785,7 @@ router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("student
 	});
 }));
 
-router.delete("/deleteMessage/:id", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.delete("/deleteMessage/:id", asyncErrorHandler(async (req, res, next) => {
 	const id = req.params.id;
 	const student = await db.Student.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
 	const message = await db.Message.findOne({ where: { id } });
@@ -815,7 +813,7 @@ router.delete("/deleteMessage/:id", [auth, checkUserRole("student")], asyncError
 	res.status(200).json({ message: "Message deleted successfully", deletedMessage: message });
 }));
 
-router.put("/updateMessage/:id", [auth, checkUserRole("student")], asyncErrorHandler(async (req, res, next) => {
+router.put("/updateMessage/:id", asyncErrorHandler(async (req, res, next) => {
 	const id = req.params.id;
 
 	const student = await db.Student.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
