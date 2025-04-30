@@ -12,8 +12,8 @@ app.use(cors({
 	// security headers
 }));
 
-app.use(express.urlencoded({extended:false})); // to obtain the data coming from forms in a json structure.
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({extended: true, limit: '10mb'})); // to obtain the data coming from forms in a json structure.
 app.use(express.static("Pictures"));
 app.use(express.static("node_modules"));
 app.use(express.static("style"));
@@ -22,7 +22,7 @@ app.use(cookieParser());
 
 app.set("view engine", "ejs");
 
-const company = require("./router/company");
+const company = require("./routers/companyRouter");
 app.use(company);
 
 errorHandler(app);

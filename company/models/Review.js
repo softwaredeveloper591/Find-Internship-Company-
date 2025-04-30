@@ -1,11 +1,19 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('StudentProfile', {
+  return sequelize.define('Review', {
     id: {
       autoIncrement: true,
       type: DataTypes.INTEGER,
       allowNull: false,
       primaryKey: true
+    },
+    companyId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Company',
+        key: 'id'
+      }
     },
     studentId: {
       type: DataTypes.INTEGER,
@@ -13,25 +21,20 @@ module.exports = function(sequelize, DataTypes) {
       references: {
         model: 'Student',
         key: 'id'
-      },
-      unique: "StudentProfile_ibfk_1"
+      }
     },
-    bio: {
+    rating: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    comment: {
       type: DataTypes.TEXT,
-      allowNull: true
-    },
-    profilePicture: {
-      type: DataTypes.STRING(255),
-      allowNull: true
-    },
-    bannerImage: {
-      type: DataTypes.STRING(255),
       allowNull: true
     }
   }, {
     sequelize,
-    tableName: 'StudentProfile',
-    timestamps: false,
+    tableName: 'Review',
+    timestamps: true,
     indexes: [
       {
         name: "PRIMARY",
@@ -42,8 +45,14 @@ module.exports = function(sequelize, DataTypes) {
         ]
       },
       {
+        name: "companyId",
+        using: "BTREE",
+        fields: [
+          { name: "companyId" },
+        ]
+      },
+      {
         name: "studentId",
-        unique: true,
         using: "BTREE",
         fields: [
           { name: "studentId" },

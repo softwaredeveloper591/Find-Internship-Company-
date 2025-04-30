@@ -5,12 +5,14 @@ var _AnnouncementSkill = require("./AnnouncementSkill");
 var _Application = require("./Application");
 var _Certificate = require("./Certificate");
 var _Company = require("./Company");
+var _CompanyProfile = require("./CompanyProfile");
 var _Conversations = require("./Conversations");
 var _Document = require("./Document");
 var _Experience = require("./Experience");
 var _ExperienceSkill = require("./ExperienceSkill");
 var _Internship = require("./Internship");
 var _Message = require("./Message");
+var _Review = require("./Review");
 var _Secretary = require("./Secretary");
 var _Skill = require("./Skill");
 var _Student = require("./Student");
@@ -26,12 +28,14 @@ function initModels(sequelize) {
   var Application = _Application(sequelize, DataTypes);
   var Certificate = _Certificate(sequelize, DataTypes);
   var Company = _Company(sequelize, DataTypes);
+  var CompanyProfile = _CompanyProfile(sequelize, DataTypes);
   var Conversations = _Conversations(sequelize, DataTypes);
   var Document = _Document(sequelize, DataTypes);
   var Experience = _Experience(sequelize, DataTypes);
   var ExperienceSkill = _ExperienceSkill(sequelize, DataTypes);
   var Internship = _Internship(sequelize, DataTypes);
   var Message = _Message(sequelize, DataTypes);
+  var Review = _Review(sequelize, DataTypes);
   var Secretary = _Secretary(sequelize, DataTypes);
   var Skill = _Skill(sequelize, DataTypes);
   var Student = _Student(sequelize, DataTypes);
@@ -56,6 +60,10 @@ function initModels(sequelize) {
   Application.hasMany(Internship, { foreignKey: "applicationId"});
   Announcement.belongsTo(Company, { foreignKey: "companyId"});
   Company.hasMany(Announcement, { foreignKey: "companyId"});
+  CompanyProfile.belongsTo(Company, { foreignKey: "companyId"});
+  Company.hasOne(CompanyProfile, { foreignKey: "companyId"});
+  Review.belongsTo(Company, { foreignKey: "companyId"});
+  Company.hasMany(Review, { foreignKey: "companyId"});
   Message.belongsTo(Conversations, { foreignKey: "conversation_id"});
   Conversations.hasMany(Message, { foreignKey: "conversation_id"});
   ExperienceSkill.belongsTo(Experience, { foreignKey: "experienceId"});
@@ -70,6 +78,8 @@ function initModels(sequelize) {
   Student.hasMany(Application, { foreignKey: "studentId"});
   Internship.belongsTo(Student, { foreignKey: "studentId"});
   Student.hasMany(Internship, { foreignKey: "studentId"});
+  Review.belongsTo(Student, { foreignKey: "studentId"});
+  Student.hasMany(Review, { foreignKey: "studentId"});
   StudentInfo.belongsTo(Student, { foreignKey: "studentId"});
   Student.hasOne(StudentInfo, { foreignKey: "studentId"});
   StudentProfile.belongsTo(Student, { foreignKey: "studentId"});
@@ -88,12 +98,14 @@ function initModels(sequelize) {
     Application,
     Certificate,
     Company,
+    CompanyProfile,
     Conversations,
     Document,
     Experience,
     ExperienceSkill,
     Internship,
     Message,
+    Review,
     Secretary,
     Skill,
     Student,

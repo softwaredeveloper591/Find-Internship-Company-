@@ -200,6 +200,10 @@ const updatePhoto = async (studentId, photo) => {
     return await db.StudentProfile.update({ profilePicture: photo }, { where: { studentId } });
 };
 
+const updateBannerImage = async (studentId, bannerImage) => {
+    return await db.StudentProfile.update({ bannerImage }, { where: { studentId } });
+};
+
 // Experience
 const addExperience = async (studentId, experienceData) => {
     const { skills = [], ...expData } = experienceData;
@@ -301,6 +305,7 @@ module.exports = {
 	createProfile,
     updateBio,
     updatePhoto,
+	updateBannerImage,
     addExperience,
     editExperience,
     deleteExperience,

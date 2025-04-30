@@ -23,6 +23,10 @@ module.exports = function(sequelize, DataTypes) {
     profilePicture: {
       type: DataTypes.STRING(255),
       allowNull: true
+    },
+    bannerImage: {
+      type: DataTypes.STRING(255),
+      allowNull: true
     }
   }, {
     sequelize,

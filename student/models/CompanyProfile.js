@@ -1,36 +1,60 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('StudentProfile', {
+  return sequelize.define('CompanyProfile', {
     id: {
       autoIncrement: true,
       type: DataTypes.INTEGER,
       allowNull: false,
       primaryKey: true
     },
-    studentId: {
+    companyId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Student',
+        model: 'Company',
         key: 'id'
       },
-      unique: "StudentProfile_ibfk_1"
+      unique: "CompanyProfile_ibfk_1"
     },
-    bio: {
+    address: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    industry: {
+      type: DataTypes.STRING(45),
+      allowNull: true
+    },
+    contactPhone: {
+      type: DataTypes.STRING(20),
+      allowNull: true
+    },
+    contactEmail: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    website: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    socialMediaLinks: {
       type: DataTypes.TEXT,
       allowNull: true
     },
-    profilePicture: {
+    companyLogo: {
       type: DataTypes.STRING(255),
       allowNull: true
     },
     bannerImage: {
       type: DataTypes.STRING(255),
       allowNull: true
+    },
+    about: {
+      type: DataTypes.TEXT,
+      allowNull: true
     }
   }, {
     sequelize,
-    tableName: 'StudentProfile',
+    tableName: 'CompanyProfile',
     timestamps: false,
     indexes: [
       {
@@ -42,11 +66,11 @@ module.exports = function(sequelize, DataTypes) {
         ]
       },
       {
-        name: "studentId",
+        name: "companyId_UNIQUE",
         unique: true,
         using: "BTREE",
         fields: [
-          { name: "studentId" },
+          { name: "companyId" },
         ]
       },
     ]

@@ -9,7 +9,7 @@ module.exports = function(sequelize, DataTypes) {
     },
     applicationId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'Application',
         key: 'id'
@@ -53,7 +53,7 @@ module.exports = function(sequelize, DataTypes) {
         ]
       },
       {
-        name: "applicationId",
+        name: "Document_ibfk_1",
         using: "BTREE",
         fields: [
           { name: "applicationId" },

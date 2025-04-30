@@ -12,8 +12,9 @@ router.post("/", [auth, checkUserRole("student")], asyncErrorHandler(profileCont
 // Update bio
 router.put("/bio", [auth, checkUserRole("student")], asyncErrorHandler(profileController.updateBio));
 
-// Update photo
+// Update photo and banner image
 router.put("/photo", [auth, checkUserRole("student")], asyncErrorHandler(profileController.updatePhoto));
+router.put("/bannerImage", [auth, checkUserRole("student")], asyncErrorHandler(profileController.updateBannerImage));
 
 // Add, edit, delete experiences
 router.post("/experience", [auth, checkUserRole("student")], asyncErrorHandler(profileController.addExperience));

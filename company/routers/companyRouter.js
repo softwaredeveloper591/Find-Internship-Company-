@@ -11,6 +11,7 @@ const auth = require("../middleware/auth");
 const checkUserRole = require("../middleware/checkUserRole");
 const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
 const { sendEmail } = require("../utils/emailSender");
+const profileRouter = require("./companyProfileRouter"); // Import profile router
 
 const db=require("../data/db");
 
@@ -88,26 +89,44 @@ router.get("/",[auth,checkUserRole("company")], asyncErrorHandler( async (req, r
     return res.status(200).json({ userType: "company", dataValues: company});
 }));
 
-router.post('/announcement',upload.single('image'), [auth, checkUserRole('company')], asyncErrorHandler( async (req, res, next) => {
-	const companyId = req.user.id;
-	const { announcementName, description, startDate, endDate } = req.body;
-	let image = null;
-	const file = req.file;
-	if (file) {
-		image = file.buffer;
-	}
+router.post('/announcement', upload.single('image'), [auth, checkUserRole('company')], asyncErrorHandler(async (req, res, next) => {
+    const { skillIds = [], ...announcementData } = req.body;
 
-    const startDateInTurkey = moment.tz(startDate, 'Europe/Istanbul').startOf('day').toDate();
-    const endDateInTurkey = moment.tz(endDate, 'Europe/Istanbul').endOf('day').toDate();
-    await db.Announcement.create({
-        companyId,
-        announcementName,
-        description,
-		image,
-        startDate: startDateInTurkey,
-        endDate: endDateInTurkey
-    });
-    res.status(200).json({ message: "Announcement published successfully" });
+	const transaction = await db.sequelize.transaction();
+	try {
+	    // Handle image separately
+	    if (req.file) {
+	        announcementData.image = req.file.buffer;
+	    }
+
+	    // Parse dates
+	    announcementData.startDate = moment.tz(announcementData.startDate, 'Europe/Istanbul').startOf('day').toDate();
+	    announcementData.endDate = moment.tz(announcementData.endDate, 'Europe/Istanbul').endOf('day').toDate();
+
+	    // Set companyId from token
+	    announcementData.companyId = req.user.id;
+
+	    // Step 1: Create Announcement
+	    const announcement = await db.Announcement.create(announcementData, { transaction });
+
+	    // Step 2: Add AnnouncementSkill entries
+	    if (skillIds.length > 0) {
+	        const announcementSkills = skillIds.map(skillId => ({
+	            announcementId: announcement.id,
+	            skillId,
+	        }));
+
+	        await db.AnnouncementSkill.bulkCreate(announcementSkills, { transaction });
+	    }
+
+	    // Step 3: Commit
+	    await transaction.commit();
+
+	    res.status(200).json({ message: "Announcement published successfully" });
+	} catch (error) {
+	    await transaction.rollback();
+	    throw error;
+	}
 }));
 
 // this is for company to be able to see their announcements
@@ -778,5 +797,7 @@ router.put("/updateMessage/:id", [auth, checkUserRole("company")], asyncErrorHan
 	conversation.user1_email === company.email ? conversation.update({ user1_new_messages: 0 }) : conversation.update({ user2_new_messages: 0 });
 	res.status(200).json({ message: "Message updated successfully", Message: message.message });
 }));
+
+router.use("/profile", profileRouter);
 
 module.exports= router;

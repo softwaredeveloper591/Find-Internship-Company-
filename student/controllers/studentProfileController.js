@@ -23,6 +23,11 @@ const updatePhoto = async (req, res) => {
     return res.status(200).json({ message: "Photo updated successfully." });
 };
 
+const updateBannerImage = async (req, res) => {
+    await profileService.updateBannerImage(req.user.id, req.body.bannerImage);
+    return res.status(200).json({ message: "Banner image updated successfully." });
+};
+
 // Experience
 const addExperience = async (req, res) => {
     await profileService.addExperience(req.user.id, req.body);
@@ -71,6 +76,7 @@ module.exports = {
 	createProfile,
     updateBio,
     updatePhoto,
+	updateBannerImage,
     addExperience,
     editExperience,
     deleteExperience,

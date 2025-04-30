@@ -16,6 +16,10 @@ const updatePhoto = async (studentId, photo) => {
     return await profileRepository.updatePhoto(studentId, photo);
 };
 
+const updateBannerImage = async (studentId, bannerImage) => {
+    return await profileRepository.updateBannerImage(studentId, bannerImage);
+};
+
 // Experience
 const addExperience = async (studentId, experienceData) => {
     return await profileRepository.addExperience(studentId, experienceData);
@@ -56,6 +60,7 @@ module.exports = {
 	createProfile,
     updateBio,
     updatePhoto,
+	updateBannerImage,
     addExperience,
     editExperience,
     deleteExperience,
