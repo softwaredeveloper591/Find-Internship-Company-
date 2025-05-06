@@ -139,18 +139,32 @@ router.get("/announcements",[auth,checkUserRole("company")], asyncErrorHandler( 
 	res.status(200).json({ announcements });
 }));
 
-router.get("/announcements/:id",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
+router.get("/announcements/:id", [auth, checkUserRole("company")], asyncErrorHandler(async (req, res, next) => {
 	const announcementId = req.params.id;
-	const announcement = await db.Announcement.findOne( { where: { id: announcementId }});
-	if(!announcement || announcement.companyId!= req.user.id  )
-		return res.status(403).json({ "error": "You do not have permission to access this resource." });
+
+	const announcement = await db.Announcement.findOne({
+		where: { id: announcementId },
+		include: [
+			{
+				model: db.Skill,
+				as: 'skillId_Skills', // Make sure this matches your association alias
+				through: { attributes: [] }, // hide join table columns
+				attributes: ['id', 'name'], // customize skill fields if needed
+			}
+		]
+	});
+
+	if (!announcement || announcement.companyId !== req.user.id) {
+		return res.status(403).json({ error: "You do not have permission to access this resource." });
+	}
 
 	const formattedAnnouncement = {
 		...announcement.dataValues,
 		formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD MM YYYY'),
 		image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
 	};
-	res.json(formattedAnnouncement)
+
+	res.json(formattedAnnouncement);
 }));
 
 router.put("/announcements/:id", upload.single('image'), [auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {

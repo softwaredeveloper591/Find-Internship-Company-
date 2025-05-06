@@ -5,10 +5,36 @@ const getProfile = async (req, res) => {
     return res.status(200).json(profile);
 };
 
+const getProfileById = async (req, res) => {
+    const profile = await profileService.getProfile(req.params.studentId);
+    return res.status(200).json(profile);
+};
+
 const createProfile = async (req, res) => {
     const studentId = req.user.id;
-    const profileData = req.body;
-    
+    const profilePicture = req.files?.['profilePicture']?.[0]?.path || null;
+	const bannerImage = req.files?.['bannerImage']?.[0]?.path || null;
+
+    // Parse stringified JSON fields
+    const experiences = req.body.experiences ? JSON.parse(req.body.experiences) : [];
+    const certificates = req.body.certificates ? JSON.parse(req.body.certificates) : [];
+	const skills = req.body.skills ? JSON.parse(req.body.skills) : [];
+    const languages = req.body.languages ? JSON.parse(req.body.languages) : [];
+
+	const profileData = {
+		bio: req.body.bio,
+		profilePicture,
+		bannerImage,
+		phoneNumber: req.body.phoneNumber,
+		email: req.body.email,
+		webSite: req.body.webSite,
+		address: req.body.address,
+		experiences,
+		certificates,
+		skills,
+		languages
+	};
+
     const profile = await profileService.createProfile(studentId, profileData);
     return res.status(201).json({ message: "Profile created successfully", profile });
 };
@@ -18,14 +44,48 @@ const updateBio = async (req, res) => {
     return res.status(200).json({ message: "Bio updated successfully." });
 };
 
+const updatePhoneNumber = async (req, res) => {
+    await profileService.updatePhoneNumber(req.user.id, req.body.phoneNumber);
+    return res.status(200).json({ message: "Phone Number updated successfully." });
+};
+
+const updateEmail = async (req, res) => {
+    await profileService.updateBio(req.user.id, req.body.email);
+    return res.status(200).json({ message: "Email updated successfully." });
+};
+
+const updateWebSite = async (req, res) => {
+    await profileService.updateBio(req.user.id, req.body.webSite);
+    return res.status(200).json({ message: "Web site updated successfully." });
+};
+
+const updateAddress = async (req, res) => {
+    await profileService.updateBio(req.user.id, req.body.address);
+    return res.status(200).json({ message: "Address updated successfully." });
+};
+
 const updatePhoto = async (req, res) => {
-    await profileService.updatePhoto(req.user.id, req.body.photo);
-    return res.status(200).json({ message: "Photo updated successfully." });
+	const profilePicture = req.file ? req.file.path : null;
+	
+	if (!profilePicture) {
+		throw new BaseError("No picture uploaded.", 400);
+	}
+
+	await profileService.updatePhoto(req.user.id, profilePicture);
+
+	return res.status(200).json({ message: "Profile picture updated successfully." });
 };
 
 const updateBannerImage = async (req, res) => {
-    await profileService.updateBannerImage(req.user.id, req.body.bannerImage);
-    return res.status(200).json({ message: "Banner image updated successfully." });
+    const bannerImage = req.file ? req.file.path : null;
+	
+	if (!bannerImage) {
+		throw new BaseError("No image uploaded.", 400);
+	}
+
+	await profileService.updateBannerImage(req.user.id, bannerImage);
+
+	return res.status(200).json({ message: "Banner iamge updated successfully." });
 };
 
 // Experience
@@ -71,10 +131,31 @@ const deleteSkill = async (req, res) => {
     return res.status(200).json({ message: "Skill deleted successfully." });
 };
 
+// Language
+const addLanguage = async (req, res) => {
+	await profileService.addLanguage(req.user.id, req.body);
+	return res.status(201).json({ message: "Language added succesfully."});
+};
+
+const updateLanguageLevel = async (req, res) => {
+	await profileService.updateLanguageLevel(req.user.id, req.params.id, req.body.newLevel);
+	return res.status(201).json({ message: "Language updated succesfully."});
+};
+
+const deleteLanguage = async (req, res) => {
+    await profileService.deleteLanguage(req.params.id);
+    return res.status(200).json({ message: "Language deleted successfully." });
+};
+
 module.exports = {
     getProfile,
+	getProfileById,
 	createProfile,
     updateBio,
+	updatePhoneNumber,
+	updateEmail,
+	updateWebSite,
+	updateAddress,
     updatePhoto,
 	updateBannerImage,
     addExperience,
@@ -84,5 +165,8 @@ module.exports = {
     editCertificate,
     deleteCertificate,
     addSkill,
-    deleteSkill
+    deleteSkill,
+	addLanguage,
+	updateLanguageLevel,
+	deleteLanguage
 };

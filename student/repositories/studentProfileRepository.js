@@ -8,6 +8,11 @@ const getProfile = async (studentId) => {
 		  sp.studentId, 
 		  sp.bio, 
 		  sp.profilePicture,
+		  sp.bannerImage,
+		  sp.phoneNumber,
+		  sp.email,
+		  sp.webSite,
+		  sp.address,
 	  
 		  -- Fetch Experiences separately
 		  (
@@ -64,7 +69,21 @@ const getProfile = async (studentId) => {
 			  FROM StudentSkill ss
 			  JOIN Skill s ON ss.skillId = s.id
 			  WHERE ss.studentId = sp.studentId
-		  ) AS skills
+		  ) AS skills,
+
+		  -- Fetch Languages 
+		  (
+		    SELECT COALESCE(JSON_ARRAYAGG(
+		      JSON_OBJECT(
+		        'id', l.id, 
+		        'name', l.name,
+		        'level', sl.level
+		      )
+		    ), '[]')
+		    FROM StudentLanguage sl
+		    JOIN Language l ON sl.languageId = l.id
+		    WHERE sl.studentId = sp.studentId
+		  ) AS languages
 	  
 		FROM StudentProfile sp
 		WHERE sp.studentId = :studentId
@@ -79,24 +98,24 @@ const getProfile = async (studentId) => {
 	  profile.experiences = JSON.parse(profile.experiences);
 	  profile.certificates = JSON.parse(profile.certificates);
 	  profile.skills = JSON.parse(profile.skills);
+	  profile.languages = JSON.parse(profile.languages);
 	  
 	  // If experience skills are still coming as stringified JSON, you can manually parse them like this:
 	  profile.experiences.forEach(experience => {
 		experience.skills = JSON.parse(experience.skills);
-	  });	  
-	
-	console.log(profile);	  
+	  });	    
 
 	return profile;
 };
 
-const createProfile = async (studentId, { bio, photo, experiences = [], certificates = [], skills = [] }) => {
+const createProfile = async (studentId, { bio, profilePicture, bannerImage, phoneNumber, email, webSite, address, 
+experiences = [], certificates = [], languages = [], skills = [] }) => {
     const transaction = await db.sequelize.transaction();
 
 	try {
 	    // Create student profile
 	    let profile = await db.StudentProfile.create(
-	        { studentId, bio, photo },
+	        { studentId, bio, profilePicture, bannerImage, phoneNumber, email, webSite, address },
 	        { transaction }
 	    );
 
@@ -116,6 +135,36 @@ const createProfile = async (studentId, { bio, photo, experiences = [], certific
 	            { transaction }
 	        );
 	    }
+
+		// Insert languages
+		let studentLanguages = [];
+
+		if (languages.length > 0) {
+		    for (const language of languages) {
+		        let languageId;
+			
+		        if (language.id) {
+		            languageId = language.id;
+		        } else {
+		            const [newLanguage] = await db.Language.findOrCreate({
+		                where: { name: language.name },
+		                defaults: { name: language.name },
+		                transaction
+		            });
+		            languageId = newLanguage.id;
+		        }
+			
+		        // Add to studentLanguages with level
+		        studentLanguages.push({
+		            studentId,
+		            languageId,
+		            level: language.level || null // or set default level
+		        });
+		    }
+		
+		    // Bulk insert to StudentLanguage
+		    await db.StudentLanguage.bulkCreate(studentLanguages, { transaction });
+		}
 
 	    // Insert skills
 	    let skillMap = new Map();
@@ -194,6 +243,22 @@ const createProfile = async (studentId, { bio, photo, experiences = [], certific
 
 const updateBio = async (studentId, bio) => {
     return await db.StudentProfile.update({ bio }, { where: { studentId } });
+};
+
+const updatePhoneNumber = async (studentId, phoneNumber) => {
+    return await db.StudentProfile.update({ phoneNumber }, { where: { studentId } });
+};
+
+const updateEmail = async (studentId, email) => {
+    return await db.StudentProfile.update({ email }, { where: { studentId } });
+};
+
+const updateWebSite = async (studentId, webSite) => {
+    return await db.StudentProfile.update({ webSite }, { where: { studentId } });
+};
+
+const updateAddress = async (studentId, address) => {
+    return await db.StudentProfile.update({ address }, { where: { studentId } });
 };
 
 const updatePhoto = async (studentId, photo) => {
@@ -300,10 +365,46 @@ const deleteSkill = async (skillId) => {
     return await db.StudentSkill.destroy({ where: { skillId } });
 };
 
+// Language
+const addLanguage = async (studentId, { languageId, level }) => {
+	return await db.StudentLanguage.findOrCreate({
+	  	where: {
+			studentId,
+			languageId,
+			level
+	  	},
+	  	defaults: {
+			studentId,
+			languageId,
+			level
+	  	}
+	});
+};
+
+const updateLanguageLevel = async (studentId, languageId, newLevel) => {
+	await db.StudentLanguage.update(
+	  	{ level: newLevel },
+	  	{
+			where: {
+			  studentId,
+			  languageId
+			}
+	  	}
+	);
+};  
+
+const deleteLanguage = async (languageId) => {
+    return await db.StudentLanguage.destroy({ where: { languageId } });
+};
+
 module.exports = {
     getProfile,
 	createProfile,
     updateBio,
+	updatePhoneNumber,
+	updateEmail,
+	updateWebSite,
+	updateAddress,
     updatePhoto,
 	updateBannerImage,
     addExperience,
@@ -313,5 +414,8 @@ module.exports = {
     editCertificate,
     deleteCertificate,
     addSkill,
-    deleteSkill
+    deleteSkill,
+	addLanguage,
+	updateLanguageLevel,
+	deleteLanguage
 };

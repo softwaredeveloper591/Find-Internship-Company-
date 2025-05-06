@@ -12,6 +12,22 @@ const updateBio = async (studentId, bio) => {
     return await profileRepository.updateBio(studentId, bio);
 };
 
+const updatePhoneNumber = async (studentId, phoneNumber) => {
+    return await profileRepository.updateBio(studentId, phoneNumber);
+};
+
+const updateEmail = async (studentId, email) => {
+    return await profileRepository.updateBio(studentId, email);
+};
+
+const updateWebSite = async (studentId, webSite) => {
+    return await profileRepository.updateBio(studentId, webSite);
+};
+
+const updateAddress = async (studentId, address) => {
+    return await profileRepository.updateBio(studentId, address);
+};
+
 const updatePhoto = async (studentId, photo) => {
     return await profileRepository.updatePhoto(studentId, photo);
 };
@@ -55,10 +71,27 @@ const deleteSkill = async (skillId) => {
     return await profileRepository.deleteSkill(skillId);
 };
 
+// Language
+const addLanguage = async (studentId, languageData) => {
+    return await profileRepository.addLanguage(studentId, languageData);
+};
+
+const updateLanguageLevel = async (studentId, languageId, newLevel) => {
+    return await profileRepository.updateLanguageLevel(studentId, languageId, newLevel);
+};
+
+const deleteLanguage = async (languageId) => {
+    return await profileRepository.deleteLanguage(languageId);
+};
+
 module.exports = {
     getProfile,
 	createProfile,
     updateBio,
+	updatePhoneNumber,
+	updateEmail,
+	updateWebSite,
+	updateAddress,
     updatePhoto,
 	updateBannerImage,
     addExperience,
@@ -68,5 +101,8 @@ module.exports = {
     editCertificate,
     deleteCertificate,
     addSkill,
-    deleteSkill
+    deleteSkill,
+	addLanguage,
+	updateLanguageLevel,
+	deleteLanguage
 };

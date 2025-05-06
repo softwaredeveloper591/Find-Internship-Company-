@@ -5,8 +5,7 @@ const initModels = require('../models/init-models'); // Import your initModels f
 const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
   host: DB_HOST,
   dialect: DB_DIALECT,
-  port: DB_PORT,
-  logging: console.log,
+  port: DB_PORT
 });
 
 async function connect() {

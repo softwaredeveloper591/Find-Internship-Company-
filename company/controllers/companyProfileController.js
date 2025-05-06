@@ -32,7 +32,7 @@ const updateBannerImage = async (req, res) => {
 
     await profileService.updateBannerImage(req.user.id, bannerImage);
 
-    res.status(200).json({ message: "Banner image updated successfully." });
+    return res.status(200).json({ message: "Banner image updated successfully." });
 }
 
 const updateLogo = async (req, res) => {
@@ -44,7 +44,7 @@ const updateLogo = async (req, res) => {
 
     await profileService.updateLogo(req.user.id, companyLogo);
 
-    res.status(200).json({ message: "Logo updated successfully." });
+    return res.status(200).json({ message: "Logo updated successfully." });
 }
 
 module.exports = {

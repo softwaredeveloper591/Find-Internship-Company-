@@ -619,7 +619,18 @@ router.get("/announcement/:announcementId", [auth, checkUserRole("admin")], asyn
 
 		const announcement = await db.Announcement.findOne({
 			where: { id: announcementId },
-			include: [{ model: db.Company, attributes: ['name'] }]
+			include: [
+				{ 
+					model: db.Company, 
+					attributes: ['name'] 
+				},
+				{
+					model: db.Skill,
+					as: 'skillId_Skills', // Make sure this matches your association alias
+					through: { attributes: [] }, // hide join table columns
+					attributes: ['id', 'name'], // customize skill fields if needed
+				}
+			]
 		});
 
 		if (!announcement) {

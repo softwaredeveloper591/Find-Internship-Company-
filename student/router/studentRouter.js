@@ -350,7 +350,18 @@ router.get("/opportunities/:opportunityId", asyncErrorHandler(async (req, res, n
 				startDate: { [Sequelize.Op.lte]: now },
 				endDate: { [Sequelize.Op.gt]: now }
 			},
-			include: [{ model: db.Company, attributes: ['name'] }]
+			include: [
+				{ 
+					model: db.Company, 
+					attributes: ['name'] 
+				},
+				{
+					model: db.Skill,
+					as: 'skillId_Skills', // Make sure this matches your association alias
+					through: { attributes: [] }, // hide join table columns
+					attributes: ['id', 'name'], // customize skill fields if needed
+				}
+			]
 		});
 	}
 
