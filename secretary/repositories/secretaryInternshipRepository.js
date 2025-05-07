@@ -27,7 +27,13 @@ const getManualApplications = async (secretaryId) => {
 	return manualApplications;
 };
 
-const approveManualApplications = async (manualApplicationId, isApproved, documentData) => {
+const approveManualApplications = async (manualApplicationId, studentId, isApproved, documentData) => {
+	const hasInternship = await db.Internship.findOne( { where: { studentId }});
+	
+	if (hasInternship) {
+		return { status: 400, message: "This student already has an internship"}
+	}
+
 	const isAlreadyChecked = await db.ManualApplication.findOne({
 		where: {
 			id: manualApplicationId, 
@@ -86,7 +92,12 @@ const approveManualApplications = async (manualApplicationId, isApproved, docume
 	}
 }
 
+const downloadFile = async (whereClause) => {
+	return await db.Document.findOne({ where: whereClause });
+}
+
 module.exports = {
 	getManualApplications,
-	approveManualApplications
+	approveManualApplications,
+	downloadFile
 };

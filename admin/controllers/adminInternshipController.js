@@ -7,8 +7,7 @@ const getManualApplications = async (req, res) => {
 };
 
 const approveManualApplications = async (req, res) => {
-	const file = req.file;
-	const result = await internshipService.approveManualApplications(req.params.id, req.body.isApproved, file);
+	const result = await internshipService.approveManualApplications(req.params.id, req.params.studentId, req.body.isApproved, req.file);
 
 	if (result?.status && result?.message) {
 		return res.status(result.status).json({ message: result.message });

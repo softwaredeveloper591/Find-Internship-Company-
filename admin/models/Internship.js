@@ -2,35 +2,10 @@ const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('Internship', {
     id: {
+      autoIncrement: true,
       type: DataTypes.INTEGER,
       allowNull: false,
       primaryKey: true
-    },
-    status: {
-      type: DataTypes.STRING(45),
-      allowNull: false,
-      defaultValue: "started"
-    },
-    score: {
-      type: DataTypes.STRING(45),
-      allowNull: true
-    },
-    studentName: {
-      type: DataTypes.STRING(45),
-      allowNull: false
-    },
-    isApproved: {
-      type: DataTypes.STRING(45),
-      allowNull: false,
-      defaultValue: "0"
-    },
-    studentId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'Student',
-        key: 'id'
-      }
     },
     applicationId: {
       type: DataTypes.INTEGER,
@@ -38,7 +13,39 @@ module.exports = function(sequelize, DataTypes) {
       references: {
         model: 'Application',
         key: 'id'
-      }
+      },
+      unique: "Internship_ibfk_1"
+    },
+    manualApplicationId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'ManualApplication',
+        key: 'id'
+      },
+      unique: "Internship_ibfk_2"
+    },
+    studentId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Student',
+        key: 'id'
+      },
+      unique: "Internship_ibfk_3"
+    },
+    status: {
+      type: DataTypes.ENUM('Started','Finished','Rejected','Approved'),
+      allowNull: false,
+      defaultValue: "Started"
+    },
+    score: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    isApprovedByDIC: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true
     }
   }, {
     sequelize,
@@ -55,6 +62,7 @@ module.exports = function(sequelize, DataTypes) {
       },
       {
         name: "studentId",
+        unique: true,
         using: "BTREE",
         fields: [
           { name: "studentId" },
@@ -62,9 +70,18 @@ module.exports = function(sequelize, DataTypes) {
       },
       {
         name: "applicationId",
+        unique: true,
         using: "BTREE",
         fields: [
           { name: "applicationId" },
+        ]
+      },
+      {
+        name: "manualApplicationId",
+        unique: true,
+        using: "BTREE",
+        fields: [
+          { name: "manualApplicationId" },
         ]
       },
     ]

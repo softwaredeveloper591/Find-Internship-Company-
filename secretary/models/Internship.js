@@ -7,11 +7,6 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       primaryKey: true
     },
-    studentId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      unique: "studentId_UNIQUE"
-    },
     applicationId: {
       type: DataTypes.INTEGER,
       allowNull: true,
@@ -22,13 +17,22 @@ module.exports = function(sequelize, DataTypes) {
       unique: "Internship_ibfk_1"
     },
     manualApplicationId: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.INTEGER,
       allowNull: true,
       references: {
         model: 'ManualApplication',
         key: 'id'
       },
       unique: "Internship_ibfk_2"
+    },
+    studentId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Student',
+        key: 'id'
+      },
+      unique: "Internship_ibfk_3"
     },
     status: {
       type: DataTypes.ENUM('Started','Finished','Rejected','Approved'),
@@ -57,7 +61,7 @@ module.exports = function(sequelize, DataTypes) {
         ]
       },
       {
-        name: "studentId_UNIQUE",
+        name: "studentId",
         unique: true,
         using: "BTREE",
         fields: [

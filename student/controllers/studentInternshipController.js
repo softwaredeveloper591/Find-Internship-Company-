@@ -9,7 +9,11 @@ const uploadApplicationForm = async (req, res) => {
 	const file = req.file;
 	const studentId = req.user.id;
   
-	await internshipService.uploadApplicationForm(file, studentId);
+	const result = await internshipService.uploadApplicationForm(file, studentId);
+
+	if (result?.status && result?.message) {
+		return res.status(result.status).json({ message: result.message });
+	}
   
 	res.status(201).json({ message: "Application Form uploaded successfully" });
 };

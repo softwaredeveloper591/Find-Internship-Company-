@@ -27,6 +27,22 @@ module.exports = function(sequelize, DataTypes) {
     bannerImage: {
       type: DataTypes.STRING(255),
       allowNull: true
+    },
+    phoneNumber: {
+      type: DataTypes.STRING(15),
+      allowNull: true
+    },
+    email: {
+      type: DataTypes.STRING(45),
+      allowNull: true
+    },
+    webSite: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    address: {
+      type: DataTypes.STRING(100),
+      allowNull: true
     }
   }, {
     sequelize,

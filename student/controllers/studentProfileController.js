@@ -76,6 +76,10 @@ const updatePhoto = async (req, res) => {
 	return res.status(200).json({ message: "Profile picture updated successfully." });
 };
 
+const deletePhoto = async (req, res) => {
+	await profileService.deletePhoto(req.user.id);
+};
+
 const updateBannerImage = async (req, res) => {
     const bannerImage = req.file ? req.file.path : null;
 	
@@ -86,6 +90,10 @@ const updateBannerImage = async (req, res) => {
 	await profileService.updateBannerImage(req.user.id, bannerImage);
 
 	return res.status(200).json({ message: "Banner iamge updated successfully." });
+};
+
+const deleteBannerImage = async (req, res) => {
+	await profileService.deleteBannerImage(req.user.id);
 };
 
 // Experience
@@ -167,7 +175,9 @@ module.exports = {
 	updateWebSite,
 	updateAddress,
     updatePhoto,
+	deletePhoto,
 	updateBannerImage,
+	deleteBannerImage,
     addExperience,
     editExperience,
     deleteExperience,

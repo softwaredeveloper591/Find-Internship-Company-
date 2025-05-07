@@ -12,9 +12,6 @@ router.post("/", upload.fields([
   ]), 
   asyncErrorHandler(profileController.createProfile));
 
-// Get student profile by studentId
-router.get("/:studentId", asyncErrorHandler(profileController.getProfileById));
-
 // Update bio, phoneNumber, email, webSite, address
 router.put("/bio", asyncErrorHandler(profileController.updateBio));
 router.put("/phoneNumber", asyncErrorHandler(profileController.updatePhoneNumber));
@@ -25,6 +22,9 @@ router.put("/address", asyncErrorHandler(profileController.updateAddress));
 // Update photo and banner image
 router.put("/photo", upload.single('profilePicture'), asyncErrorHandler(profileController.updatePhoto));
 router.put("/bannerImage", upload.single('bannerImage'), asyncErrorHandler(profileController.updateBannerImage));
+
+router.delete("/photo", asyncErrorHandler(profileController.deletePhoto));
+router.delete("/bannerImage", asyncErrorHandler(profileController.deleteBannerImage));
 
 // Add, edit, delete experiences
 router.post("/experience", asyncErrorHandler(profileController.addExperience));
@@ -45,7 +45,10 @@ router.post("/language", asyncErrorHandler(profileController.addLanguage));
 router.put("/language/:id", asyncErrorHandler(profileController.updateLanguageLevel));
 router.delete("/language/:id", asyncErrorHandler(profileController.deleteLanguage));
 
-router.get("skills", asyncErrorHandler(profileController.getAllSkills));
-router.get("languages", asyncErrorHandler(profileController.getAllLanguages));
+router.get("/skills", asyncErrorHandler(profileController.getAllSkills));
+router.get("/languages", asyncErrorHandler(profileController.getAllLanguages));
+
+// Get student profile by studentId
+router.get("/:studentId", asyncErrorHandler(profileController.getProfileById));
 
 module.exports = router;

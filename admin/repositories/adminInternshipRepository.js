@@ -26,7 +26,13 @@ const getManualApplications = async (adminId) => {
 	return manualApplications;
 };
 
-const approveManualApplications = async (manualApplicationId, isApproved, data) => {
+const approveManualApplications = async (manualApplicationId, studentId, isApproved, data) => {
+	const hasInternship = await db.Internship.findOne( { where: { studentId }});
+
+	if (hasInternship) {
+		return { status: 400, message: "This student already has an internship"}
+	}
+	
 	const isAlreadyChecked = await db.ManualApplication.findOne({
 		where: {
 		  	id: manualApplicationId, // replace with the actual application ID

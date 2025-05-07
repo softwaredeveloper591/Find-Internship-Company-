@@ -1,4 +1,6 @@
 const db = require("../data/db");
+const fs = require('fs');
+const path = require('path');
 
 const getProfile = async (studentId) => {
     const [profile] = await db.sequelize.query(
@@ -13,6 +15,7 @@ const getProfile = async (studentId) => {
 		  sp.email,
 		  sp.webSite,
 		  sp.address,
+		  s.username,
 	  
 		  -- Fetch Experiences separately
 		  (
@@ -86,6 +89,7 @@ const getProfile = async (studentId) => {
 		  ) AS languages
 	  
 		FROM StudentProfile sp
+		JOIN Student s ON s.id = sp.studentId 
 		WHERE sp.studentId = :studentId
 		`,
 		{
@@ -265,8 +269,48 @@ const updatePhoto = async (studentId, photo) => {
     return await db.StudentProfile.update({ profilePicture: photo }, { where: { studentId } });
 };
 
+const deletePhoto = async (studentId) => {
+	const profile = await db.StudentProfile.findOne({ where: { studentId } });
+
+    if (!profile || !profile.profilePicture) return;
+
+    const photoPath = path.join(__dirname, '..', 'uploads', profile.profilePicture); // adjust path if needed
+
+    // Delete file from filesystem
+    fs.unlink(photoPath, (err) => {
+        if (err) {
+            console.error('Error deleting profile photo:', err);
+        }
+    });
+
+    return await db.StudentProfile.update(
+        { profilePicture: null },
+        { where: { studentId } }
+    );
+};
+
 const updateBannerImage = async (studentId, bannerImage) => {
     return await db.StudentProfile.update({ bannerImage }, { where: { studentId } });
+};
+
+const deleteBannerImage = async (studentId) => {
+	const profile = await db.StudentProfile.findOne({ where: { studentId } });
+
+    if (!profile || !profile.bannerImage) return;
+
+    const photoPath = path.join(__dirname, '..', 'uploads', profile.bannerImage); // adjust path if needed
+
+    // Delete file from filesystem
+    fs.unlink(photoPath, (err) => {
+        if (err) {
+            console.error('Error deleting banner Image:', err);
+        }
+    });
+	
+    return await db.StudentProfile.update(
+        { bannerImage: null },
+        { where: { studentId } }
+    );
 };
 
 // Experience

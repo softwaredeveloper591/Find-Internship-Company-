@@ -1,5 +1,4 @@
 const internshipRepository = require("../repositories/studentInternshipRepository");
-const { v4: uuidv4 } = require("uuid");
 
 const getFiles = async (studentId) => {
 	return await internshipRepository.getFiles(studentId);
@@ -8,13 +7,11 @@ const getFiles = async (studentId) => {
 const uploadApplicationForm = async (file, studentId) => {
 	if (!file) throw new Error("No file uploaded");
 
-  	const manualApplicationId = uuidv4();
   	const fileType = "ManualApplicationForm";
   	const data = file.buffer;
 	const name = file.originalname;
 
 	const document = {
-		manualApplicationId,
 		fileType,
 		data,
 		name

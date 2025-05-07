@@ -32,8 +32,16 @@ const updatePhoto = async (studentId, photo) => {
     return await profileRepository.updatePhoto(studentId, photo);
 };
 
+const deletePhoto = async (studentId) => {
+    return await profileRepository.deletePhoto(studentId);
+};
+
 const updateBannerImage = async (studentId, bannerImage) => {
     return await profileRepository.updateBannerImage(studentId, bannerImage);
+};
+
+const deleteBannerImage = async (studentId) => {
+    return await profileRepository.deleteBannerImage(studentId);
 };
 
 // Experience
@@ -101,7 +109,9 @@ module.exports = {
 	updateWebSite,
 	updateAddress,
     updatePhoto,
+	deletePhoto,
 	updateBannerImage,
+	deleteBannerImage,
     addExperience,
     editExperience,
     deleteExperience,

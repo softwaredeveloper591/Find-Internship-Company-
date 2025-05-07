@@ -16,7 +16,7 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
     manualApplicationId: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.INTEGER,
       allowNull: true,
       references: {
         model: 'ManualApplication',
@@ -33,7 +33,7 @@ module.exports = function(sequelize, DataTypes) {
     },
     username: {
       type: DataTypes.STRING(45),
-      allowNull: false
+      allowNull: true
     },
     userId: {
       type: DataTypes.STRING(45),

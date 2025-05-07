@@ -90,6 +90,8 @@ function initModels(sequelize) {
   Skill.hasMany(StudentSkill, { foreignKey: "skillId"});
   Application.belongsTo(Student, { foreignKey: "studentId"});
   Student.hasMany(Application, { foreignKey: "studentId"});
+  Internship.belongsTo(Student, { foreignKey: "studentId"});
+  Student.hasOne(Internship, { foreignKey: "studentId"});
   ManualApplication.belongsTo(Student, { foreignKey: "studentId"});
   Student.hasMany(ManualApplication, { foreignKey: "studentId"});
   Review.belongsTo(Student, { foreignKey: "studentId"});

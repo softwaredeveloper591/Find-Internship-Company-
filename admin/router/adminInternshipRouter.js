@@ -6,7 +6,7 @@ const upload = require('../middleware/fileUploader');
 
 router.get("/manualApplications", asyncErrorHandler(internshipController.getManualApplications));
 
-router.put("/manualApplications/:id", upload.single('ApplicationForm'), asyncErrorHandler(internshipController.approveManualApplications));
+router.put("/manualApplications/:id/:studentId", upload.single('ApplicationForm'), asyncErrorHandler(internshipController.approveManualApplications));
 
 router.get("/download/:applicationId/:fileType", asyncErrorHandler(internshipController.downloadFile));
 

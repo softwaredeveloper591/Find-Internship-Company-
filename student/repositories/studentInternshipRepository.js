@@ -8,15 +8,22 @@ const getFiles = async (studentId) => {
 };
 
 const uploadApplicationForm = async(studentId, document) => {
-	const transaction = await db.sequelize.transaction(); // Start transaction
+	const existingInternship = await db.Internship.findOne({ where: { studentId }});
+
+	if (existingInternship) {
+		return { status: 403, message: "You already have an internship" };
+	}
+
+	const transaction = await db.sequelize.transaction(); 
 	try {
 		const student = await db.Student.findByPk(studentId, { transaction });
 
-		await db.ManualApplication.create(
-			{ id: document.manualApplicationId, studentId },
+		const manualApplication = await db.ManualApplication.create(
+			{ studentId },
 			{ transaction }
 		);
 
+		document.manualApplicationId = manualApplication.id;
 		document.username = student.username;
 		document.userId = studentId;
 

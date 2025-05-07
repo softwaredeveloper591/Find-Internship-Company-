@@ -4,10 +4,10 @@ const getManualApplications = async (adminId) => {
 	return await internshipRepository.getManualApplications(adminId);
 };
 
-const approveManualApplications = async (manualApplicationId, isApproved, file) => {
+const approveManualApplications = async (manualApplicationId, studentId, isApproved, file) => {
 	if (!file) throw new Error("No file uploaded");
 	const data = file.buffer;
-	return await internshipRepository.approveManualApplications(manualApplicationId, isApproved, data);
+	return await internshipRepository.approveManualApplications(manualApplicationId, studentId, isApproved, data);
 };
 
 const downloadFile = async (whereClause) => {

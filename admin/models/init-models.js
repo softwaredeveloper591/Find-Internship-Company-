@@ -65,7 +65,7 @@ function initModels(sequelize) {
   Document.belongsTo(Application, { foreignKey: "applicationId"});
   Application.hasMany(Document, { foreignKey: "applicationId"});
   Internship.belongsTo(Application, { foreignKey: "applicationId"});
-  Application.hasMany(Internship, { foreignKey: "applicationId"});
+  Application.hasOne(Internship, { foreignKey: "applicationId"});
   Announcement.belongsTo(Company, { foreignKey: "companyId"});
   Company.hasMany(Announcement, { foreignKey: "companyId"});
   CompanyProfile.belongsTo(Company, { foreignKey: "companyId"});
@@ -80,6 +80,8 @@ function initModels(sequelize) {
   Language.hasMany(StudentLanguage, { foreignKey: "languageId"});
   Document.belongsTo(ManualApplication, { foreignKey: "manualApplicationId"});
   ManualApplication.hasMany(Document, { foreignKey: "manualApplicationId"});
+  Internship.belongsTo(ManualApplication, { foreignKey: "manualApplicationId"});
+  ManualApplication.hasOne(Internship, { foreignKey: "manualApplicationId"});
   AnnouncementSkill.belongsTo(Skill, { foreignKey: "skillId"});
   Skill.hasMany(AnnouncementSkill, { foreignKey: "skillId"});
   ExperienceSkill.belongsTo(Skill, { foreignKey: "skillId"});
@@ -89,7 +91,7 @@ function initModels(sequelize) {
   Application.belongsTo(Student, { foreignKey: "studentId"});
   Student.hasMany(Application, { foreignKey: "studentId"});
   Internship.belongsTo(Student, { foreignKey: "studentId"});
-  Student.hasMany(Internship, { foreignKey: "studentId"});
+  Student.hasOne(Internship, { foreignKey: "studentId"});
   ManualApplication.belongsTo(Student, { foreignKey: "studentId"});
   Student.hasMany(ManualApplication, { foreignKey: "studentId"});
   Review.belongsTo(Student, { foreignKey: "studentId"});
