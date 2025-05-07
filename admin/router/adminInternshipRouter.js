@@ -10,4 +10,7 @@ router.put("/manualApplications/:id/:studentId", upload.single('ApplicationForm'
 
 router.get("/download/:applicationId/:fileType", asyncErrorHandler(internshipController.downloadFile));
 
+router.get("/linkRequests", asyncErrorHandler(internshipController.getLinkRequests));
+router.put("/approveLinkRequest/:id", asyncErrorHandler(internshipController.approveLinkRequest));
+
 module.exports = router;

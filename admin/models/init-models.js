@@ -6,6 +6,7 @@ var _Application = require("./Application");
 var _Certificate = require("./Certificate");
 var _Company = require("./Company");
 var _CompanyProfile = require("./CompanyProfile");
+var _CompanyUploadLinkRequest = require("./CompanyUploadLinkRequest");
 var _Conversations = require("./Conversations");
 var _Document = require("./Document");
 var _Experience = require("./Experience");
@@ -32,6 +33,7 @@ function initModels(sequelize) {
   var Certificate = _Certificate(sequelize, DataTypes);
   var Company = _Company(sequelize, DataTypes);
   var CompanyProfile = _CompanyProfile(sequelize, DataTypes);
+  var CompanyUploadLinkRequest = _CompanyUploadLinkRequest(sequelize, DataTypes);
   var Conversations = _Conversations(sequelize, DataTypes);
   var Document = _Document(sequelize, DataTypes);
   var Experience = _Experience(sequelize, DataTypes);
@@ -76,6 +78,8 @@ function initModels(sequelize) {
   Conversations.hasMany(Message, { foreignKey: "conversation_id"});
   ExperienceSkill.belongsTo(Experience, { foreignKey: "experienceId"});
   Experience.hasMany(ExperienceSkill, { foreignKey: "experienceId"});
+  CompanyUploadLinkRequest.belongsTo(Internship, { foreignKey: "internshipId"});
+  Internship.hasMany(CompanyUploadLinkRequest, { foreignKey: "internshipId"});
   StudentLanguage.belongsTo(Language, { foreignKey: "languageId"});
   Language.hasMany(StudentLanguage, { foreignKey: "languageId"});
   Document.belongsTo(ManualApplication, { foreignKey: "manualApplicationId"});
@@ -90,6 +94,8 @@ function initModels(sequelize) {
   Skill.hasMany(StudentSkill, { foreignKey: "skillId"});
   Application.belongsTo(Student, { foreignKey: "studentId"});
   Student.hasMany(Application, { foreignKey: "studentId"});
+  CompanyUploadLinkRequest.belongsTo(Student, { foreignKey: "studentId"});
+  Student.hasMany(CompanyUploadLinkRequest, { foreignKey: "studentId"});
   Internship.belongsTo(Student, { foreignKey: "studentId"});
   Student.hasOne(Internship, { foreignKey: "studentId"});
   ManualApplication.belongsTo(Student, { foreignKey: "studentId"});
@@ -117,6 +123,7 @@ function initModels(sequelize) {
     Certificate,
     Company,
     CompanyProfile,
+    CompanyUploadLinkRequest,
     Conversations,
     Document,
     Experience,

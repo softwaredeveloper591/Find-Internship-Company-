@@ -38,7 +38,7 @@ const uploadApplicationForm = async(studentId, document) => {
 	}
 };
 
-const finishInternship = async(studentId) => {
+const finishInternship = async (studentId) => {
 	const internship = await db.Internship.findOne({ where: { studentId } });
 
 	if (!internship) {
@@ -52,8 +52,27 @@ const finishInternship = async(studentId) => {
 	);
 }
 
+const requestLink = async (studentId, companyEmail) => {
+	const internship = await db.Internship.findOne({ where: { studentId }});
+
+	if (!internship) {
+		return { status: 403, message: "You are not authorized to request a link or the internship doesn't exist." };
+	}
+
+	const existing = await db.CompanyUploadLinkRequest.findOne({ 
+		where: { internshipId: internship.id, studentId }
+	});
+	
+	if (existing) {
+		return { status: 400, message: "You already requested a link." };
+	}
+
+	await db.CompanyUploadLinkRequest.create( { internshipId: internship.id, studentId, companyEmail });
+}
+
 module.exports = {
     getFiles,
 	uploadApplicationForm,
-	finishInternship
+	finishInternship,
+	requestLink
 };

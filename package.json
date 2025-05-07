@@ -1,1 +1,8 @@
-{}
+{
+  "dependencies": {
+    "mysql2": "^3.14.1"
+  },
+  "devDependencies": {
+    "sequelize-auto": "^0.8.8"
+  }
+}

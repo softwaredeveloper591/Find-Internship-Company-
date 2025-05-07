@@ -12,4 +12,6 @@ router.post("/applicationForm", upload.single('ApplicationForm'), asyncErrorHand
 
 router.put("/finishInternship", asyncErrorHandler(internshipController.finishInternship));
 
+router.post("/requestLink", asyncErrorHandler(internshipController.requestLink));
+
 module.exports = router;

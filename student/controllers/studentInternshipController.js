@@ -28,8 +28,19 @@ const finishInternship = async (req, res) => {
 	return res.status(200).json({ message: "Internship marked as finished" });
 }
 
+const requestLink = async (req, res) => {
+	const result = await internshipService.requestLink(req.user.id, req.body.companyEmail);
+
+	if (result?.status && result?.message) {
+		return res.status(result.status).json({ message: result.message });
+	}
+	
+	return res.status(200).json({ message: "Link is requested" });
+}
+
 module.exports = {
     getFiles,
 	uploadApplicationForm,
-	finishInternship
+	finishInternship,
+	requestLink
 };

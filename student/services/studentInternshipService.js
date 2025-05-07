@@ -24,8 +24,13 @@ const finishInternship = async (studentId) => {
 	return await internshipRepository.finishInternship(studentId);
 }
 
+const requestLink = async (studentId, companyEmail) => {
+	return await internshipRepository.requestLink(studentId, companyEmail);
+}
+
 module.exports = {
     getFiles,
 	uploadApplicationForm,
-	finishInternship
+	finishInternship,
+	requestLink
 };
