@@ -13,6 +13,10 @@ const { Op } = require("sequelize");
 
 const db = require("../data/db");
 
+const internshipRouter = require("./secretaryInternshipRouter");
+
+router.use(auth, checkUserRole("secretary"));
+
 async function findReceiverByEmail(email) {
 	let receiver = null;
 	const mail = email;
@@ -510,5 +514,6 @@ router.put("/updateMessage/:id", [auth, checkUserRole("secretary")], asyncErrorH
 	res.status(200).json({ message: "Message updated successfully", Message: message.message });
 }));
 
+router.use("/internship", internshipRouter);
 
 module.exports = router;

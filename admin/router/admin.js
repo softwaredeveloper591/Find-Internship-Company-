@@ -12,7 +12,11 @@ const checkUserRole = require("../middleware/checkUserRole")
 const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
 const { sendEmail } = require("../utils/emailSender");
 
+const internshipRouter = require("./adminInternshipRouter");
+
 const db = require("../data/db");
+
+router.use(auth, checkUserRole("admin"));
 
 let totalAnnouncementsCount = 0;
 let totalApplicationsCount = 0;
@@ -475,24 +479,7 @@ router.get("/files", [auth, checkUserRole("admin")], asyncErrorHandler(async (re
 		}
 	});
 
-	res.send(applicationForms); // to test it at postman
-
-	/*res.render("applicationForm",{ 
-		usertype:"admin", 
-		dataValues:admin.dataValues,
-		applicationForms
-	});*/
-
-	// we need to use username to show which student sent the application form
-
-	// in the front end there will be student names and a download button next to the names
-	// we need to use /documents/download/:id/:fileType
-	/* maybe I can find a way to combine /documents/download/:id/:fileType and /application/download/:applicationId/:fileType 
-	in the future but I will leave it like that for now
-	There is a library called uuid to assign unique ids to the table. Maybe I can use it or I can use the document model 
-	instead of the application model at admin's applications page
-	uuid is simply a random number generator which generates very large random numbers so the probolity of collision is very low*/
-	// I used uuid
+	res.status(200).json(applicationForms); 
 }));
 
 router.put("/feedback/:studentId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
@@ -560,24 +547,6 @@ router.put("/deleteApplicationForm/:applicationId", [auth, checkUserRole("admin"
 
 	res.status(200).json({ message: "Application form deleted" });
 }));
-
-// since I used uuid we don't need this router. We can use the /application/download/:applicationId/:fileType
-
-/*router.get("/documents/download/:id/:fileType",[auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
-	const id = req.params.id;
-	const fileType = req.params.fileType;
-	const takenDocument = await db.Document.findOne({where:{id, fileType}});
-	if(!takenDocument){
-		throw new Error("There is no such document.")
-	}
-	let filename= takenDocument.dataValues.name;
-	let binaryData= takenDocument.dataValues.data;
-	let contentType = 'application/octet-stream'; // Default content type
-	contentType = 'image/jpeg';
-	res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-	res.setHeader('Content-Type', contentType);
-	res.send(binaryData);
-}));*/
 
 router.get("/announcementRequests", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	const admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
@@ -689,13 +658,6 @@ router.get("/companyRequests", [auth, checkUserRole("admin")], asyncErrorHandler
 	// let admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
 	const pendingCompanies = await db.Company.findAll({ where: { statusByDIC: false } });
 	res.status(200).json({ companies: pendingCompanies });
-	/* res.render("companyRequests", {
-		usertype: "admin",
-		dataValues: admin.dataValues,
-		companies: pendingCompanies,
-		totalAnnouncementsCount,
-		totalApplicationsCount
-	}); */
 }));
 
 router.put("/company/:companyId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
@@ -730,7 +692,6 @@ router.get("/applicationRequests", [auth, checkUserRole("admin")], asyncErrorHan
 		});
 
 		if (!admin) {
-			// If no admin found, return a 404 Not Found status
 			return res.status(404).json({ message: 'Admin not found' });
 		}
 
@@ -754,18 +715,16 @@ router.get("/applicationRequests", [auth, checkUserRole("admin")], asyncErrorHan
 				}
 			]
 		});
-		// Render the page with the fetched data
+
 		res.status(200).json({
 			dataValues: admin.dataValues,
 			applications,
 		});
 	} catch (error) {
-		// If an error occurs, log it and return a 500 Internal Server Error
 		console.error('Error fetching application requests:', error);
 		res.status(500).json({ message: 'An error occurred while fetching application requests', error: error.message });
 	}
 }));
-
 
 router.get("/applications/:applicationId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	const applicationId = req.params.applicationId.slice(0);
@@ -789,10 +748,8 @@ router.get("/applications/:applicationId", [auth, checkUserRole("admin")], async
 			}
 		]
 	});
-	// Return JSON response
-	res.status(200).json({
-		application
-	});
+
+	res.status(200).json({ application });
 }));
 
 
@@ -888,16 +845,7 @@ router.get("/interns", [auth, checkUserRole("admin")], asyncErrorHandler(async (
 	});
 	const internships = interns.get();
 	console.log(interns);
-	res.send(internships); // to test it on postman
-
-	/*res.render("applicationRequests", {
-		usertype: "admin",
-		dataValues: admin.dataValues,
-		interns,
-		totalAnnouncementsCount,
-		totalCompaniesCount
-	});*/
-
+	res.status(200).json(internships); 
 }));
 
 router.get("/interns/:applicationId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
@@ -931,16 +879,7 @@ router.get("/interns/:applicationId", [auth, checkUserRole("admin")], asyncError
 		]
 	});
 
-	res.send(intern); // to test it on postman
-
-	/*res.render("applicationRequests", {
-		usertype: "admin",
-		dataValues: admin.dataValues,
-		intern,
-		totalAnnouncementsCount,
-		totalCompaniesCount
-	});*/
-
+	res.status(200).json(intern); 
 }));
 
 router.put("/interns/:applicationId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
@@ -965,5 +904,7 @@ router.put("/interns/:applicationId", [auth, checkUserRole("admin")], asyncError
 		return res.status(200).json({ message: "score is entered" });
 	}
 }));
+
+router.use("/internship", internshipRouter);
 
 module.exports = router;

@@ -15,6 +15,14 @@ module.exports = function(sequelize, DataTypes) {
         key: 'id'
       }
     },
+    manualApplicationId: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      references: {
+        model: 'ManualApplication',
+        key: 'id'
+      }
+    },
     name: {
       type: DataTypes.STRING(100),
       allowNull: false
@@ -57,6 +65,13 @@ module.exports = function(sequelize, DataTypes) {
         using: "BTREE",
         fields: [
           { name: "applicationId" },
+        ]
+      },
+      {
+        name: "fk_manual_application",
+        using: "BTREE",
+        fields: [
+          { name: "manualApplicationId" },
         ]
       },
     ]

@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
 const profileController = require("../controllers/studentProfileController");
-const upload = require('../middleware/fileUploader'); 
+const upload = require('../middleware/imageUploader'); 
 
 // Get profile
 router.get("/", asyncErrorHandler(profileController.getProfile));
@@ -44,5 +44,8 @@ router.delete("/skill/:id", asyncErrorHandler(profileController.deleteSkill));
 router.post("/language", asyncErrorHandler(profileController.addLanguage));
 router.put("/language/:id", asyncErrorHandler(profileController.updateLanguageLevel));
 router.delete("/language/:id", asyncErrorHandler(profileController.deleteLanguage));
+
+router.get("skills", asyncErrorHandler(profileController.getAllSkills));
+router.get("languages", asyncErrorHandler(profileController.getAllLanguages));
 
 module.exports = router;

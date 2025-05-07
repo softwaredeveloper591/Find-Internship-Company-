@@ -323,7 +323,10 @@ const editExperience = async (experienceId, experienceData) => {
                 skillId,
             }));
 
-            await db.ExperienceSkill.bulkCreate(experienceSkills, { transaction });
+            await db.ExperienceSkill.bulkCreate(experienceSkills, {
+				transaction,
+				ignoreDuplicates: true
+			});
         }
 
         await transaction.commit();
@@ -397,6 +400,14 @@ const deleteLanguage = async (languageId) => {
     return await db.StudentLanguage.destroy({ where: { languageId } });
 };
 
+const getAllSkills = async () => {
+	return await db.Skill.findAll();
+}
+
+const getAllLanguages = async () => {
+	return await db.Language.findAll();
+}
+
 module.exports = {
     getProfile,
 	createProfile,
@@ -417,5 +428,7 @@ module.exports = {
     deleteSkill,
 	addLanguage,
 	updateLanguageLevel,
-	deleteLanguage
+	deleteLanguage,
+	getAllSkills,
+	getAllLanguages
 };

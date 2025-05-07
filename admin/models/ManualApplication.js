@@ -1,9 +1,8 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('Application', {
+  return sequelize.define('ManualApplication', {
     id: {
-      autoIncrement: true,
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING(50),
       allowNull: false,
       primaryKey: true
     },
@@ -15,21 +14,10 @@ module.exports = function(sequelize, DataTypes) {
         key: 'id'
       }
     },
-    announcementId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Announcement',
-        key: 'id'
-      }
-    },
     status: {
-      type: DataTypes.STRING(100),
-      allowNull: false
-    },
-    isApprovedByCompany: {
-      type: DataTypes.BOOLEAN,
-      allowNull: true
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      defaultValue: "Pending"
     },
     isApprovedByDIC: {
       type: DataTypes.BOOLEAN,
@@ -41,15 +29,17 @@ module.exports = function(sequelize, DataTypes) {
     },
     applyDate: {
       type: DataTypes.DATE,
-      allowNull: true
+      allowNull: true,
+      defaultValue: Sequelize.Sequelize.literal('CURRENT_TIMESTAMP')
     },
     statusUpdateDate: {
       type: DataTypes.DATE,
-      allowNull: true
+      allowNull: true,
+      defaultValue: Sequelize.Sequelize.literal('CURRENT_TIMESTAMP')
     }
   }, {
     sequelize,
-    tableName: 'Application',
+    tableName: 'ManualApplication',
     timestamps: false,
     indexes: [
       {
@@ -65,13 +55,6 @@ module.exports = function(sequelize, DataTypes) {
         using: "BTREE",
         fields: [
           { name: "studentId" },
-        ]
-      },
-      {
-        name: "announcementId",
-        using: "BTREE",
-        fields: [
-          { name: "announcementId" },
         ]
       },
     ]

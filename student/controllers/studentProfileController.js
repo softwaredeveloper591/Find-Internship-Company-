@@ -50,28 +50,28 @@ const updatePhoneNumber = async (req, res) => {
 };
 
 const updateEmail = async (req, res) => {
-    await profileService.updateBio(req.user.id, req.body.email);
+    await profileService.updateEmail(req.user.id, req.body.email);
     return res.status(200).json({ message: "Email updated successfully." });
 };
 
 const updateWebSite = async (req, res) => {
-    await profileService.updateBio(req.user.id, req.body.webSite);
+    await profileService.updateWebSite(req.user.id, req.body.webSite);
     return res.status(200).json({ message: "Web site updated successfully." });
 };
 
 const updateAddress = async (req, res) => {
-    await profileService.updateBio(req.user.id, req.body.address);
+    await profileService.updateAddress(req.user.id, req.body.address);
     return res.status(200).json({ message: "Address updated successfully." });
 };
 
 const updatePhoto = async (req, res) => {
-	const profilePicture = req.file ? req.file.path : null;
+	const photo = req.file ? req.file.path : null;
 	
-	if (!profilePicture) {
+	if (!photo) {
 		throw new BaseError("No picture uploaded.", 400);
 	}
 
-	await profileService.updatePhoto(req.user.id, profilePicture);
+	await profileService.updatePhoto(req.user.id, photo);
 
 	return res.status(200).json({ message: "Profile picture updated successfully." });
 };
@@ -147,6 +147,16 @@ const deleteLanguage = async (req, res) => {
     return res.status(200).json({ message: "Language deleted successfully." });
 };
 
+const getAllSkills = async (req, res) => {
+    skills = await profileService.getAllSkills();
+    return res.status(200).json( skills );
+};
+
+const getAllLanguages = async (req, res) => {
+    languages = await profileService.getAllLanguages();
+    return res.status(200).json( languages );
+};
+
 module.exports = {
     getProfile,
 	getProfileById,
@@ -168,5 +178,7 @@ module.exports = {
     deleteSkill,
 	addLanguage,
 	updateLanguageLevel,
-	deleteLanguage
+	deleteLanguage,
+	getAllSkills,
+	getAllLanguages
 };

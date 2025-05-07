@@ -12,6 +12,7 @@ var _Experience = require("./Experience");
 var _ExperienceSkill = require("./ExperienceSkill");
 var _Internship = require("./Internship");
 var _Language = require("./Language");
+var _ManualApplication = require("./ManualApplication");
 var _Message = require("./Message");
 var _Review = require("./Review");
 var _Secretary = require("./Secretary");
@@ -37,6 +38,7 @@ function initModels(sequelize) {
   var ExperienceSkill = _ExperienceSkill(sequelize, DataTypes);
   var Internship = _Internship(sequelize, DataTypes);
   var Language = _Language(sequelize, DataTypes);
+  var ManualApplication = _ManualApplication(sequelize, DataTypes);
   var Message = _Message(sequelize, DataTypes);
   var Review = _Review(sequelize, DataTypes);
   var Secretary = _Secretary(sequelize, DataTypes);
@@ -76,6 +78,8 @@ function initModels(sequelize) {
   Experience.hasMany(ExperienceSkill, { foreignKey: "experienceId"});
   StudentLanguage.belongsTo(Language, { foreignKey: "languageId"});
   Language.hasMany(StudentLanguage, { foreignKey: "languageId"});
+  Document.belongsTo(ManualApplication, { foreignKey: "manualApplicationId"});
+  ManualApplication.hasMany(Document, { foreignKey: "manualApplicationId"});
   AnnouncementSkill.belongsTo(Skill, { foreignKey: "skillId"});
   Skill.hasMany(AnnouncementSkill, { foreignKey: "skillId"});
   ExperienceSkill.belongsTo(Skill, { foreignKey: "skillId"});
@@ -86,6 +90,8 @@ function initModels(sequelize) {
   Student.hasMany(Application, { foreignKey: "studentId"});
   Internship.belongsTo(Student, { foreignKey: "studentId"});
   Student.hasMany(Internship, { foreignKey: "studentId"});
+  ManualApplication.belongsTo(Student, { foreignKey: "studentId"});
+  Student.hasMany(ManualApplication, { foreignKey: "studentId"});
   Review.belongsTo(Student, { foreignKey: "studentId"});
   Student.hasMany(Review, { foreignKey: "studentId"});
   StudentInfo.belongsTo(Student, { foreignKey: "studentId"});
@@ -115,6 +121,7 @@ function initModels(sequelize) {
     ExperienceSkill,
     Internship,
     Language,
+    ManualApplication,
     Message,
     Review,
     Secretary,

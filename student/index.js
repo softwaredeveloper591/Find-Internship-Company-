@@ -14,7 +14,7 @@ app.use(cors({
 
 app.use(express.urlencoded({extended:false})); // to obtain the data coming from forms in a json structure.
 app.use(express.json());
-app.use(express.static("Pictures"));
+app.use('/uploads', express.static("uploads"));
 app.use(express.static("node_modules"));
 app.use(express.static("style"));
 

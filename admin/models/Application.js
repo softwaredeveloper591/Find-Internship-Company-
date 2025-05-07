@@ -24,8 +24,9 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
     status: {
-      type: DataTypes.STRING(100),
-      allowNull: false
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
     },
     isApprovedByCompany: {
       type: DataTypes.BOOLEAN,
@@ -37,8 +38,7 @@ module.exports = function(sequelize, DataTypes) {
     },
     isSentBySecretary: {
       type: DataTypes.BOOLEAN,
-      allowNull: true,
-      defaultValue: 0
+      allowNull: true
     },
     applyDate: {
       type: DataTypes.DATE,

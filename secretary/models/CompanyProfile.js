@@ -1,55 +1,60 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('Application', {
+  return sequelize.define('CompanyProfile', {
     id: {
       autoIncrement: true,
       type: DataTypes.INTEGER,
       allowNull: false,
       primaryKey: true
     },
-    studentId: {
+    companyId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Student',
+        model: 'Company',
         key: 'id'
-      }
+      },
+      unique: "CompanyProfile_ibfk_1"
     },
-    announcementId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Announcement',
-        key: 'id'
-      }
+    address: {
+      type: DataTypes.STRING(255),
+      allowNull: true
     },
-    status: {
+    industry: {
+      type: DataTypes.STRING(45),
+      allowNull: true
+    },
+    contactPhone: {
+      type: DataTypes.STRING(20),
+      allowNull: true
+    },
+    contactEmail: {
       type: DataTypes.STRING(100),
-      allowNull: false
-    },
-    isApprovedByCompany: {
-      type: DataTypes.BOOLEAN,
       allowNull: true
     },
-    isApprovedByDIC: {
-      type: DataTypes.BOOLEAN,
+    website: {
+      type: DataTypes.STRING(255),
       allowNull: true
     },
-    isSentBySecretary: {
-      type: DataTypes.BOOLEAN,
+    socialMediaLinks: {
+      type: DataTypes.TEXT,
       allowNull: true
     },
-    applyDate: {
-      type: DataTypes.DATE,
+    companyLogo: {
+      type: DataTypes.STRING(255),
       allowNull: true
     },
-    statusUpdateDate: {
-      type: DataTypes.DATE,
+    bannerImage: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    about: {
+      type: DataTypes.TEXT,
       allowNull: true
     }
   }, {
     sequelize,
-    tableName: 'Application',
+    tableName: 'CompanyProfile',
     timestamps: false,
     indexes: [
       {
@@ -61,17 +66,11 @@ module.exports = function(sequelize, DataTypes) {
         ]
       },
       {
-        name: "studentId",
+        name: "companyId_UNIQUE",
+        unique: true,
         using: "BTREE",
         fields: [
-          { name: "studentId" },
-        ]
-      },
-      {
-        name: "announcementId",
-        using: "BTREE",
-        fields: [
-          { name: "announcementId" },
+          { name: "companyId" },
         ]
       },
     ]

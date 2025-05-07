@@ -19,7 +19,8 @@ router.use(auth, checkUserRole("student"));
 
 const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
 const { uploadFile } = require('../utils/fileUploader');
-const profileRouter = require("./studentProfileRouter"); // Import profile router
+const profileRouter = require("./studentProfileRouter"); 
+const internshipRouter = require("./studentInternshipRouter");
 
 const db = require('../data/db');
 
@@ -328,6 +329,62 @@ router.get("/opportunities", asyncErrorHandler(async (req, res, next) => {
 	res.status(200).json({ announcements: formattedAnnouncements });
 }));
 
+router.get("/opportunities/matchingSkills", asyncErrorHandler(async (req, res) => {
+	const studentId = req.user.id;
+	const now = moment.tz('Europe/Istanbul').toDate();
+
+	// Get student skill IDs
+	const studentSkills = await db.StudentSkill.findAll({
+		where: { studentId },
+		attributes: ['skillId']
+	});
+	const skillIds = studentSkills.map(s => s.skillId);
+
+	if (skillIds.length === 0) {
+		return res.status(200).json({ announcements: [] }); // No skills, no matches
+	}
+
+	const announcements = await db.Announcement.findAll({
+		where: {
+			status: "approved",
+			startDate: { [Op.lte]: now },
+			endDate: { [Op.gt]: now },
+			id: {
+				[Op.notIn]: Sequelize.literal(`(
+                    SELECT announcementId
+                    FROM Application
+                    WHERE studentId = ${studentId}
+                )`)
+			}
+		},
+		attributes: ["id", "announcementName", "image"],
+		include: [
+			{
+				model: db.Company,
+				attributes: ['name']
+			},
+			{
+				model: db.Skill,
+				as: 'skillId_Skills',
+				where: {
+					id: {
+						[Op.in]: skillIds
+					}
+				},
+				attributes: [] 
+			}
+		],
+		distinct: true
+	});
+
+	const formattedAnnouncements = announcements.map(a => ({
+		...a.dataValues,
+		image: a.image ? `data:image/png;base64,${a.image.toString('base64')}` : null
+	}));
+
+	res.status(200).json({ announcements: formattedAnnouncements });
+}));
+
 router.get("/opportunities/:opportunityId", asyncErrorHandler(async (req, res, next) => {
 	const student = await db.Student.findOne({ where: { id: req.user.id } });
 	const opportunityId = req.params.opportunityId
@@ -407,7 +464,6 @@ router.post("/opportunities/:opportunityId", upload.single('CV'), asyncErrorHand
 	const application = await db.Application.create({
 		studentId: student.id,
 		announcementId,
-		status: 0,
 		statusUpdateDate: new Date()
 	});
 
@@ -845,5 +901,6 @@ router.put("/updateMessage/:id", asyncErrorHandler(async (req, res, next) => {
 }));
 
 router.use("/profile", profileRouter);
+router.use("/internship", internshipRouter);
 
 module.exports = router;

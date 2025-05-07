@@ -1,11 +1,19 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('Application', {
+  return sequelize.define('Review', {
     id: {
       autoIncrement: true,
       type: DataTypes.INTEGER,
       allowNull: false,
       primaryKey: true
+    },
+    companyId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Company',
+        key: 'id'
+      }
     },
     studentId: {
       type: DataTypes.INTEGER,
@@ -15,42 +23,18 @@ module.exports = function(sequelize, DataTypes) {
         key: 'id'
       }
     },
-    announcementId: {
+    rating: {
       type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Announcement',
-        key: 'id'
-      }
-    },
-    status: {
-      type: DataTypes.STRING(100),
-      allowNull: false
-    },
-    isApprovedByCompany: {
-      type: DataTypes.BOOLEAN,
       allowNull: true
     },
-    isApprovedByDIC: {
-      type: DataTypes.BOOLEAN,
-      allowNull: true
-    },
-    isSentBySecretary: {
-      type: DataTypes.BOOLEAN,
-      allowNull: true
-    },
-    applyDate: {
-      type: DataTypes.DATE,
-      allowNull: true
-    },
-    statusUpdateDate: {
-      type: DataTypes.DATE,
+    comment: {
+      type: DataTypes.TEXT,
       allowNull: true
     }
   }, {
     sequelize,
-    tableName: 'Application',
-    timestamps: false,
+    tableName: 'Review',
+    timestamps: true,
     indexes: [
       {
         name: "PRIMARY",
@@ -61,17 +45,17 @@ module.exports = function(sequelize, DataTypes) {
         ]
       },
       {
+        name: "companyId",
+        using: "BTREE",
+        fields: [
+          { name: "companyId" },
+        ]
+      },
+      {
         name: "studentId",
         using: "BTREE",
         fields: [
           { name: "studentId" },
-        ]
-      },
-      {
-        name: "announcementId",
-        using: "BTREE",
-        fields: [
-          { name: "announcementId" },
         ]
       },
     ]
