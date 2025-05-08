@@ -93,11 +93,23 @@ const requestLink = async (studentId, companyEmail) => {
 	await db.CompanyUploadLinkRequest.create( { internshipId: internship.id, studentId, companyEmail });
 }
 
-const uploadFile = async(studentId, document) => {
+const uploadFile = async(studentId, document, internshipStatus) => {
 	const existingInternship = await db.Internship.findOne({ where: { studentId, status: 1 }});
 
 	if (!existingInternship) {
 		return { status: 403, message: "Your internship hasen't finished yet" };
+	}
+
+	// Check if a document of the same fileType already exists
+	const existingDoc = await db.Document.findOne({
+		where: {
+			userId: studentId,
+			fileType: document.fileType
+		}
+	});
+
+	if (existingDoc) {
+		return { status: 400, message: `You have already uploaded a ${document.fileType}.` };
 	}
 
 	const transaction = await db.sequelize.transaction(); 
@@ -109,6 +121,27 @@ const uploadFile = async(studentId, document) => {
 		document.userId = studentId;
 
 		const createdDoc = await db.Document.create(document, { transaction });
+
+		// After current document is uploaded, check if both Report and Survey exist
+		const fileTypesToCheck = ['Report', 'Survey'];
+		const docs = await db.Document.findAll({
+			where: {
+				userId: studentId,
+				fileType: fileTypesToCheck
+			},
+			transaction
+		});
+
+		const uploadedTypes = docs.map(d => d.fileType);
+		const hasReport = uploadedTypes.includes('Report');
+		const hasSurvey = uploadedTypes.includes('Survey');
+
+		const newStatus = hasReport && hasSurvey ? 4 : internshipStatus;
+
+		await db.Internship.update(
+			{ status: newStatus },
+			{ where: { id: existingInternship.id }, transaction }
+		);
 
 		await transaction.commit(); // ✅ Commit if all succeeds
 		return createdDoc;

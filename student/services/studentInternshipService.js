@@ -45,7 +45,7 @@ const uploadReport = async (file, studentId) => {
 		name
 	}
 
-  	return await internshipRepository.uploadFile(studentId, document);
+  	return await internshipRepository.uploadFile(studentId, document, 2);
 }
 
 const uploadSurvey = async (file, studentId) => {
@@ -61,7 +61,7 @@ const uploadSurvey = async (file, studentId) => {
 		name
 	}
 
-  	return await internshipRepository.uploadFile(studentId, document);
+  	return await internshipRepository.uploadFile(studentId, document, 3);
 }
 
 module.exports = {
