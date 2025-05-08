@@ -43,10 +43,32 @@ const requestLink = async (req, res) => {
 	return res.status(200).json({ message: "Link is requested" });
 }
 
+const uploadReport = async (req, res) => {
+	const result = await internshipService.uploadReport(req.file, req.user.id);
+
+	if (result?.status && result?.message) {
+		return res.status(result.status).json({ message: result.message });
+	}
+  
+	return res.status(201).json({ message: "Summer Practise Report uploaded successfully" });
+}
+
+const uploadSurvey = async (req, res) => {
+	const result = await internshipService.uploadSurvey(req.file, req.user.id);
+
+	if (result?.status && result?.message) {
+		return res.status(result.status).json({ message: result.message });
+	}
+  
+	return res.status(201).json({ message: "Summer Practise Survey uploaded successfully" });
+}
+
 module.exports = {
 	getInternship,
     getFiles,
 	uploadApplicationForm,
 	finishInternship,
-	requestLink
+	requestLink,
+	uploadReport,
+	uploadSurvey
 };
