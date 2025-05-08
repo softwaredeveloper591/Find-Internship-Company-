@@ -1,5 +1,6 @@
 const { Server } = require("socket.io");
 const db = require("../data/db"); // Adjust the path to your database file
+const cookieParser = require("cookie-parser");
 const jwt=require("jsonwebtoken");
 const { APP_SECRET } = require("../config");
 
@@ -47,10 +48,15 @@ function initializeSocketServer(server) {
     const io = new Server(server);
 
     io.use((socket, next) => {
-        const token = socket.handshake.auth.token;
+        const cookies = socket.handshake.headers.cookie;
+        if (!cookies) {
+            return next(new Error("Authentication error: No cookies found"));
+        }
+        const parsedCookies = cookieParser.JSONCookies(cookieParser.parse(cookies));
+        const token = parsedCookies.jwt; // Extract the JWT from cookies
         
         if (!token) {
-            return next(new Error("Authentication error"));
+            return next(new Error("Authentication error: No token found in cookies"));
         }
         // Verify token and attach user to socket
         jwt.verify(token, APP_SECRET, (err, user) => {
