@@ -1,5 +1,9 @@
 const db = require("../data/db");
 
+const getInternship = async (studentId) => {
+	return await db.Internship.findOne( { where: { studentId }});
+};
+
 const getFiles = async (studentId) => {
 	return await db.Document.findAll({
 		where: { userId: studentId },
@@ -71,6 +75,7 @@ const requestLink = async (studentId, companyEmail) => {
 }
 
 module.exports = {
+	getInternship,
     getFiles,
 	uploadApplicationForm,
 	finishInternship,

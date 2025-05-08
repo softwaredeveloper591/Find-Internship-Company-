@@ -4,6 +4,8 @@ const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
 const internshipController = require("../controllers/studentInternshipController");
 const upload = require('../middleware/fileUploader'); 
 
+router.get("/", asyncErrorHandler(internshipController.getInternship));
+
 // The page where all file operations are performed
 router.get("/files", asyncErrorHandler(internshipController.getFiles));
 

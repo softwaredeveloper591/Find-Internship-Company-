@@ -252,7 +252,7 @@ router.post("/applications/:applicationId/fillApplicationForm",[auth,checkUserRo
 	const applicationId = req.params.applicationId;
 
 	const document = await db.Document.findOne({
-		where: { applicationId, fileType: "Application Form" },
+		where: { applicationId, fileType: "ApplicationForm" },
 		include: {
 			model: db.Application,
 			include: [
@@ -309,7 +309,7 @@ router.post("/applications/:applicationId/fillApplicationForm",[auth,checkUserRo
 	zip.updateFile("word/document.xml", Buffer.from(docxTemplate, "utf-8"));
 
 	const updatedDocxBuffer = zip.toBuffer();
-	const updatedApplicationForm = await db.Document.findOne({where: {applicationId, fileType: "Application Form"}});
+	const updatedApplicationForm = await db.Document.findOne({where: {applicationId, fileType: "ApplicationForm"}});
 
 	if (updatedApplicationForm === null) {
 		await db.Document.create({
@@ -320,7 +320,7 @@ router.post("/applications/:applicationId/fillApplicationForm",[auth,checkUserRo
 		});
 	}
 	else {
-		await db.Document.update({ data: updatedDocxBuffer }, { where: { applicationId, fileType: "Application Form" } });   
+		await db.Document.update({ data: updatedDocxBuffer }, { where: { applicationId, fileType: "ApplicationForm" } });   
     }
 	return res.status(200).json({ message: "Application filled successfully." });
 }));
@@ -352,7 +352,7 @@ router.put("/applications/:applicationId",upload.single('upload-file'),[auth,che
 	let binaryData = null;
 	if (file) {
 		binaryData = file.buffer;
-		await db.Document.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "Application Form" } });
+		await db.Document.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "ApplicationForm" } });
 	}
 
 	const emailSubject = isApproved === "true" ? 'Application Approved' : 'Application Rejected';
@@ -384,13 +384,15 @@ router.get("/applications/download/:applicationId/:fileType",[auth,checkUserRole
         return res.status(400).json({ error: "You need to fill the form before downloading the application form." });
     }
 
-    let filename= takenDocument.dataValues.name;
-    let binaryData= takenDocument.dataValues.data;
-    const contentType = mime.lookup(filename) || 'application/octet-stream';
+    let filename = takenDocument.name;
+    let binaryData = takenDocument.data;
+	console.log(binaryData);
+	const contentType = mime.lookup(filename) || 'application/octet-stream';
 
-    res.setHeader('Content-Disposition', 'attachment; filename='+encodeURI(filename));
-    res.setHeader('Content-Type', contentType);
-    res.send(binaryData);
+  	res.header('Access-Control-Expose-Headers', 'Content-Disposition');
+  	res.setHeader('Content-Disposition', 'attachment; filename=' + encodeURI(filename));
+  	res.setHeader('Content-Type', contentType);
+  	res.send(binaryData);
 }));
 
 router.get("/internships",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {

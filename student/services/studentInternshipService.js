@@ -1,5 +1,9 @@
 const internshipRepository = require("../repositories/studentInternshipRepository");
 
+const getInternship = async (studentId) => {
+	return await internshipRepository.getInternship(studentId);
+};
+
 const getFiles = async (studentId) => {
 	return await internshipRepository.getFiles(studentId);
 };
@@ -29,6 +33,7 @@ const requestLink = async (studentId, companyEmail) => {
 }
 
 module.exports = {
+	getInternship,
     getFiles,
 	uploadApplicationForm,
 	finishInternship,

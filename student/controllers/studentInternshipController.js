@@ -1,5 +1,10 @@
 const internshipService = require("../services/studentInternshipService");
 
+const getInternship = async (req, res) => {
+	const internship = await internshipService.getInternship(req.user.id);
+	return res.status(201).json(internship);
+}
+
 const getFiles = async (req, res) => {
 	const files = await internshipService.getFiles(req.user.id);
 	return res.status(200).json(files);
@@ -15,7 +20,7 @@ const uploadApplicationForm = async (req, res) => {
 		return res.status(result.status).json({ message: result.message });
 	}
   
-	res.status(201).json({ message: "Application Form uploaded successfully" });
+	return res.status(201).json({ message: "Application Form uploaded successfully" });
 };
 
 const finishInternship = async (req, res) => {
@@ -39,6 +44,7 @@ const requestLink = async (req, res) => {
 }
 
 module.exports = {
+	getInternship,
     getFiles,
 	uploadApplicationForm,
 	finishInternship,

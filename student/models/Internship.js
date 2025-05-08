@@ -35,12 +35,16 @@ module.exports = function(sequelize, DataTypes) {
       unique: "Internship_ibfk_3"
     },
     status: {
-      type: DataTypes.ENUM('Started','Finished','Rejected','Approved'),
+      type: DataTypes.INTEGER,
       allowNull: false,
-      defaultValue: "Started"
+      defaultValue: 0
     },
     score: {
       type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    isApprovedByCompany: {
+      type: DataTypes.BOOLEAN,
       allowNull: true
     },
     isApprovedByDIC: {
