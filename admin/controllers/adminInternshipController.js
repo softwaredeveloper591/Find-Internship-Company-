@@ -1,9 +1,8 @@
 const internshipService = require("../services/adminInternshipService");
 
 const getManualApplications = async (req, res) => {	
-	const adminId = req.user.id;
-	const manualApplications = await internshipService.getManualApplications(adminId);
-	return res.status(200).json(manualApplications);
+	const manualApplications = await internshipService.getManualApplications(req.user.id);
+	return res.status(200).json( manualApplications );
 };
 
 const approveManualApplications = async (req, res) => {
@@ -45,8 +44,25 @@ const downloadFile = async (req, res) => {
   	res.send(data);
 }
 
+const getLinkRequests = async (req, res) => {
+	const linkRequests = await internshipService.getLinkRequests();
+	return res.status(200).json( linkRequests );
+}
+
+const approveLinkRequest = async (req, res) => {
+	const result = await internshipService.approveLinkRequest(req.params.id, req.body.isApproved);
+
+	if (result?.status && result?.message) {
+		return res.status(result.status).json({ message: result.message });
+	}
+
+	return res.status(200).json({ message: "Link request approved successfully." });
+}
+
 module.exports = {
     getManualApplications,
 	approveManualApplications,
-	downloadFile
+	downloadFile,
+	getLinkRequests,
+	approveLinkRequest
 };

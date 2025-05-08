@@ -225,8 +225,7 @@ router.post("/applications/:applicationId", upload.single('studentFile'), [auth,
 	await application.save();
 
 	await db.Internship.create({
-		id: applicationId,
-		studentName: application.Student.username,
+		applicationId,
 		studentId: application.Student.id
 	});
 

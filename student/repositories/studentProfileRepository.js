@@ -274,7 +274,7 @@ const deletePhoto = async (studentId) => {
 
     if (!profile || !profile.profilePicture) return;
 
-    const photoPath = path.join(__dirname, '..', 'uploads', profile.profilePicture); // adjust path if needed
+    const photoPath = path.join(__dirname, '..', profile.profilePicture); // adjust path if needed
 
     // Delete file from filesystem
     fs.unlink(photoPath, (err) => {
@@ -298,7 +298,7 @@ const deleteBannerImage = async (studentId) => {
 
     if (!profile || !profile.bannerImage) return;
 
-    const photoPath = path.join(__dirname, '..', 'uploads', profile.bannerImage); // adjust path if needed
+    const photoPath = path.join(__dirname, '..', profile.bannerImage); // adjust path if needed
 
     // Delete file from filesystem
     fs.unlink(photoPath, (err) => {

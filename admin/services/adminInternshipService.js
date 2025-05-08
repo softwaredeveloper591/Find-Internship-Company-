@@ -14,8 +14,18 @@ const downloadFile = async (whereClause) => {
 	return await internshipRepository.downloadFile(whereClause);
 }
 
+const getLinkRequests = async () => {
+	return await internshipRepository.getLinkRequests();
+}
+
+const approveLinkRequest = async (requestId, isApproved) => {
+	return await internshipRepository.approveLinkRequest(requestId, isApproved);
+}
+
 module.exports = {
     getManualApplications,
 	approveManualApplications,
-	downloadFile
+	downloadFile,
+	getLinkRequests,
+	approveLinkRequest
 };

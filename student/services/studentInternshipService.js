@@ -1,5 +1,9 @@
 const internshipRepository = require("../repositories/studentInternshipRepository");
 
+const getInternship = async (studentId) => {
+	return await internshipRepository.getInternship(studentId);
+};
+
 const getFiles = async (studentId) => {
 	return await internshipRepository.getFiles(studentId);
 };
@@ -24,8 +28,48 @@ const finishInternship = async (studentId) => {
 	return await internshipRepository.finishInternship(studentId);
 }
 
+const requestLink = async (studentId, companyEmail) => {
+	return await internshipRepository.requestLink(studentId, companyEmail);
+}
+
+const uploadReport = async (file, studentId) => {
+	if (!file) return { status: 400, message: "No file uploaded" };
+
+  	const fileType = "Report";
+  	const data = file.buffer;
+	const name = file.originalname;
+
+	const document = {
+		fileType,
+		data,
+		name
+	}
+
+  	return await internshipRepository.uploadFile(studentId, document, 2);
+}
+
+const uploadSurvey = async (file, studentId) => {
+	if (!file) return { status: 400, message: "No file uploaded" };
+
+  	const fileType = "Survey";
+  	const data = file.buffer;
+	const name = file.originalname;
+
+	const document = {
+		fileType,
+		data,
+		name
+	}
+
+  	return await internshipRepository.uploadFile(studentId, document, 3);
+}
+
 module.exports = {
+	getInternship,
     getFiles,
 	uploadApplicationForm,
-	finishInternship
+	finishInternship,
+	requestLink,
+	uploadReport,
+	uploadSurvey
 };

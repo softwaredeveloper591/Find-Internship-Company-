@@ -308,7 +308,7 @@ router.get("/opportunities", asyncErrorHandler(async (req, res, next) => {
 			id: {
 				[Op.notIn]: Sequelize.literal(`(
                     SELECT announcementId
-                    FROM application
+                    FROM Application
                     WHERE studentId = ${student.id}
                 )`)
 			}
@@ -468,10 +468,10 @@ router.post("/opportunities/:opportunityId", upload.single('CV'), asyncErrorHand
 	});
 
 	await db.Document.create({
-		name: `${student.username}_ApplicationForm`,
+		name: file.originalname,
 		applicationId: application.id,
 		data: bufferedApplicationForm,
-		fileType: 'Application Form',
+		fileType: 'ApplicationForm',
 		username: student.username
 	});
 

@@ -1,4 +1,5 @@
 const db = require("../data/db");
+const { generateSecureToken } = require('../utils/tokenUtil');
 
 const getManualApplications = async (adminId) => {
 
@@ -70,8 +71,54 @@ const downloadFile = async (whereClause) => {
 	return await db.Document.findOne({ where: whereClause });
 }
 
+const getLinkRequests = async () => {
+	return await db.CompanyUploadLinkRequest.findAll({ where: { status: "Pending" }});
+}
+
+const approveLinkRequest = async (requestId, isApproved) => {
+	const request = await db.CompanyUploadLinkRequest.findByPk(requestId);
+
+	if (!request) {
+		return { status: 404, message: "Request not found." };
+	}
+
+	const existingRequest = await db.CompanyUploadLinkRequest.findOne({
+		where: {
+			id: requestId, 
+			status: 'Approved'
+		}
+	});
+	
+	if (existingRequest) {
+		return { status: 400, message: "Request is already approved." };
+	}
+
+	if (isApproved) {
+		const token = generateSecureToken(); // from crypto
+
+    	await db.CompanyUploadLinkRequest.update(
+			{
+    	    	status: "Approved",
+    	    	token,
+    	    	expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // 3 days
+    		}, 
+			{ where: { id: requestId }}
+		);
+	}
+	else {
+		await db.CompanyUploadLinkRequest.update(
+			{
+    	    	status: "Rejected",
+    		}, 
+			{ where: { id: requestId }}
+		);
+	}
+}
+
 module.exports = {
     getManualApplications,
 	approveManualApplications,
-	downloadFile
+	downloadFile,
+	getLinkRequests,
+	approveLinkRequest
 };

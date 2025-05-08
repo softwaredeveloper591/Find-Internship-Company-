@@ -1,5 +1,10 @@
 const internshipService = require("../services/studentInternshipService");
 
+const getInternship = async (req, res) => {
+	const internship = await internshipService.getInternship(req.user.id);
+	return res.status(201).json(internship);
+}
+
 const getFiles = async (req, res) => {
 	const files = await internshipService.getFiles(req.user.id);
 	return res.status(200).json(files);
@@ -15,7 +20,7 @@ const uploadApplicationForm = async (req, res) => {
 		return res.status(result.status).json({ message: result.message });
 	}
   
-	res.status(201).json({ message: "Application Form uploaded successfully" });
+	return res.status(201).json({ message: "Application Form uploaded successfully" });
 };
 
 const finishInternship = async (req, res) => {
@@ -28,8 +33,42 @@ const finishInternship = async (req, res) => {
 	return res.status(200).json({ message: "Internship marked as finished" });
 }
 
+const requestLink = async (req, res) => {
+	const result = await internshipService.requestLink(req.user.id, req.body.companyEmail);
+
+	if (result?.status && result?.message) {
+		return res.status(result.status).json({ message: result.message });
+	}
+	
+	return res.status(200).json({ message: "Link is requested" });
+}
+
+const uploadReport = async (req, res) => {
+	const result = await internshipService.uploadReport(req.file, req.user.id);
+
+	if (result?.status && result?.message) {
+		return res.status(result.status).json({ message: result.message });
+	}
+  
+	return res.status(201).json({ message: "Summer Practise Report uploaded successfully" });
+}
+
+const uploadSurvey = async (req, res) => {
+	const result = await internshipService.uploadSurvey(req.file, req.user.id);
+
+	if (result?.status && result?.message) {
+		return res.status(result.status).json({ message: result.message });
+	}
+  
+	return res.status(201).json({ message: "Summer Practise Survey uploaded successfully" });
+}
+
 module.exports = {
+	getInternship,
     getFiles,
 	uploadApplicationForm,
-	finishInternship
+	finishInternship,
+	requestLink,
+	uploadReport,
+	uploadSurvey
 };

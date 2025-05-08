@@ -778,7 +778,7 @@ router.put("/applications/:applicationId", upload.single('studentFile'), [auth, 
 	let binaryData = null;
 	if (file) {
 		binaryData = file.buffer;
-		await db.Document.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "Application Form" } });
+		await db.Document.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "ApplicationForm" } });
 	}
 	const { isApproved, feedback } = req.body;
 
