@@ -1,25 +1,27 @@
 const { Server } = require("socket.io");
 const db = require("../data/db"); // Adjust the path to your database file
-const jwt=require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
+const cookie = require("cookie");
+const jwt = require("jsonwebtoken");
 const { APP_SECRET } = require("../config");
 
 findUserByIdandType = async (userId, userType) => {
     let user = null;
     // Check the userType and find the user accordingly
-    if(userType == "student") {
-         user = await db.Student.findOne({ where: { id: userId }, attributes: { exclude: ['password'] } });
+    if (userType == "student") {
+        user = await db.Student.findOne({ where: { id: userId }, attributes: { exclude: ['password'] } });
     }
-    else if(userType == "company") {
-         user = await db.Company.findOne({ where: { id: userId }, attributes: { exclude: ['password'] } });
+    else if (userType == "company") {
+        user = await db.Company.findOne({ where: { id: userId }, attributes: { exclude: ['password'] } });
     }
-    else if(userType == "admin") {
-         user = await db.Admin.findOne({ where: { id: userId }, attributes: { exclude: ['password'] } });
+    else if (userType == "admin") {
+        user = await db.Admin.findOne({ where: { id: userId }, attributes: { exclude: ['password'] } });
     }
-    else if(userType == "secretary") {
-         user = await db.Secretary.findOne({ where: { id: userId }, attributes: { exclude: ['password'] } });
+    else if (userType == "secretary") {
+        user = await db.Secretary.findOne({ where: { id: userId }, attributes: { exclude: ['password'] } });
     }
     // If userType is not recognized, return null or throw an error
-    return user; 
+    return user;
 }
 
 async function findReceiverByEmail(email) {
@@ -43,28 +45,43 @@ async function findReceiverByEmail(email) {
     return receiver;
 }
 
-function initializeSocketServer(server) {  
-    const io = new Server(server);
+function initializeSocketServer(server) {
+    const io = new Server(server, {
+        cors: {
+            origin: "http://localhost:5173",
+            methods: ["GET", "POST"],
+            credentials: true
+        }
+    });
 
     io.use((socket, next) => {
-        const token = socket.handshake.auth.token;
-        
+        const cookies = socket.handshake.headers.cookie;
+
+        if (!cookies) {
+            return next(new Error("Authentication error: No cookies found"));
+        }
+        const parsed = cookie.parse(cookies); // 1) Cookie ile cookie’leri parse edersiniz
+
+        // 2) JSONCookies ile stringify edilmiş cookie’leri açarsınız
+        const cookieFinal = cookieParser.JSONCookies(parsed);
+        const token = cookieFinal.jwt; // 3) Cookie’lerden token’i alırsınız
+
         if (!token) {
-            return next(new Error("Authentication error"));
+            return next(new Error("Authentication error: No token found in cookies"));
         }
         // Verify token and attach user to socket
         jwt.verify(token, APP_SECRET, (err, user) => {
             if (err) {
                 return next(new Error("Authentication error"));
-              }
-        
-              // Check the userType attribute of the JWT payload
-              if (user.userType != "student" && user.userType != "company" && user.userType != "admin" && user.userType != "secretary") {
+            }
+
+            // Check the userType attribute of the JWT payload
+            if (user.userType != "student" && user.userType != "company" && user.userType != "admin" && user.userType != "secretary") {
                 // If the userType is not one of the allowed types, return an error
                 return next(new Error("Authentication error"));
-              }
-              socket.user = user;
-              next();
+            }
+            socket.user = user;
+            next();
         });
     });
 
@@ -73,13 +90,12 @@ function initializeSocketServer(server) {
         console.log(`User connected: ${socket.user.id}`);
         const conversationId = socket.handshake.query.conversationId;
         if (!conversationId) {
-            socket.emit("error", { message: "Conversation ID is required" });   
+            socket.emit("error", { message: "Conversation ID is required" });
             return;
         }
         // Find the conversation by ID
         const conversationIdInt = parseInt(conversationId, 10);
         const conversation = await db.Conversations.findOne({ where: { id: conversationIdInt } });
-
         if (!conversation) {
             socket.emit("error", { message: "Conversation not found" });
             return;
@@ -89,7 +105,7 @@ function initializeSocketServer(server) {
         const user = await findUserByIdandType(socket.user.id, socket.user.userType);
         if (!user) {
             socket.emit("error", { message: "User not found" });
-            return; 
+            return;
         }
 
         if (![conversation.user1_email, conversation.user2_email].includes(user.email)) {
@@ -127,79 +143,86 @@ function initializeSocketServer(server) {
         socket.emit("conversationMessages", { messages: unifiedMessages });
         // Update the new messages count for the user who is not the sender
         //client: we can also update the new messages count when client sends an acknowledgment that all conversation messages are received.
-	    conversation.user1_email === user.email ? conversation.update({ user1_new_messages: 0 }) : conversation.update({ user2_new_messages: 0 });
+        conversation.user1_email === user.email ? conversation.update({ user1_new_messages: 0 }) : conversation.update({ user2_new_messages: 0 });
 
         // Handle sending messages
         socket.on("sendMessage", async ({ message, file, fileName }) => {
             const user = socket.user;
             const conversation = socket.conversation;
 
+
             if (!message && !file) {
                 socket.emit("error", { message: "Message or file is required" });
                 return;
             }
 
-            let receiverEmail;
-            if (conversation.user1_email === user.email) {
-                receiverEmail = conversation.user2_email;
-            } else if (conversation.user2_email === user.email) {
-                receiverEmail = conversation.user1_email;
-            }
+            let receiverEmail = conversation.user1_email === user.email
+                ? conversation.user2_email
+                : conversation.user1_email;
 
             const receiver = await findReceiverByEmail(receiverEmail);
             if (!receiver) {
                 socket.emit("error", { message: "Receiver not found" });
                 return;
             }
-            
-            const matches = file.match(/^data:(.+);base64,(.+)$/);
+
+            // ONLY parse base64 if file is a string
             let data = null;
-            if (matches) {
-                // const mimeType = matches[1];
-                const base64Data = matches[2]; 
-                data= Buffer.from(base64Data, 'base64'); // Convert base64 string to buffer     
-            } 
-
-            const createdMessage = db.Message.create({
-                from: user.email,
-                senderName: user.username,
-                to: receiverEmail,
-                receiverName: receiver.username,
-                conversation_id: conversationIdInt,
-                message,
-                fileName,
-                data
-            });
-
-            if (conversation.user1_email === user.email) {
-                const numberOfNewMessages = conversation.user2_new_messages + 1;
-                conversation.update({ last_message_time: createdMessage.createdAt, user2_new_messages: numberOfNewMessages });
-            } else if (conversation.user2_email === user.email) {
-                const numberOfNewMessages = conversation.user1_new_messages + 1;
-                conversation.update({ last_message_time: createdMessage.createdAt, user1_new_messages: numberOfNewMessages });
+            if (typeof file === "string") {
+                const matches = file.match(/^data:(.+);base64,(.+)$/);
+                if (matches) {
+                    const base64Data = matches[2];
+                    data = Buffer.from(base64Data, "base64");
+                }
             }
 
-            // Emit the message to the others in conversation room
-            socket.broadcast.to(conversationIdInt).emit("newMessage", {
+            // Create the message record
+            const createdMessage = await db.Message.create({
                 from: user.email,
                 senderName: user.username,
                 to: receiverEmail,
                 receiverName: receiver.username,
-                conversation_id: conversationIdInt,
+                conversation_id: conversation.id,
                 message,
                 fileName,
                 data
             });
 
-            await createdMessage;
+            // Update unread counts & last_message_time
+            if (conversation.user1_email === user.email) {
+                await conversation.update({
+                    last_message_time: createdMessage.createdAt,
+                    user2_new_messages: conversation.user2_new_messages + 1
+                });
+            } else {
+                await conversation.update({
+                    last_message_time: createdMessage.createdAt,
+                    user1_new_messages: conversation.user1_new_messages + 1
+                });
+            }
+
+            // Emit to other clients
+            socket.broadcast.to(conversation.id).emit("newMessage", {
+                from: user.email,
+                senderName: user.username,
+                to: receiverEmail,
+                receiverName: receiver.username,
+                conversation_id: conversation.id,
+                message,
+                fileName,
+                data: data?.toString("base64") || null
+            });
+
+            // Acknowledge back to sender
             socket.emit("messageDelivered", {
                 id: createdMessage.id,
                 receiver: receiver.username,
                 message
             });
-
-            console.log(`Message sent in conversation ${conversationIdInt}`);
+            
+            console.log(`Message sent in conversation ${conversation.id}`);
         });
+
 
         socket.on("markRead", async (messageId) => {
             const user = socket.user;
@@ -227,9 +250,9 @@ function initializeSocketServer(server) {
 
             socket.broadcast.to(conversation.id).emit("messageRead", { messageId });
             await message.update({ is_read: true });
-            
+
             // Emit the marking read event to the sender of the message
-            socket.emit("MarkingReadissued", {messageId});
+            socket.emit("MarkingReadissued", { messageId });
         });
 
         // receiver can't delete the message. only sender can delete the message.
@@ -257,7 +280,7 @@ function initializeSocketServer(server) {
                 return;
             }
 
-            if(message.is_read===false) {
+            if (message.is_read === false) {
                 if (conversation.user1_email === user.email) {
                     const numberOfNewMessages = conversation.user2_new_messages - 1;
                     conversation.update({ user2_new_messages: numberOfNewMessages });
@@ -268,7 +291,7 @@ function initializeSocketServer(server) {
             }
 
             await message.destroy();
-            
+
             // Emit the delete event to the other participant in the conversation
             socket.broadcast.to(conversation.id).emit("messageDeleted", { messageId });
             socket.emit("messageSuccesfullyDeleted", { deletedmessageId: messageId });
