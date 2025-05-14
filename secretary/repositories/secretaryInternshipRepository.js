@@ -77,7 +77,7 @@ const approveManualApplications = async (manualApplicationId, studentId, isAppro
 
 		    await db.Document.create(documentData, { transaction });
 				
-		    await db.Internship.create({ manualApplicationId, studentId }, { transaction });
+		    await db.Internship.create({ manualApplicationId, studentId, isApprovedByCompany: true }, { transaction });
 				
 		    await db.ManualApplication.update(
 		        { isSentBySecretary: true, status: 2 },

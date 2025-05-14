@@ -28,8 +28,8 @@ const finishInternship = async (studentId) => {
 	return await internshipRepository.finishInternship(studentId);
 }
 
-const requestLink = async (studentId, companyEmail) => {
-	return await internshipRepository.requestLink(studentId, companyEmail);
+const requestLink = async (studentId, companyData) => {
+	return await internshipRepository.requestLink(studentId, companyData);
 }
 
 const uploadReport = async (file, studentId) => {

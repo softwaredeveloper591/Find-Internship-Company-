@@ -24,7 +24,7 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
     status: {
-      type: DataTypes.ENUM('Pending','Approved','Rejected'),
+      type: DataTypes.ENUM('Pending','Approved','Rejected','Completed'),
       allowNull: true,
       defaultValue: "Pending"
     },
@@ -38,6 +38,10 @@ module.exports = function(sequelize, DataTypes) {
     },
     companyEmail: {
       type: DataTypes.STRING(100),
+      allowNull: false
+    },
+    companyName: {
+      type: DataTypes.STRING(45),
       allowNull: false
     }
   }, {

@@ -76,44 +76,54 @@ const getLinkRequests = async () => {
 }
 
 const approveLinkRequest = async (requestId, isApproved) => {
-	const request = await db.CompanyUploadLinkRequest.findByPk(requestId);
-
-	if (!request) {
-		return { status: 404, message: "Request not found." };
-	}
-
-	const existingRequest = await db.CompanyUploadLinkRequest.findOne({
-		where: {
-			id: requestId, 
-			status: 'Approved'
-		}
+	const request = await db.CompanyUploadLinkRequest.findByPk(requestId, {
+		include: [
+			{ model: db.Student, attributes: ['email', 'username'] }
+		]
 	});
-	
-	if (existingRequest) {
+
+	if (!request) return { status: 404, error: "Request not found." };
+
+	if (request.status !== 'Pending') {
 		return { status: 400, message: "Request is already approved." };
 	}
 
-	if (isApproved) {
-		const token = generateSecureToken(); // from crypto
+	const companyEmail = request.companyEmail;
+	const companyName = request.companyName;
 
-    	await db.CompanyUploadLinkRequest.update(
-			{
-    	    	status: "Approved",
-    	    	token,
-    	    	expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // 3 days
-    		}, 
-			{ where: { id: requestId }}
-		);
+	if (isApproved) {
+		const token = generateSecureToken();
+		const expiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+
+		await request.update({
+			status: "Approved",
+			token,
+			expiresAt
+		});
+
+		return {
+			status: 200,
+			data: {
+				student: request.Student,
+				company: { companyEmail, companyName },
+				token,
+				expiresAt,
+				approved: true
+			}
+		};
+	} else {
+		await request.update({ status: "Rejected" });
+
+		return {
+			status: 200,
+			data: {
+				student: request.Student,
+				company: request.Company,
+				approved: false
+			}
+		};
 	}
-	else {
-		await db.CompanyUploadLinkRequest.update(
-			{
-    	    	status: "Rejected",
-    		}, 
-			{ where: { id: requestId }}
-		);
-	}
-}
+};
 
 module.exports = {
     getManualApplications,

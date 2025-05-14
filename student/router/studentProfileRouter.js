@@ -7,10 +7,10 @@ const upload = require('../middleware/imageUploader');
 // Get profile
 router.get("/", asyncErrorHandler(profileController.getProfile));
 router.post("/", upload.fields([
-    { name: 'profilePicture', maxCount: 1 },
-    { name: 'bannerImage', maxCount: 1 }
-  ]), 
-  asyncErrorHandler(profileController.createProfile));
+		{ name: 'profilePicture', maxCount: 1 },
+    	{ name: 'bannerImage', maxCount: 1 }
+  	]), 
+  	asyncErrorHandler(profileController.createProfile));
 
 // Update bio, phoneNumber, email, webSite, address
 router.put("/bio", asyncErrorHandler(profileController.updateBio));

@@ -1,7 +1,8 @@
 const db = require("../data/db");
+const { Op } = require('sequelize');
 
 const getInternship = async (studentId) => {
-	return await db.Internship.findOne({
+	const internship = await db.Internship.findOne({
 		where: { studentId },
 		include: {
 		  	model: db.Application,
@@ -15,6 +16,12 @@ const getInternship = async (studentId) => {
 		  	}
 		}
 	});
+
+	if (!internship) {
+		return { status: 404, message: "You don't have an internship" };
+	}
+
+	return internship;
 };
 
 const getFiles = async (studentId) => {
@@ -75,29 +82,45 @@ const finishInternship = async (studentId) => {
 	);
 }
 
-const requestLink = async (studentId, companyEmail) => {
-	const internship = await db.Internship.findOne({ where: { studentId }});
+const requestLink = async (studentId, companyData) => {
+	const internship = await db.Internship.findOne({ 
+		where: { studentId, status: 1 } 
+	});
 
 	if (!internship) {
 		return { status: 403, message: "You are not authorized to request a link or the internship doesn't exist." };
 	}
 
 	const existing = await db.CompanyUploadLinkRequest.findOne({ 
-		where: { internshipId: internship.id, studentId }
+		where: {
+			internshipId: internship.id,
+			studentId,
+			status: { [Op.not]: 'Rejected' } // Exclude rejected ones
+		}
 	});
-	
+
 	if (existing) {
 		return { status: 400, message: "You already requested a link." };
 	}
 
-	await db.CompanyUploadLinkRequest.create( { internshipId: internship.id, studentId, companyEmail });
-}
+	const { companyEmail, companyName } = companyData;
+
+	await db.CompanyUploadLinkRequest.create({
+		internshipId: internship.id,
+		studentId,
+		companyEmail,
+		companyName
+	});
+
+	// ✅ Add this return for consistency and clarity
+	return { status: 200, message: "Link request created successfully." };
+};
 
 const uploadFile = async(studentId, document, internshipStatus) => {
 	const existingInternship = await db.Internship.findOne({ where: { studentId, status: 1 }});
 
 	if (!existingInternship) {
-		return { status: 403, message: "Your internship hasen't finished yet" };
+		return { status: 403, message: "Your internship hasen't finished yet or don't have an internship" };
 	}
 
 	// Check if a document of the same fileType already exists

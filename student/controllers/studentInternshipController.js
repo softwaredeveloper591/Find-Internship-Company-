@@ -1,8 +1,13 @@
 const internshipService = require("../services/studentInternshipService");
 
 const getInternship = async (req, res) => {
-	const internship = await internshipService.getInternship(req.user.id);
-	return res.status(201).json(internship);
+	const result = await internshipService.getInternship(req.user.id);
+	
+	if (result?.status && result?.message) {
+		return res.status(result.status).json({ message: result.message });
+	}
+
+	return res.status(200).json(result);
 }
 
 const getFiles = async (req, res) => {
@@ -34,7 +39,7 @@ const finishInternship = async (req, res) => {
 }
 
 const requestLink = async (req, res) => {
-	const result = await internshipService.requestLink(req.user.id, req.body.companyEmail);
+	const result = await internshipService.requestLink(req.user.id, req.body);
 
 	if (result?.status && result?.message) {
 		return res.status(result.status).json({ message: result.message });

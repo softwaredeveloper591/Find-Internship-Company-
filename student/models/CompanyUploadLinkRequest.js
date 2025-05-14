@@ -39,6 +39,10 @@ module.exports = function(sequelize, DataTypes) {
     companyEmail: {
       type: DataTypes.STRING(100),
       allowNull: false
+    },
+    companyName: {
+      type: DataTypes.STRING(45),
+      allowNull: false
     }
   }, {
     sequelize,

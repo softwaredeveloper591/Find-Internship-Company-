@@ -3,7 +3,7 @@ const profileController = require('../controllers/companyProfileController');
 const auth = require("../middleware/auth");
 const checkUserRole = require("../middleware/checkUserRole");
 const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
-const upload = require('../middleware/fileUploader'); 
+const upload = require('../middleware/imageUploader'); 
 const router = express.Router();
 
 // Get, create, update company profile

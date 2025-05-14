@@ -6,12 +6,14 @@ const upload = multer();
 const AdmZip = require("adm-zip");
 const mime = require('mime-types');
 const { Op } = require('sequelize');
+const uploadFile = require('../middleware/fileUploader');
 
 const auth = require("../middleware/auth");  
 const checkUserRole = require("../middleware/checkUserRole");
 const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
 const { sendEmail } = require("../utils/emailSender");
 const profileRouter = require("./companyProfileRouter"); // Import profile router
+const internshipController = require("../controllers/companyInternshipController"); // Import profile router
 
 const db=require("../data/db");
 
@@ -79,6 +81,13 @@ async function findReceiverByEmail(email) {
 //     await updateTotalInternshipsCount();
 //     next();
 // });
+
+router.get("/internship/upload", asyncErrorHandler(internshipController.getUploadPage));
+router.post("/internship/upload", uploadFile.fields([
+    	{ name: 'manualReport', maxCount: 1 },
+    	{ name: 'manualForm', maxCount: 1 }
+  	]), 
+	asyncErrorHandler(internshipController.uploadFiles));
 
 router.get("/",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
     const company = await db.Company.findOne({ 

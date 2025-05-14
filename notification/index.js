@@ -22,14 +22,14 @@ amqp.connect(process.env.MSG_QUEUE_URL, (err, connection) => {
                 const transporter = nodeMailer.createTransport({
                     service: 'gmail',
                     auth: {
-                        user: 'enesbilalbabaturalpro06@gmail.com',
+                        user: 'automatedinternshipsystem@gmail.com',
                         pass: process.env.EMAIL_PASS
                     }
                 });
 
                 try {
                     await transporter.sendMail({
-                        from: '"Buket Erşahin" <enesbilalbabaturalpro06@gmail.com>',
+                        from: '"Automated Internship System" <automatedinternshipsystem@gmail.com>',
                         to: emailData.to,
                         subject: emailData.subject,
                         html: emailData.body
