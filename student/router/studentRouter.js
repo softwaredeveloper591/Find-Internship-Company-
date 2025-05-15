@@ -10,6 +10,7 @@ const bodyParser = require('body-parser');
 const AdmZip = require("adm-zip");
 const { v4: uuidv4 } = require('uuid');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const bcrypt= require("bcrypt");
 require('dotenv').config();
 
 const auth = require("../middleware/auth");
@@ -898,6 +899,54 @@ router.put("/updateMessage/:id", asyncErrorHandler(async (req, res, next) => {
 	const conversation = await db.Conversations.findOne({ where: { id: message.conversation_id } });
 	conversation.user1_email === student.email ? conversation.update({ user1_new_messages: 0 }) : conversation.update({ user2_new_messages: 0 });
 	res.status(200).json({ message: "Message updated successfully", Message: message.message });
+}));
+
+router.get("/personalInfo", asyncErrorHandler( async (req, res, next) => {
+	const student = await db.Student.findOne({ 
+		where: {id: req.user.id},
+		attributes: {
+			exclude: ["password"]
+	}});
+	return res.status(200).json(student);
+}));
+
+router.post('/personalInfo', asyncErrorHandler( async (req, res, next) => {
+	const student = await db.Student.findOne({ 
+		where: {id: req.user.id}});
+    const { firstName, lastName, email, currentPassword, password, confirmPassword } = req.body;
+	if (!firstName && !lastName && !email && !password) {
+        return res.status(400).json({ error: 'At least one field must be provided for update' });
+    }
+
+    const updates = {};
+    if (firstName && lastName) updates.username= `${firstName} ${lastName}`;
+	if (email) updates.email = email;
+
+	let hashedPassword;
+	if (password) {
+		if (password.length < 6) {
+			return res.status(404).json({ error: 'Minimum password length is 6 characters' });
+		}
+
+		if (password !== confirmPassword) {
+			return res.status(404).json({ error: 'Passwords do not match' });
+		}
+
+		const checkPassword= await bcrypt.compare(currentPassword,student.password);
+		if(!checkPassword) {
+			return res.status(400).json({ error: 'Current password entered wrong!' });
+		}
+
+		const checkPassword2= await bcrypt.compare(password,student.password);
+		if(checkPassword2) {
+			return res.status(400).json({ error: 'New password must be different from the current password.' });
+		}
+		hashedPassword = await bcrypt.hash(password, 10);
+	}
+	if(hashedPassword){updates.password = hashedPassword;}
+
+    await student.update(updates);
+	res.status(200).json({ success: 'User information updated succesfully.' });
 }));
 
 router.use("/profile", profileRouter);
