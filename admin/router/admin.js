@@ -1,4 +1,5 @@
 const express = require("express");
+const bcrypt= require("bcrypt");
 const router = express.Router();
 const cron = require('node-cron');
 const { Sequelize } = require('sequelize');
