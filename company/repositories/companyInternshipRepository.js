@@ -186,7 +186,7 @@ const uploadFile = async(internshipId, document) => {
 			  switch (feedbackContextCompany) {
 			    case "CompanyForm":
 			      if (fileType === "CompanyForm") {
-			        return [5, "CompanyForm"];
+			        return [5, null];
 			      }
 			      break;
 			  }
@@ -248,7 +248,7 @@ const evaluateInternship = async (id, status, feedbackToStudent, feedbackContext
 		where: {
 			id,
 			studentStatus: {
-				[Op.in]: [3, 4, 5, 6, 7]
+				[Op.in]: [1, 3, 4, 5, 6, 7]
 			},
 			isApprovedByDIC: null
 		},
@@ -290,10 +290,11 @@ const evaluateInternship = async (id, status, feedbackToStudent, feedbackContext
 		  break;
 
 		case "Report":
-		  if (status === "Approved") {
-			if (studentStatus === 6 || studentStatus === 7) return [3, "Report"];
-		  }
-		  break;
+  		  if (status === "Approved") {
+  		    if (studentStatus === 7) return [3, null];
+  		    if (studentStatus === 6) return [3, "Report"];
+  		  }
+  		  break;
 
 	  }
 	
