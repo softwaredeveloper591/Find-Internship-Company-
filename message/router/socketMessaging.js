@@ -146,10 +146,9 @@ function initializeSocketServer(server) {
         conversation.user1_email === user.email ? conversation.update({ user1_new_messages: 0 }) : conversation.update({ user2_new_messages: 0 });
 
         // Handle sending messages
-        socket.on("sendMessage", async ({ message, file, fileName }) => {
+        socket.on("sendMessage", async ({ message, file, fileName, tempId }) => { // tempId'yi al
             const user = socket.user;
             const conversation = socket.conversation;
-
 
             if (!message && !file) {
                 socket.emit("error", { message: "Message or file is required" });
@@ -213,16 +212,17 @@ function initializeSocketServer(server) {
                 data: data?.toString("base64") || null
             });
 
-            // Acknowledge back to sender
+            // Acknowledge back to sender WITH TEMPID
             socket.emit("messageDelivered", {
                 id: createdMessage.id,
+                tempId, 
                 receiver: receiver.username,
-                message
+                message,
+                timestamp: createdMessage.createdAt 
             });
-            
+
             console.log(`Message sent in conversation ${conversation.id}`);
         });
-
 
         socket.on("markRead", async (messageId) => {
             const user = socket.user;
@@ -256,45 +256,55 @@ function initializeSocketServer(server) {
         });
 
         // receiver can't delete the message. only sender can delete the message.
-        socket.on("deleteMessage", async (messageId) => {
-            const user = socket.user;
-            const conversation = socket.conversation;
-
-            if (!messageId) {
-                socket.emit("error", { message: "Message ID is required" });
-                return;
-            }
-            const messageIdInt = parseInt(messageId, 10);
-            const message = await db.Message.findOne({ where: { id: messageIdInt } });
-
-            if (!message) {
-                socket.emit("error", { message: "Message not found with the given id" });
-                return;
-            }
-            if (message.from !== user.email) {
-                socket.emit("error", { message: "You are not the sender of this message" });
-                return;
-            }
-            if (message.conversation_id !== conversation.id) {
-                socket.emit("error", { message: "Message does not belong to this conversation" });
-                return;
-            }
-
-            if (message.is_read === false) {
-                if (conversation.user1_email === user.email) {
-                    const numberOfNewMessages = conversation.user2_new_messages - 1;
-                    conversation.update({ user2_new_messages: numberOfNewMessages });
-                } else if (conversation.user2_email === user.email) {
-                    const numberOfNewMessages = conversation.user1_new_messages - 1;
-                    conversation.update({ user1_new_messages: numberOfNewMessages });
+        socket.on("deleteMessage", async (data) => {
+            try {
+                const user = socket.user;
+                const conversation = socket.conversation;
+                const { messageId } = data;
+                if (!messageId) {
+                    socket.emit("error", { message: "Message ID is required" });
+                    return;
                 }
+                const messageIdInt = parseInt(messageId, 10);
+                console.log(messageId);
+                console.log(typeof messageId)
+                console.log(typeof messageIdInt);
+                console.log(messageIdInt);
+                const message = await db.Message.findOne({ where: { id: messageIdInt } });
+
+                if (!message) {
+                    socket.emit("error", { message: "Message not found with the given id" });
+                    return;
+                }
+                if (message.from !== user.email) {
+                    socket.emit("error", { message: "You are not the sender of this message" });
+                    return;
+                }
+                if (message.conversation_id !== conversation.id) {
+                    socket.emit("error", { message: "Message does not belong to this conversation" });
+                    return;
+                }
+
+                if (message.is_read === false) {
+                    if (conversation.user1_email === user.email) {
+                        const numberOfNewMessages = conversation.user2_new_messages - 1;
+                        await conversation.update({ user2_new_messages: numberOfNewMessages });
+                    } else if (conversation.user2_email === user.email) {
+                        const numberOfNewMessages = conversation.user1_new_messages - 1;
+                        await conversation.update({ user1_new_messages: numberOfNewMessages });
+                    }
+                }
+
+                await message.destroy();
+
+                // Emit the delete event to the other participant in the conversation
+                socket.broadcast.to(conversation.id).emit("messageDeleted", { messageId });
+                console.log(`Message deleted in conversation ${messageId}`);
+                socket.emit("messageSuccesfullyDeleted", { deletedmessageId: messageId });
+            } catch (error) {
+                console.error("Error deleting message:", error);
+                socket.emit("error", { message: "An error occurred while deleting the message." });
             }
-
-            await message.destroy();
-
-            // Emit the delete event to the other participant in the conversation
-            socket.broadcast.to(conversation.id).emit("messageDeleted", { messageId });
-            socket.emit("messageSuccesfullyDeleted", { deletedmessageId: messageId });
         });
 
         // Handle disconnect
