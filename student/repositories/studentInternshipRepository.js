@@ -116,8 +116,13 @@ const requestLink = async (studentId, companyData) => {
 	return { status: 200, message: "Link request created successfully." };
 };
 
-const uploadFile = async(studentId, document, internshipStatus) => {
-	const existingInternship = await db.Internship.findOne({ where: { studentId, status: 1 }});
+const uploadFile = async(studentId, document, studentStatus) => {
+	const existingInternship = await db.Internship.findOne({
+		where: {
+			studentId,
+			status: 1
+		}
+	});
 
 	if (!existingInternship) {
 		return { status: 403, message: "Your internship hasen't finished yet or don't have an internship" };
@@ -132,14 +137,75 @@ const uploadFile = async(studentId, document, internshipStatus) => {
 	});
 
 	if (existingDoc) {
-		return { status: 400, message: `You have already uploaded a ${document.fileType}.` };
+		const transaction = await db.sequelize.transaction();
+		try {
+			await existingDoc.update(
+				{ data: document.data },
+				{ transaction }
+			);
+
+			let studentStatus = existingInternship.studentStatus;
+			let feedbackContextStudent = existingInternship.feedbackContextStudent;
+			const fileType = document.fileType;
+
+			// Helper function
+			const updateStatusOnFileUpload = (studentStatus, feedbackContextStudent, fileType) => {
+			  switch (feedbackContextStudent) {
+			    case "Report":
+			      if (fileType === "Report") {
+			        return studentStatus === 4 ? [6, "Report"] : studentStatus === 5 ? [7, "Report"] : [studentStatus, feedbackContextStudent];
+			      }
+			      break;
+			  
+			    case "Survey":
+			      if (fileType === "Survey") {
+			        return [6, "Survey"];
+			      }
+			      break;
+			  
+			    case "Both":
+			      if (fileType === "Report") return [studentStatus, "SurveyMissing"];
+			      if (fileType === "Survey") return [studentStatus, "ReportMissing"];
+			      break;
+			  
+			    case "SurveyMissing":
+			      if (fileType === "Survey") return [6, "Both"];
+			      break;
+			  
+			    case "ReportMissing":
+			      if (fileType === "Report") return [6, "Both"];
+			      break;
+			  }
+		  
+			  return [studentStatus, feedbackContextStudent]; // default fallback
+			};
+
+			[studentStatus, feedbackContextStudent] = updateStatusOnFileUpload(studentStatus, feedbackContextStudent, fileType);
+
+			await existingInternship.update(
+				{ studentStatus, feedbackContextStudent },
+				{ transaction }
+			);
+
+			await transaction.commit();
+			return { status: 200, message: `${document.fileType} has been updated.` };
+		} catch (error) {
+			await transaction.rollback();
+			throw error;
+		}
 	}
 
 	const transaction = await db.sequelize.transaction(); 
 	try {
 		const student = await db.Student.findByPk(studentId, { transaction });
 
-		document.applicationId = existingInternship.applicationId;;
+		if (existingInternship.manualApplicationId) {
+			document.manualApplicationId = existingInternship.manualApplicationId;
+		}
+		else {
+			document.applicationId = existingInternship.applicationId;
+		}
+
 		document.username = student.username;
 		document.userId = studentId;
 
@@ -159,10 +225,10 @@ const uploadFile = async(studentId, document, internshipStatus) => {
 		const hasReport = uploadedTypes.includes('Report');
 		const hasSurvey = uploadedTypes.includes('Survey');
 
-		const newStatus = hasReport && hasSurvey ? 4 : internshipStatus;
+		const newStudentStatus = hasReport && hasSurvey ? 3 : studentStatus;
 
 		await db.Internship.update(
-			{ status: newStatus },
+			{ studentStatus: newStudentStatus },
 			{ where: { id: existingInternship.id }, transaction }
 		);
 

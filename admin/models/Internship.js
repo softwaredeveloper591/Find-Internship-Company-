@@ -39,6 +39,16 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       defaultValue: 0
     },
+    studentStatus: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
+    },
+    companyStatus: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
+    },
     score: {
       type: DataTypes.INTEGER,
       allowNull: true
@@ -49,6 +59,22 @@ module.exports = function(sequelize, DataTypes) {
     },
     isApprovedByDIC: {
       type: DataTypes.BOOLEAN,
+      allowNull: true
+    },
+    feedbackToStudent: {
+      type: DataTypes.STRING(200),
+      allowNull: true
+    },
+    feedbackToCompany: {
+      type: DataTypes.STRING(200),
+      allowNull: true
+    },
+    feedbackContextStudent: {
+      type: DataTypes.ENUM('Report','Survey','Both','ReportMissing','SurveyMissing'),
+      allowNull: true
+    },
+    feedbackContextCompany: {
+      type: DataTypes.ENUM('Report','CompanyForm','Both','ReportMissing','CompanyFormMissing'),
       allowNull: true
     }
   }, {

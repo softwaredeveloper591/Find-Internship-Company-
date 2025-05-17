@@ -32,10 +32,24 @@ const requestLink = async (studentId, companyData) => {
 	return await internshipRepository.requestLink(studentId, companyData);
 }
 
-const uploadReport = async (file, studentId) => {
+const uploadInternshipFile = async (file, studentId, uploadedFileType) => {
 	if (!file) return { status: 400, message: "No file uploaded" };
 
-  	const fileType = "Report";
+	let studentStatus;
+
+	let fileType = uploadedFileType;
+
+  	if (fileType === "Report") {
+		studentStatus = 1;
+	}
+	else if (fileType === "Survey") {
+		studentStatus = 2;
+	}
+	else {
+		studentStatus = 3;
+		fileType = "Survey"
+	}
+
   	const data = file.buffer;
 	const name = file.originalname;
 
@@ -45,23 +59,7 @@ const uploadReport = async (file, studentId) => {
 		name
 	}
 
-  	return await internshipRepository.uploadFile(studentId, document, 2);
-}
-
-const uploadSurvey = async (file, studentId) => {
-	if (!file) return { status: 400, message: "No file uploaded" };
-
-  	const fileType = "Survey";
-  	const data = file.buffer;
-	const name = file.originalname;
-
-	const document = {
-		fileType,
-		data,
-		name
-	}
-
-  	return await internshipRepository.uploadFile(studentId, document, 3);
+  	return await internshipRepository.uploadFile(studentId, document, studentStatus);
 }
 
 module.exports = {
@@ -70,6 +68,5 @@ module.exports = {
 	uploadApplicationForm,
 	finishInternship,
 	requestLink,
-	uploadReport,
-	uploadSurvey
+	uploadInternshipFile
 };
