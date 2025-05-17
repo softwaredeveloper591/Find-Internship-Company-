@@ -16,9 +16,9 @@ const approveManualApplications = async (req, res) => {
 };
 
 const downloadFile = async (req, res) => {
-	const { applicationId, applicationType } = req.params;
+	const { applicationId, applicationType, fileType } = req.params;
 
-	const whereClause = {};
+	const whereClause = { fileType };
 
 	// Determine whether to use manualApplicationId or applicationId
 	if (applicationType === "Manual") {

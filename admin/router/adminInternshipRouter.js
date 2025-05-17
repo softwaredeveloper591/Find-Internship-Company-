@@ -8,7 +8,7 @@ router.get("/manualApplications", asyncErrorHandler(internshipController.getManu
 
 router.put("/manualApplications/:id/:studentId", upload.single('ApplicationForm'), asyncErrorHandler(internshipController.approveManualApplications));
 
-router.get("/download/:applicationId/:applicationType", asyncErrorHandler(internshipController.downloadFile));
+router.get("/download/:applicationId/:applicationType/:fileType", asyncErrorHandler(internshipController.downloadFile));
 
 router.get("/linkRequests", asyncErrorHandler(internshipController.getLinkRequests));
 router.put("/approveLinkRequest/:id", asyncErrorHandler(internshipController.approveLinkRequest));
