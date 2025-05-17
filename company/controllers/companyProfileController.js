@@ -12,7 +12,20 @@ const getProfileById = async (req, res) => {
 
 const createProfile = async (req, res) => {
 	const companyId = req.user.id;
-	const profileData = req.body;
+    const companyLogo = req.files?.['companyLogo']?.[0]?.path || null;
+	const bannerImage = req.files?.['bannerImage']?.[0]?.path || null;
+
+    const profileData = {
+		about: req.body.about,
+        industry: req.body.industry,
+		companyLogo,
+		bannerImage,
+		contactPhone: req.body.contactPhone,
+		contactEmail: req.body.contactEmail,
+		website: req.body.website,
+		address: req.body.address,
+        socialMediaLinks: req.body.socialMediaLinks
+	};
 
     const profile = await profileService.createProfile(companyId, profileData);
 	return res.status(201).json({ message: "Profile created successfully", profile });

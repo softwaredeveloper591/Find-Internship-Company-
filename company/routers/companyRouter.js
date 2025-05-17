@@ -1,4 +1,5 @@
 const express = require("express");
+const bcrypt= require("bcrypt");
 const router= express.Router();
 const moment = require('moment-timezone');
 const multer= require("multer");
@@ -10,6 +11,7 @@ const uploadFile = require('../middleware/fileUploader');
 
 const auth = require("../middleware/auth");  
 const checkUserRole = require("../middleware/checkUserRole");
+
 const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
 const { sendEmail } = require("../utils/emailSender");
 const profileRouter = require("./companyProfileRouter"); // Import profile router
@@ -821,6 +823,56 @@ router.put("/updateMessage/:id", [auth, checkUserRole("company")], asyncErrorHan
 	const conversation = await db.Conversation.findOne({ where: { id: message.conversation_id } });
 	conversation.user1_email === company.email ? conversation.update({ user1_new_messages: 0 }) : conversation.update({ user2_new_messages: 0 });
 	res.status(200).json({ message: "Message updated successfully", Message: message.message });
+}));
+
+router.get("/personalInfo", [auth, checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
+	const company = await db.Company.findOne({ 
+		where: {id: req.user.id},
+		attributes: {
+			exclude: ["password"]
+	}});
+	console.log(company)
+	return res.status(200).json(company);
+}));
+
+router.post('/personalInfo', [auth, checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
+	const company = await db.Company.findOne({ 
+		where: {id: req.user.id}});
+    const { firstName, lastName, email, currentPassword, password, confirmPassword } = req.body;
+	
+	if (!firstName && !lastName && !email && !password) {
+        return res.status(400).json({ error: 'At least one field must be provided for update' });
+    }
+
+    const updates = {};
+    if (firstName && lastName) updates.username= `${firstName} ${lastName}`;
+	if (email) updates.email = email;
+
+	let hashedPassword;
+	if (password) {
+		if (password.length < 6) {
+			return res.status(404).json({ error: 'Minimum password length is 6 characters' });
+		}
+
+		if (password !== confirmPassword) {
+			return res.status(404).json({ error: 'Passwords do not match' });
+		}
+
+		const checkPassword= await bcrypt.compare(currentPassword,company.password);
+		if(!checkPassword) {
+			return res.status(400).json({ error: 'Current password entered wrong!' });
+		}
+
+		const checkPassword2= await bcrypt.compare(password,company.password);
+		if(checkPassword2) {
+			return res.status(400).json({ error: 'New password must be different from the current password.' });
+		}
+		hashedPassword = await bcrypt.hash(password, 10);
+	}
+	if(hashedPassword){updates.password = hashedPassword;}
+
+    await company.update(updates);
+	res.status(200).json({ success: 'User information updated succesfully.' });
 }));
 
 router.use("/profile", profileRouter);

@@ -8,7 +8,12 @@ const router = express.Router();
 
 // Get, create, update company profile
 router.get("/", [auth, checkUserRole("company")], asyncErrorHandler(profileController.getProfile));
-router.post("/", [auth, checkUserRole("company")], asyncErrorHandler(profileController.createProfile));
+router.post("/", [auth, checkUserRole("company")], upload.fields([
+		{ name: 'companyLogo', maxCount: 1 },
+    	{ name: 'bannerImage', maxCount: 1 }
+  	]), 
+  	asyncErrorHandler(profileController.createProfile));
+
 router.put("/", [auth, checkUserRole("company")], asyncErrorHandler(profileController.updateProfile));
 
 // Get company profile by companyId
