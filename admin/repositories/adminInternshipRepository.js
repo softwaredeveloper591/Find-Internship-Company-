@@ -274,7 +274,7 @@ const evaluateInternship = async (id, status, feedbackToStudent, feedbackToCompa
 	}
 
 	const studentStatus = internship.studentStatus;
-	const feedbackContextStudent = internship.feedbackContextStudent;
+	const currentfeedbackContextStudent = internship.feedbackContextStudent;
 	const companyStatus = internship.companyStatus;
 
 	switch (status) {
@@ -287,7 +287,7 @@ const evaluateInternship = async (id, status, feedbackToStudent, feedbackToCompa
 			break;
 
 		case "FeedbackToStudent":
-			if (studentStatus === 4 || (studentStatus === 6 && feedbackContextStudent === "Both" || feedbackContextStudent === "Report")) {
+			if (studentStatus === 4 || (studentStatus === 6 && currentfeedbackContextStudent === "Both" || currentfeedbackContextStudent === "Report")) {
 				return { status: 403, message: "You already gave a feedback to the student" };
 			}
 			await internship.update({ studentStatus: 4, feedbackToStudent, feedbackContextStudent });
