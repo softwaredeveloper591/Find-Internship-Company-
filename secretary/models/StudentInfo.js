@@ -18,11 +18,11 @@ module.exports = function(sequelize, DataTypes) {
     },
     faculty: {
       type: DataTypes.STRING(45),
-      allowNull: false
+      allowNull: true
     },
     department: {
       type: DataTypes.STRING(45),
-      allowNull: false
+      allowNull: true
     },
     year: {
       type: DataTypes.INTEGER,

@@ -8,54 +8,21 @@ const { Op } = require('sequelize');
 const moment = require('moment-timezone');
 const bodyParser = require('body-parser');
 const AdmZip = require("adm-zip");
-const { v4: uuidv4 } = require('uuid');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const bcrypt= require("bcrypt");
+const bcrypt = require("bcrypt");
 require('dotenv').config();
 
 const auth = require("../middleware/auth");
 const checkUserRole = require("../middleware/checkUserRole");
 router.use(auth, checkUserRole("student"));
 
-
 const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
 const { uploadFile } = require('../utils/fileUploader');
 const profileRouter = require("./studentProfileRouter"); 
 const internshipRouter = require("./studentInternshipRouter");
+const applicationRouter = require("./studentApplicationRouter");
 
 const db = require('../data/db');
-
-/*let totalAnnouncementsCount = 0;
-
-async function updateTotalAnnouncementsCount(id) {
-	const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
-	try {
-		totalAnnouncementsCount = await db.Announcement.count( 
-			{ 
-				where: {
-					isActive: true,
-					startDate: {
-						[Sequelize.Op.lte]: now // Ensure the announcement has started
-					},
-					id: {
-						[Op.notIn]: Sequelize.literal(`(
-							SELECT announcementId
-							FROM application
-							WHERE studentId = ${id}
-						)`)
-					}
-				}
-			} 
-		);
-	} catch (error) {
-		console.error('Failed to fetch total applications count:', error);
-	}
-}
-
-router.use([auth,checkUserRole("student")],async function(req, res, next){
-	await updateTotalAnnouncementsCount(req.user.id);
-	next();
-});*/
 
 async function findReceiverByEmail(email) {
 	let receiver = null;
@@ -182,10 +149,7 @@ router.post("/chatWithAI", asyncErrorHandler(async (req, res, next) => {
 	//     topic: "Chat with AI",
 	//     message: aiMessage
 	// });
-
-
 }));
-
 
 router.get("/conversation/ai", asyncErrorHandler(async (req, res, next) => {
 	const student = await db.Student.findOne({
@@ -206,7 +170,6 @@ router.get("/conversation/ai", asyncErrorHandler(async (req, res, next) => {
 	return res.status(200).json({ id: conversation ? conversation.id : null });
   })
 );
-
 
 router.post("/conversation/ai", asyncErrorHandler(async (req, res, next) => {
 	const student = await db.Student.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
@@ -235,62 +198,6 @@ router.post("/conversation/ai", asyncErrorHandler(async (req, res, next) => {
 	});
 
 	res.status(200).json({ conversations });
-}));
-
-
-// The page where all file operations are performed
-router.get("/files", asyncErrorHandler(async (req, res, next) => {
-	const student = await db.Student.findOne({ where: { id: req.user.id } });
-	const applicationForms = await db.Document.findAll({ where: { userId: student.id } });
-
-	res.send(applicationForms); // to test it at postman
-
-	/*res.render("applicationForm",{ 
-		usertype:"student", 
-		dataValues:student.dataValues,
-		//totalAnnouncementsCount
-	});*/
-
-}));
-
-router.post("/applicationForm", upload.single('ApplicationForm'), asyncErrorHandler(async (req, res, next) => {
-	const student = await db.Student.findOne({ where: { id: req.user.id } });
-
-	const applicationId = uuidv4();
-	const file = req.file;
-	const fileType = 'Manual Application Form';
-	const name = `${student.username}_ApplicationForm`;
-	const status = null;
-
-	await uploadFile(file, applicationId, student, name, fileType, status, db.Document);
-
-	res.status(201).json({ message: "Application Form uploaded successfully" });
-}));
-
-router.post("/file", upload.single('file'),  asyncErrorHandler(async (req, res, next) => {
-	/* since students send only one file for each file after internship starts and admin doesn't send back any of them, 
-	there is no need to use an applicationId for this files. */
-	const student = await db.Student.findOne({ where: { id: req.user.id } });
-
-	let name = "";
-
-	const { fileType } = req.body; // this value will change according to file type. (i.e. application form, company form ...)
-
-	if (fileType === "Manual Company Form") {
-		name = `${student.username}_CompanyForm`;
-	} else if (fileType === "Manual Summer Practice Report") {
-		name = `${student.username}_SummerPracticeReport`;
-	} else { // Manual Summer Practice Evaluation Survey
-		name = `${student.username}_SummerPracticeEvaluationSurvey`;
-	}
-
-	const file = req.file;
-	const applicationId = null;
-	const status = "resent";
-
-	await uploadFile(file, applicationId, student, name, fileType, status, db.Document);
-
-	res.status(201).json({ message: "File uploaded successfully" });
 }));
 
 router.get("/opportunities", asyncErrorHandler(async (req, res, next) => {
@@ -484,7 +391,6 @@ router.post("/opportunities/:opportunityId", upload.single('CV'), asyncErrorHand
 
 	await uploadFile(file, applicationId, student, name, fileType, status, db.Document);
 	res.status(200).json({ message: "Succesfully applied." });
-	//res.redirect("/student/opportunities");
 }));
 
 router.get("/applications", asyncErrorHandler(async (req, res, next) => {
@@ -510,113 +416,8 @@ router.get("/applications", asyncErrorHandler(async (req, res, next) => {
 			}
 		]
 	});
-	// res.render("applications", {
-	// 	usertype: "student",
-	// 	dataValues: student.dataValues,
-	// 	applications,
-	// 	//totalAnnouncementsCount
-	// });
 
 	res.status(200).json({ applications });
-}));
-
-router.get("/internship", asyncErrorHandler(async (req, res, next) => {
-
-	/* I don't know how we will determine the end of the internship. There are two options. 
-	First, we can ask the student if it is over, then the student can upload the necessary files. 
-	Second, we can determine it by the internship end date that a company set when announcing an opportunity. 
-	If we choose the first option there should be a button for it and after the student clicks the button the necessary files 
-	should be uploadable. We also need to show different pages to the student for when the internship is over and when it is not.
-	We also need to check if admin enter the internship score. */
-	/* if company rejects the internship definitly or rejects the summer practice report and gives a feedback, 
-	the page should be different too for these options. For the first one there should be a line like "company rejected the internship",
-	for the second one there should be a line like "company sent a feedback via your email. Please check your email" */
-
-	const student = await db.Student.findOne({ where: { id: req.user.id } });
-
-	const internship = await db.Internship.findOne({
-		where: {
-			studentId: student.id,  // Filter applications by the provided student ID
-		},
-		include: [
-			// we dont need this since we have const student = await db.Student.findOne({ where: { id: req.user.id }});
-			/*{
-			model: db.Student,
-			attributes: ['username'] // Fetching only the student name
-			},*/
-			{
-				model: db.Application,
-				include: [
-					{
-						model: db.Announcement,
-						attributes: ['announcementName'],
-						include: [
-							{
-								model: db.Company,
-								attributes: ['name'] // Fetching the company name
-							}
-						]
-					}
-				]
-			}
-		]
-	});
-
-	res.send(internship); // to test it on postman
-
-	/*res.render("internship",{ 
-		usertype:"student", 
-		dataValues:student.dataValues,
-		internship
-	});*/
-
-	// I dont know how this process will be handled at the frontend so I am just writing it like this for now.
-	// There shold be the options to upload summer practise report and upload Practice Evaluation Survey at this page.
-	// Should we check if the internship is over before the student do these processes?
-}));
-
-router.put("/internship", asyncErrorHandler(async (req, res, next) => {
-	// when students click the button to end the internship, this router will work
-
-	const { finished, applicationId } = req.body;
-	// both are hidden objects at frontend
-
-	if (finished === "finished") {
-		await db.Internship.update(
-			{
-				status: 'finished'
-			},
-			{
-				where: {
-					id: applicationId
-				}
-			}
-		);
-	}
-
-	res.status(201).json({ message: "Internship is over. Score will be entered later" });
-
-}));
-
-router.post("/internshipFiles/:applicationId", upload.single('file'), asyncErrorHandler(async (req, res, next) => {
-
-	const student = await db.Student.findOne({ where: { id: req.user.id } });
-
-	const applicationId = req.params.applicationId;
-	/* We need to use a script as await fetch(/summerPracticeReport/:applicationId"). So we need to send applicationId
-	to backend from frontend */
-	const { fileType } = req.body;  // either "Summer Practice Evaluation Survey" or "Summer Practice Report"
-
-	const file = req.file;
-	const name = file.originalname;
-	const status = null;
-
-	await uploadFile(file, applicationId, student, name, fileType, status, db.Document);
-
-	/* when the student uploads the file again, it would be good to ask "are you sure you want to upload 
-	the summer practice report again". Also users should be able to see the files they uploaded to check if everything okay.*/
-
-	res.status(201).json({ message: "File is uploaded" });
 }));
 
 // what is this for?
@@ -635,7 +436,6 @@ router.get("/download/:studentId/:fileType", asyncErrorHandler(async (req, res, 
 	res.setHeader('Content-Type', contentType);
 	res.send(binaryData);
 }));
-
 
 router.get("/users", asyncErrorHandler(async (req, res, next) => {
 	const secretary = await db.Secretary.findAll({ attributes: ['username', 'email'] });
@@ -951,5 +751,6 @@ router.post('/personalInfo', asyncErrorHandler( async (req, res, next) => {
 
 router.use("/profile", profileRouter);
 router.use("/internship", internshipRouter);
+router.use("/application", applicationRouter);
 
 module.exports = router;
