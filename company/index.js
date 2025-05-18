@@ -13,6 +13,7 @@ app.use(cors({
 }));
 
 app.use(express.json({ limit: '10mb' }));
+app.use('/uploads', express.static("uploads"))
 app.use(express.urlencoded({extended: true, limit: '10mb'})); // to obtain the data coming from forms in a json structure.
 app.use(express.static("Pictures"));
 app.use(express.static("node_modules"));

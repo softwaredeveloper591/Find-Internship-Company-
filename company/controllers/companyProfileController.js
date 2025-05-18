@@ -6,7 +6,7 @@ const getProfile = async (req, res) => {
 };
 
 const getProfileById = async (req, res) => {
-	const profile = await companyProfileService.getProfile(req.params.companyId);
+	const profile = await profileService.getProfile(req.params.companyId);
     return res.status(200).json(profile);
 }
 
