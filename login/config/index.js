@@ -31,11 +31,6 @@ if (process.env.NODE_ENV === "test") {
     DB_HOST: "localhost",
     DB_DIALECT: "mysql",
     DB_PORT: 3306,
-    PORT: 3001,
-    MSG_QUEUE_URL: 'amqp://rabbitmq',
-    APP_SECRET: "Automated_System",
-    SENTRY_DSN: "https://c5f3589cf7f85b3e309f2c1e2f652e64@o4507821746094080.ingest.de.sentry.io/4507827687129168",
-    EMAIL_PASS: "elde beun xhtc btxu"
   };
 }
 
