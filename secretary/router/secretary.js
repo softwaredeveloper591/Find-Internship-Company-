@@ -5,7 +5,6 @@ const upload = multer();
 const amqp = require('amqplib/callback_api');
 const bcrypt = require("bcrypt");
 
-
 const auth = require("../middleware/auth");
 const checkUserRole = require("../middleware/checkUserRole");
 const asyncErrorHandler = require("../utils/asyncErrorHandler");
@@ -105,7 +104,11 @@ router.get("/", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req
 				model: db.Announcement,
 				include: {
 					model: db.Company,
-					attributes: ['name']
+					attributes: ['name'],
+					include: {
+						model: db.CompanyProfile,
+						attributes: ['companyLogo']
+					}
 				}
 			},
 			{
@@ -186,7 +189,13 @@ router.get("/applications/download/:applicationId/:fileType", [auth, checkUserRo
 }));
 
 router.post("/applications/:applicationId", upload.single('studentFile'), [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
-	const applicationId = req.params.applicationId.slice(0);
+	
+	const applicationId = req.params.applicationId;
+	
+	const internship = await db.Internship.findOne( { where: { applicationId } });
+
+	if (internship) return res.status(403).json( { message: "This internship already approved" });
+
 	const application = await db.Application.findOne({
 		where: {
 			id: applicationId
@@ -208,7 +217,7 @@ router.post("/applications/:applicationId", upload.single('studentFile'), [auth,
 
 	const file = req.file;
 	const binaryData = file.buffer;
-	const fileType = "Employment Certificate";
+	const fileType = "EmploymentCertificate";
 	const name = file.originalname;
 
 	await db.Document.create({
@@ -254,7 +263,8 @@ router.post("/applications/:applicationId", upload.single('studentFile'), [auth,
 			connection.close();
 		}, 500);
 	});
-	// res.redirect("/secretary");
+	
+	res.status(200).json({ message: "Employment certificate is uploded"});
 }));
 
 router.get("/users", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {

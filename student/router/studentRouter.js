@@ -372,11 +372,10 @@ router.post("/opportunities/:opportunityId", upload.single('CV'), asyncErrorHand
 	const application = await db.Application.create({
 		studentId: student.id,
 		announcementId,
-		statusUpdateDate: new Date()
 	});
 
 	await db.Document.create({
-		name: file.originalname,
+		name: "ApplicationForm.docx",
 		applicationId: application.id,
 		data: bufferedApplicationForm,
 		fileType: 'ApplicationForm',
@@ -386,10 +385,9 @@ router.post("/opportunities/:opportunityId", upload.single('CV'), asyncErrorHand
 	const file = req.file;
 	const fileType = "CV";
 	const name = file.originalname;
-	const status = null;
 	const applicationId = application.id;
 
-	await uploadFile(file, applicationId, student, name, fileType, status, db.Document);
+	await uploadFile(file, applicationId, student, name, fileType, db.Document);
 	res.status(200).json({ message: "Succesfully applied." });
 }));
 

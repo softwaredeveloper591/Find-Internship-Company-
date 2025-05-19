@@ -728,7 +728,7 @@ router.get("/applicationRequests", [auth, checkUserRole("admin")], asyncErrorHan
 }));
 
 router.get("/applications/:applicationId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	const applicationId = req.params.applicationId.slice(0);
+	const applicationId = req.params.applicationId;
 	const admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
 
 	const application = await db.Application.findOne({
