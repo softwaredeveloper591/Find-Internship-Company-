@@ -128,13 +128,24 @@ const uploadFile = async(studentId, document, studentStatus) => {
 		return { status: 403, message: "Your internship hasen't finished yet or don't have an internship" };
 	}
 
-	// Check if a document of the same fileType already exists
-	const existingDoc = await db.Document.findOne({
-		where: {
-			userId: studentId,
-			fileType: document.fileType
-		}
-	});
+	let existingDoc = null;
+
+	if (existingInternship.manualApplicationId) {
+		existingDoc = await db.Document.findOne({
+			where: {
+				manualApplicationId: existingInternship.manualApplicationId,
+				fileType: document.fileType
+			}
+		});
+	}
+	else {
+		existingDoc = await db.Document.findOne({
+			where: {
+				applicationId: existingInternship.applicationId,
+				fileType: document.fileType
+			}
+		});
+	}	
 
 	if (existingDoc) {
 		const transaction = await db.sequelize.transaction();
@@ -199,27 +210,27 @@ const uploadFile = async(studentId, document, studentStatus) => {
 	try {
 		const student = await db.Student.findByPk(studentId, { transaction });
 
+		let docs = null;
+
 		if (existingInternship.manualApplicationId) {
 			document.manualApplicationId = existingInternship.manualApplicationId;
 		}
 		else {
 			document.applicationId = existingInternship.applicationId;
+			const fileTypesToCheck = ['Report', 'Survey'];
+			docs = await db.Document.findAll({
+				where: {
+					applicationId: existingInternship.applicationId,
+					fileType: fileTypesToCheck
+				},
+				transaction
+			});
 		}
 
 		document.username = student.username;
 		document.userId = studentId;
 
 		const createdDoc = await db.Document.create(document, { transaction });
-
-		// After current document is uploaded, check if both Report and Survey exist
-		const fileTypesToCheck = ['Report', 'Survey'];
-		const docs = await db.Document.findAll({
-			where: {
-				userId: studentId,
-				fileType: fileTypesToCheck
-			},
-			transaction
-		});
 
 		const uploadedTypes = docs.map(d => d.fileType);
 		const hasReport = uploadedTypes.includes('Report');
