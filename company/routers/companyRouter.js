@@ -95,9 +95,26 @@ router.get("/",[auth,checkUserRole("company")], asyncErrorHandler( async (req, r
     const company = await db.Company.findOne({ 
 		where: {id: req.user.id},
 		attributes: {
-			exclude: ["password"]
-	}});
-    return res.status(200).json({ userType: "company", dataValues: company});
+			exclude: ["password"],
+		}, 
+		include: [
+			{
+				model: db.CompanyProfile,
+				attributes: ['companyLogo']
+			}
+		]
+	});
+	if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+    }
+	return res.status(200).json({ 
+        userType: "company", 
+        dataValues: {
+            ...company.dataValues,
+            profilePicture: company?.CompanyProfile?.companyLogo || null
+        }
+    });
+    // return res.status(200).json({ userType: "company", dataValues: company});
 }));
 
 router.post('/announcement', upload.single('image'), [auth, checkUserRole('company')], asyncErrorHandler(async (req, res, next) => {
@@ -244,7 +261,7 @@ router.get("/applications/:applicationId",[auth,checkUserRole("company")], async
 			},
 			{
 				model: db.Student,
-				attributes: ['username']
+				attributes: ['username', 'year']
 			}
 		]
     });

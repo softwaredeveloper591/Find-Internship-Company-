@@ -14,7 +14,19 @@ require('dotenv').config();
 
 const auth = require("../middleware/auth");
 const checkUserRole = require("../middleware/checkUserRole");
-router.use(auth, checkUserRole("student"));
+// router.use(auth, checkUserRole("student"));
+router.use((req, res, next) => {
+  // Allow unauthenticated access only to GET /profile/:studentId
+  if (
+    req.method === "GET" &&
+    /^\/profile\/\d+$/.test(req.path)
+  ) {
+    return next();
+  }
+  // Apply auth + role check to all other routes
+  return auth(req, res, () => checkUserRole("student")(req, res, next));
+});
+
 
 const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
 const { uploadFile } = require('../utils/fileUploader');
@@ -53,9 +65,25 @@ router.get("/", asyncErrorHandler(async (req, res, next) => {
 		where: { id: req.user.id },
 		attributes: {
 			exclude: ["password"]
-		}
+		},
+		include: [
+			{
+				model: db.StudentProfile,
+				attributes: ['profilePicture']
+			}
+		]
 	});
-	return res.status(200).json({ userType: "student", dataValues: student });
+	if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+    }
+	return res.status(200).json({ 
+        userType: "student", 
+        dataValues: {
+            ...student.dataValues,
+            profilePicture: student?.StudentProfile?.profilePicture || null
+        }
+    });
+	// return res.status(200).json({ userType: "student", dataValues: student });
 }));
 
 router.post("/createStudentInfo",asyncErrorHandler(async (req, res, next) => {
@@ -408,7 +436,13 @@ router.get("/applications", asyncErrorHandler(async (req, res, next) => {
 				include: [
 					{
 						model: db.Company,
-						attributes: ['name'] // Fetching the company name
+						attributes: ['id', 'name'], // Fetching the company name
+						include: [
+							{
+								model: db.CompanyProfile,
+								attributes: ['companyLogo']
+							}
+						]
 					}
 				]
 			}

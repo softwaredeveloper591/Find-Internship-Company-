@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { Op } = require('sequelize');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const {GoogleGenAI} =  require('@google/genai');
 require('dotenv').config();
 
 const auth = require("../middleware/auth");
@@ -52,17 +53,27 @@ findUserByIdandType = async (userId, userType) => {
     return user;
 }
 
+const GEMINI_API_KEY = 'AIzaSyAtjOy-QJ3UxN9f-Npw69zoHjCcOc6-E6Y';
+const ai = new GoogleGenAI({apiKey: GEMINI_API_KEY});		
+//client: no need to provide a conversation id, it will be found by the email of the student
 router.post("/chatWithAI", checkUserRole(["student"]), asyncErrorHandler(async (req, res, next) => {
 	const student = await db.Student.findOne({ where: { id: req.user.id } });
 	const userMessage = req.body.userMessage;
-	const conversationId = req.body.conversationId;
 	
-	const genAI = new GoogleGenerativeAI(process.env.AI_API);  		
-	const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+	// const genAI = new GoogleGenerativeAI();  		
+	// const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 	const prompt = userMessage; // Message sent by student
 
-	const conversationExists = await db.Conversations.findByPk(conversationId);
+	const conversationExists = await db.Conversations.findOne({
+		where: {
+			user1_email: student.email,
+			isDeletedByUser1: false,
+			user2_email: "-",   
+			user2_name: "AI",   // The condition to find the conversation with AI
+		},
+	});
+	
 	if (!conversationExists) {
 		return res.status(404).json({ error: "Conversation not found" });
 	}
@@ -76,20 +87,23 @@ router.post("/chatWithAI", checkUserRole(["student"]), asyncErrorHandler(async (
 		senderName: student.username,
 		to: "-",
 		receiverName: "AI",
-		conversation_id: conversationId,
+		conversation_id: conversationExists.id,
 		message: userMessage
 	});
 
 	try {
-		const result = await model.generateContent(prompt);
-		const aiMessage = result.response.text(); // Response received from AI.
+		const response = await ai.models.generateContent({
+			model: 'tunedModels/internship-chatbot-akoqstzz8k5crm00pk4dr',
+			contents: prompt,
+  });
+		const aiMessage = response.text;
 
 		const aiMessageDb = await db.Message.create({
 			from: "-",
 			senderName: "AI",
 			to: student.email,
 			receiverName: student.username,
-			conversation_id: conversationId,
+			conversation_id: conversationExists.id,
 			message: aiMessage
 		});
 
@@ -117,7 +131,7 @@ router.get("/conversation/ai",checkUserRole(["student"]), asyncErrorHandler(asyn
 			user2_email: "-",   
 			user2_name: "AI",   // The condition to find the conversation with AI
 		},
-		attributes: ["id"], 
+		attributes: ["id", "user1_email"], 
 	});
 
 	// Check if the conversation exists
