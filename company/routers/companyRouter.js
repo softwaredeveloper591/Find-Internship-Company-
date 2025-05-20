@@ -17,6 +17,7 @@ const { sendEmail } = require("../utils/emailSender");
 const profileRouter = require("./companyProfileRouter"); // Import profile router
 const internshipController = require("../controllers/companyInternshipController"); // Import profile router
 const internshipRouter = require("./companyInternshipRouter");
+const applicationRouter = require("./companyApplicationRouter")
 
 const db=require("../data/db");
 
@@ -901,5 +902,6 @@ router.post('/personalInfo', [auth, checkUserRole("company")], asyncErrorHandler
 
 router.use("/profile", profileRouter);
 router.use("/internship", internshipRouter);
+router.use("/application", applicationRouter);
 
 module.exports= router;
