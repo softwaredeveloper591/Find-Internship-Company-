@@ -251,45 +251,62 @@ const fillApplicationForm = async (companyId, applicationId, body) => {
 const uploadApplicationForm = async (companyId, applicationId, document, body) => {
 	const { isApproved } = body;
 
-	const application = await db.Application.findOne({
-		where: { id: applicationId },
-		include: [
-			{
-				model: db.Student,
-				attributes: ['username', 'email']
+	const transaction = await db.sequelize.transaction();
+	try {
+		const application = await db.Application.findOne({
+			where: { id: applicationId },
+			include: [
+				{
+					model: db.Student,
+					attributes: ['username', 'email']
+				},
+				{
+					model: db.Announcement,
+					where: { companyId },
+					attributes: ['announcementName', 'companyId']
+				}
+			],
+			transaction
+		});
+
+		if (!application) {
+			await transaction.rollback();
+			return { status: 403, message: "You are not allowed to upload form or application doesn't exist" };
+		}
+
+		await db.Document.update({
+			data: document.data,
+			name: document.name
+		}, {
+			where: {
+				applicationId,
+				fileType: "UpdatedApplicationForm"
 			},
-			{
-				model: db.Announcement,
-				where: {
-						companyId
-					},
-				attributes: ['announcementName',"companyId"]
+			transaction
+		});
+
+		if (isApproved === "true") {
+			application.isApprovedByCompany = true;
+			application.status = 1; // Consider replacing this with a named constant
+		} else {
+			application.isApprovedByCompany = false;
+			application.status = 4;
+		}
+
+		await application.save({ transaction });
+		await transaction.commit();
+
+		return {
+			status: 200,
+			data: {
+				application,
+				message: isApproved === "true" ? "Application approved" : "Application rejected"
 			}
-		]
-	});
+		};
 
-	if (!application) return { status: 403, message: "You are not allowed to upload form or application doesn't exist" };
-
-	await db.Document.update({
-	  	data: document.data,
-	  	name: document.name
-	}, {
-	  	where: {
-	  	  	applicationId,
-	  	  	fileType: "UpdatedApplicationForm"
-	  	}
-	});
-
-	if (isApproved === "true") {
-		application.isApprovedByCompany = true;
-		application.status = 1;
-		await application.save();
-		return { status: 200, data: { application, message: "Application approved" }};
-	} else {
-		application.isApprovedByCompany = false;
-		application.status = 4;
-		await application.save();
-		return { status: 200, data: { application, message: "Application rejected" }};
+	} catch (error) {
+		await transaction.rollback();
+		throw error;
 	}
 };
 
