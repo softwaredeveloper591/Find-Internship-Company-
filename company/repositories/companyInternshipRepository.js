@@ -1,5 +1,5 @@
 const db = require("../data/db");
-const { Op } = reqire("sequelize");
+const { Op } = require("sequelize");
 
 const getUploadPage = async (token) => {
 	return await db.CompanyUploadLinkRequest.findOne({
