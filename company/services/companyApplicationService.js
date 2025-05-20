@@ -48,25 +48,27 @@ const fillApplicationForm = async (companyId, applicationId, body) => {
 };
 
 const uploadApplicationForm = async (companyId, applicationId, file, body) => {
-	if (!file) return { status: 400, message: "No file uploaded" };
+	let document = null;
+	
+	if (file) {
+		const data = file.buffer;
+		const name = file.originalname;
+
+		document = {
+			applicationId,
+			fileType: "UpdatedApplicationForm",
+			data,
+			name
+		}
+	};
 
 	const { isApproved } = body.isApproved;
-
-	const data = file.buffer;
-	const name = file.originalname;
-
-	const document = {
-		applicationId,
-		fileType: "UpdatedApplicationForm",
-		data,
-		name
-	}
 
 	const result = await applicationRepository.uploadApplicationForm(companyId, applicationId, document, body);
 
 	const { application, message } = result.data;
 
-	const emailSubject = isApproved === true ? 'Application Approved' : 'Application Rejected';
+	const emailSubject = isApproved === "true" ? 'Application Approved' : 'Application Rejected';
 	const emailBody = `Hello ${application.Student.username},<br><br>
 		Your application titled "${application.Announcement.announcementName}" has been ${isApproved === "true" ? "approved by company" : "rejected by company and will be removed from our system"}.<br><br>
 		Best Regards,<br>Admin Team`;

@@ -156,7 +156,11 @@ const getApplication = async (companyId, applicationId) => {
 			},
 			{
 				model: db.Student,
-				attributes: ['username']
+				attributes: ['username','year'],
+				include: [ {
+					model: db.StudentProfile,
+					attributes: ['profilePicture']
+				}]
 			}
 		]
 	});
@@ -278,16 +282,18 @@ const uploadApplicationForm = async (companyId, applicationId, document, body) =
 			return { status: 403, message: "You are not allowed to upload form or application doesn't exist" };
 		}
 
-		await db.Document.update({
-			data: document.data,
-			name: document.name
-		}, {
-			where: {
-				applicationId,
-				fileType: "UpdatedApplicationForm"
-			},
-			transaction
-		});
+		if (document) {
+			await db.Document.update({
+				data: document.data,
+				name: document.name
+			}, {
+				where: {
+					applicationId,
+					fileType: "UpdatedApplicationForm"
+				},
+				transaction
+			});
+		}
 
 		if (isApproved === "true") {
 			application.isApprovedByCompany = true;
