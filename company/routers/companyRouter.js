@@ -16,6 +16,7 @@ const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
 const { sendEmail } = require("../utils/emailSender");
 const profileRouter = require("./companyProfileRouter"); // Import profile router
 const internshipController = require("../controllers/companyInternshipController"); // Import profile router
+const internshipRouter = require("./companyInternshipRouter");
 
 const db=require("../data/db");
 
@@ -90,6 +91,8 @@ router.post("/internship/upload", uploadFile.fields([
     	{ name: 'manualForm', maxCount: 1 }
   	]), 
 	asyncErrorHandler(internshipController.uploadFiles));
+
+router.use(auth, checkUserRole("company"));
 
 router.get("/",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
     const company = await db.Company.findOne({ 
@@ -261,7 +264,11 @@ router.get("/applications/:applicationId",[auth,checkUserRole("company")], async
 			},
 			{
 				model: db.Student,
-				attributes: ['username', 'year']
+				attributes: ['username', 'year'],
+				include: [ { 
+					model: db.StudentProfile,
+					attributes: ['profilePicture']
+				}]
 			}
 		]
     });
@@ -893,5 +900,6 @@ router.post('/personalInfo', [auth, checkUserRole("company")], asyncErrorHandler
 }));
 
 router.use("/profile", profileRouter);
+router.use("/internship", internshipRouter);
 
 module.exports= router;

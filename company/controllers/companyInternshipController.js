@@ -23,17 +23,17 @@ const uploadFiles = async (req, res) => {
     const result = await internshipService.uploadFiles(token, files);
 
     return res.status(result.status).json({ message: result.message });
-}
+};
 
 const getInternships = async (req, res) => {
-	const result = await internshipService.getInternships();
+	const result = await internshipService.getInternships(req.user.id);
 
 	if (result?.status && result?.message) {
 		return res.status(result.status).json({ message: result.message });
 	}
 
 	return res.status(200).json( result );
-}
+};
 
 const getInternship = async (req, res) => {
 	const result = await internshipService.getInternship(req.params.id);
@@ -43,7 +43,7 @@ const getInternship = async (req, res) => {
 	}
 
 	return res.status(200).json( result );
-}
+};
 
 const uploadInternshipFile = async (req, res) => {
 	const result = await internshipService.uploadInternshipFile(req.file, req.params.id, req.body.fileType);
@@ -53,7 +53,7 @@ const uploadInternshipFile = async (req, res) => {
 	}
   
 	return res.status(201).json({ message: "File uploaded successfully" });
-}
+};
 
 const evaluateInternship = async (req, res) => {
 	const { status, feedbackToStudent, feedbackContextStudent } = req.body;
@@ -77,7 +77,7 @@ const evaluateInternship = async (req, res) => {
 	}
 
 	return res.status(200).json( result );
-}
+};
 
 module.exports = {
 	getUploadPage,

@@ -80,6 +80,8 @@ const finishInternship = async (studentId) => {
 		{ status: 1 },
 		{ where: { studentId } }
 	);
+
+	return { status: 200, message: "Internship marked as finished"};
 }
 
 const requestLink = async (studentId, companyData) => {

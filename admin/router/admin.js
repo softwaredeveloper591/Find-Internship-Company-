@@ -657,7 +657,7 @@ router.put("/announcement/:announcementId", [auth, checkUserRole("admin")], asyn
 
 router.get("/companyRequests", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	// let admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
-	const pendingCompanies = await db.Company.findAll({ where: { statusByDIC: false } });
+	const pendingCompanies = await db.Company.findAll({ where: { statusByDIC: null } });
 	res.status(200).json({ companies: pendingCompanies });
 }));
 

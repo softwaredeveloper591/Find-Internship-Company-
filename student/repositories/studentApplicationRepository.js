@@ -7,7 +7,7 @@ const AdmZip = require("adm-zip");
 const createStudentInfo = async (body) => {
 	await db.StudentInfo.create(body);
 
-	return res.status(200).json({ message: "Student info created successfully." });
+	return { status: 201, message: "Student info created successfully."};
 };
 
 const updateStudentInfo = async (studentId, updates) => {
@@ -17,9 +17,9 @@ const updateStudentInfo = async (studentId, updates) => {
 	});
 
 	if (updated) {
-		return res.status(200).json({ message: "Student info updated successfully." });
+		return { status: 200, message: "Student info updated successfully."};
 	} else {
-		return res.status(404).json({ message: "No record found to update." });
+		return { status: 404, message: "No record found to update."};
 	}
 }
 
@@ -55,7 +55,7 @@ const getOpportunities = async (studentId) => {
 		...announcement.dataValues,
 		image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
 	}));
-	return res.status(200).json({ announcements: formattedAnnouncements });
+	return formattedAnnouncements;
 };
 
 const getOpportunitiesSkills = async (studentId) => {
@@ -69,7 +69,7 @@ const getOpportunitiesSkills = async (studentId) => {
 	const skillIds = studentSkills.map(s => s.skillId);
 
 	if (skillIds.length === 0) {
-		return res.status(200).json({ announcements: [] }); // No skills, no matches
+		return []; // No skills, no matches
 	}
 
 	const announcements = await db.Announcement.findAll({
@@ -110,7 +110,7 @@ const getOpportunitiesSkills = async (studentId) => {
 		image: a.image ? `data:image/png;base64,${a.image.toString('base64')}` : null
 	}));
 
-	return res.status(200).json({ announcements: formattedAnnouncements });
+	return formattedAnnouncements;
 };
 
 const getOneOpportunity = async (studentId, announcementId) => {
@@ -152,7 +152,7 @@ const getOneOpportunity = async (studentId, announcementId) => {
 		});
 	}
 
-	if (!announcement) return res.status(400).json({ error: "There is no available announcement you are allowed to see." });
+	if (!announcement) return { status: 400, message: "There is no available announcement you are allowed to see."};
 
 	const timeDifference = announcement.endDate - now;
 	const remainingSeconds = Math.floor(timeDifference / 1000);
@@ -163,7 +163,7 @@ const getOneOpportunity = async (studentId, announcementId) => {
 		isApplied: !!isApplied,
 		image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
 	};
-	return res.status(200).json({ announcement: formattedAnnouncement });
+	return formattedAnnouncement;
 };
 
 const applyToAnnouncement = async (studentId, announcementId, document) => {
@@ -171,11 +171,11 @@ const applyToAnnouncement = async (studentId, announcementId, document) => {
   
 	const isApplied = await db.Application.findOne({ where: { announcementId, studentId } });
 
-	if (isApplied) return res.status(409).json({ message: "Already applied to this announcement" });
-
+	if (isApplied) return { status: 409, message: "Already applied to this announcement"};
+	
 	const studentInfo = await db.StudentInfo.findOne( { where: studentId });
 
-	if (!studentInfo) return res.status(403).json({ message: "You need to fill the student info before applying to an announcement"});
+	if (!studentInfo) return { status: 403, message: "You need to fill the student info before applying to an announcement"};
 
 	const templatePath = path.join(__dirname, '../files', 'ApplicationForm.docx');
 	const createFilledDocument = async () => {
@@ -212,7 +212,7 @@ const applyToAnnouncement = async (studentId, announcementId, document) => {
 
 	await db.Document.create(document);
 
-	res.status(200).json({ message: "Succesfully applied." });
+	return { status: 200, message: "Succesfully applied" };
 };
 
 const getApplications = async (studentId) => {	
@@ -238,7 +238,7 @@ const getApplications = async (studentId) => {
 		]
 	});
 
-	res.status(200).json({ applications });
+	return applications;
 }
 
 module.exports = {
