@@ -42,9 +42,9 @@ const getApplications = async (req, res) => {
 };
 
 const getApplication = async (req, res) => {
-	const application = await applicationService.getApplication(req.user.id, req.params.id);
+	const { application, documentId } = await applicationService.getApplication(req.user.id, req.params.id);
 
-	return res.status(200).json({ application });
+	return res.status(200).json({ application, documentId });
 };
 
 const fillApplicationForm = async (req, res) => {

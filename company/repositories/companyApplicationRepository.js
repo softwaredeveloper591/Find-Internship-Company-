@@ -161,7 +161,11 @@ const getApplication = async (companyId, applicationId) => {
 		]
 	});
 
-	return application;
+	const document = await db.Document.findOne({
+		where: { applicationId, fileType: "CV" }
+	});
+
+	return { application, documentId: document.id };
 };
 
 const fillApplicationForm = async (companyId, applicationId, body) => {

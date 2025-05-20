@@ -172,7 +172,7 @@ const applyToAnnouncement = async (studentId, announcementId, document) => {
 
 	if (isApplied) return { status: 409, message: "Already applied to this announcement"};
 	
-	const studentInfo = await db.StudentInfo.findOne( { where: studentId });
+	const studentInfo = await db.StudentInfo.findOne( { where: { studentId } });
 
 	if (!studentInfo) return { status: 403, message: "You need to fill the student info before applying to an announcement"};
 
@@ -230,7 +230,12 @@ const getApplications = async (studentId) => {
 				include: [
 					{
 						model: db.Company,
-						attributes: ['name'] // Fetching the company name
+						attributes: ['name'],
+						include: [ {
+								model: db.CompanyProfile,
+								attributes: ['companyLogo']
+							}
+						]
 					}
 				]
 			}
