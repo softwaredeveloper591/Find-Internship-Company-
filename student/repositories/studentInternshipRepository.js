@@ -80,6 +80,8 @@ const finishInternship = async (studentId) => {
 		{ status: 1 },
 		{ where: { studentId } }
 	);
+
+	return { status: 200, message: "Internship marked as finished"};
 }
 
 const requestLink = async (studentId, companyData) => {
@@ -116,129 +118,133 @@ const requestLink = async (studentId, companyData) => {
 	return { status: 200, message: "Link request created successfully." };
 };
 
-const uploadFile = async(studentId, document, studentStatus) => {
-	const existingInternship = await db.Internship.findOne({
-		where: {
-			studentId,
-			status: 1
-		}
-	});
+const uploadFile = async (studentId, document, studentStatus) => {
+  	const transaction = await db.sequelize.transaction();
 
-	if (!existingInternship) {
-		return { status: 403, message: "Your internship hasen't finished yet or don't have an internship" };
-	}
+  	try {
+  	  	const existingInternship = await db.Internship.findOne({
+  	  	  	where: {
+  	  	  	  	studentId,
+  	  	  	  	status: 1
+  	  	  	},
+  	  	  	lock: transaction.LOCK.UPDATE, // 🔒 prevent race condition
+  	  	  	transaction
+  	  	});
+	  
+  	  	if (!existingInternship) {
+  	  	  	await transaction.rollback();
+  	  	  	return { status: 403, message: "Your internship hasn't finished yet or you don't have an internship" };
+  	  	}
+	  
+  	  	let existingDoc = null;
+	  
+  	  	if (existingInternship.manualApplicationId) {
+  	  	  	existingDoc = await db.Document.findOne({
+  	  	  	  	where: {
+  	  	  	  	  	manualApplicationId: existingInternship.manualApplicationId,
+  	  	  	  	  	fileType: document.fileType
+  	  	  	  	},
+  	  	  	  	transaction
+  	  	  	});
+  	  	} else {
+  	  	  	existingDoc = await db.Document.findOne({
+  	  	  	  	where: {
+  	  	  	  	  	applicationId: existingInternship.applicationId,
+  	  	  	  	  	fileType: document.fileType
+  	  	  	  	},
+  	  	  	  	transaction
+  	  	  	});
+  	  	}
 
-	// Check if a document of the same fileType already exists
-	const existingDoc = await db.Document.findOne({
-		where: {
-			userId: studentId,
-			fileType: document.fileType
-		}
-	});
+    	if (existingDoc) {
+    	  	await existingDoc.update(
+    	  	  	{ data: document.data, name: document.name },
+    	  	  	{ transaction }
+    	  	);
 
-	if (existingDoc) {
-		const transaction = await db.sequelize.transaction();
-		try {
-			await existingDoc.update(
-				{ data: document.data },
-				{ transaction }
-			);
+    	  	let currentStatus = existingInternship.studentStatus;
+    	  	let context = existingInternship.feedbackContextStudent;
+    	  	const fileType = document.fileType;
 
-			let studentStatus = existingInternship.studentStatus;
-			let feedbackContextStudent = existingInternship.feedbackContextStudent;
-			const fileType = document.fileType;
+    	  	const updateStatusOnFileUpload = (studentStatus, feedbackContextStudent, fileType) => {
+    	  	  	switch (feedbackContextStudent) {
+    	  	  	  	case "Report":
+    	  	  	  	  	if (fileType === "Report") {
+    	  	  	  	  	  return studentStatus === 4 ? [6, "Report"] : studentStatus === 5 ? [7, "Report"] : [studentStatus, feedbackContextStudent];
+    	  	  	  	  	}
+    	  	  	  	  	break;
 
-			// Helper function
-			const updateStatusOnFileUpload = (studentStatus, feedbackContextStudent, fileType) => {
-			  switch (feedbackContextStudent) {
-			    case "Report":
-			      if (fileType === "Report") {
-			        return studentStatus === 4 ? [6, "Report"] : studentStatus === 5 ? [7, "Report"] : [studentStatus, feedbackContextStudent];
-			      }
-			      break;
-			  
-			    case "Survey":
-			      if (fileType === "Survey") {
-			        return [6, "Survey"];
-			      }
-			      break;
-			  
-			    case "Both":
-			      if (fileType === "Report") return [studentStatus, "SurveyMissing"];
-			      if (fileType === "Survey") return [studentStatus, "ReportMissing"];
-			      break;
-			  
-			    case "SurveyMissing":
-			      if (fileType === "Survey") return [6, "Both"];
-			      break;
-			  
-			    case "ReportMissing":
-			      if (fileType === "Report") return [6, "Both"];
-			      break;
-			  }
-		  
-			  return [studentStatus, feedbackContextStudent]; // default fallback
-			};
+    	  	  	  	case "Survey":
+    	  	  	  	  	if (fileType === "Survey") {
+    	  	  	  	  	  return [6, "Survey"];
+    	  	  	  	  	}
+    	  	  	  	  	break;
 
-			[studentStatus, feedbackContextStudent] = updateStatusOnFileUpload(studentStatus, feedbackContextStudent, fileType);
+    	  	  	  	case "Both":
+    	  	  	  	  	if (fileType === "Report") return [studentStatus, "SurveyMissing"];
+    	  	  	  	  	if (fileType === "Survey") return [studentStatus, "ReportMissing"];
+    	  	  	  	  	break;
 
-			await existingInternship.update(
-				{ studentStatus, feedbackContextStudent },
-				{ transaction }
-			);
+    	  	  	  	case "SurveyMissing":
+    	  	  	  	  	if (fileType === "Survey") return [6, "Both"];
+    	  	  	  	  	break;
 
-			await transaction.commit();
-			return { status: 200, message: `${document.fileType} has been updated.` };
-		} catch (error) {
-			await transaction.rollback();
-			throw error;
-		}
-	}
+    	  	  	  	case "ReportMissing":
+    	  	  	  	  	if (fileType === "Report") return [6, "Both"];
+    	  	  	  	  	break;
+    	  	  	}
 
-	const transaction = await db.sequelize.transaction(); 
-	try {
-		const student = await db.Student.findByPk(studentId, { transaction });
+    	  	  	return [studentStatus, feedbackContextStudent];
+    	  	};
 
-		if (existingInternship.manualApplicationId) {
-			document.manualApplicationId = existingInternship.manualApplicationId;
-		}
-		else {
-			document.applicationId = existingInternship.applicationId;
-		}
+    	  	[currentStatus, context] = updateStatusOnFileUpload(currentStatus, context, fileType);
 
-		document.username = student.username;
-		document.userId = studentId;
+    	  	await existingInternship.update(
+    	  	  	{ studentStatus: currentStatus, feedbackContextStudent: context },
+    	  	  	{ transaction }
+    	  	);
 
-		const createdDoc = await db.Document.create(document, { transaction });
+    	  	await transaction.commit();
+    	  	return { status: 200, message: `${document.fileType} has been updated.` };
+    	}
 
-		// After current document is uploaded, check if both Report and Survey exist
-		const fileTypesToCheck = ['Report', 'Survey'];
-		const docs = await db.Document.findAll({
-			where: {
-				userId: studentId,
-				fileType: fileTypesToCheck
-			},
-			transaction
-		});
+    	// Create new doc
+    	let docs = null;
+    	let createdDoc = null;
 
-		const uploadedTypes = docs.map(d => d.fileType);
-		const hasReport = uploadedTypes.includes('Report');
-		const hasSurvey = uploadedTypes.includes('Survey');
+    	if (existingInternship.manualApplicationId) {
+    	  	document.manualApplicationId = existingInternship.manualApplicationId;
+    	  	createdDoc = await db.Document.create(document, { transaction });
+    	} else {
+    	  	document.applicationId = existingInternship.applicationId;
+    	  	createdDoc = await db.Document.create(document, { transaction });
 
-		const newStudentStatus = hasReport && hasSurvey ? 3 : studentStatus;
+    	  	docs = await db.Document.findAll({
+    	  	  	where: {
+    	  	  	  applicationId: existingInternship.applicationId,
+    	  	  	  fileType: ['Report', 'Survey']
+    	  	  	},
+    	  	  	transaction
+    	  	});
+    	}
 
-		await db.Internship.update(
-			{ studentStatus: newStudentStatus },
-			{ where: { id: existingInternship.id }, transaction }
-		);
+    	const uploadedTypes = docs.map(d => d.fileType);
+    	const hasReport = uploadedTypes.includes('Report');
+    	const hasSurvey = uploadedTypes.includes('Survey');
 
-		await transaction.commit(); // ✅ Commit if all succeeds
-		return createdDoc;
+    	const newStudentStatus = hasReport && hasSurvey ? 3 : studentStatus;
 
-	} catch (error) {
-		await transaction.rollback(); // ❌ Rollback on error
-		throw error;
-	}
+    	await existingInternship.update(
+    	  	{ studentStatus: newStudentStatus },
+    	  	{ transaction }
+    	);
+
+    	await transaction.commit();
+    	return createdDoc;
+  	} catch (error) {
+    	await transaction.rollback();
+    	throw error;
+  	}
 };
 
 module.exports = {

@@ -1,4 +1,5 @@
 const db = require("../data/db");
+const { Op } = require("sequelize");
 
 const getUploadPage = async (token) => {
 	return await db.CompanyUploadLinkRequest.findOne({
@@ -88,20 +89,27 @@ const saveFiles = async (token, files) => {
     return { status: 200, data: { student: request.Student, companyName}};
 }
 
-const getInternships = async () => {
+const getInternships = async (companyId) => {
 	const internships = await db.Internship.findAll({
 		where: {
-			companyStatus: {
-				[Op.in]: [3, 4, 5, 6]
-			}
+			studentStatus: {
+				[Op.in]: [1, 3, 4, 5, 6, 7]
+			},
+			status: 1
 		},
 		include: [
-			{ model: db.Student, attributes: ['id', 'username', 'email'] },
+			{ 
+				model: db.Student, 
+				attributes: ['id', 'username', 'email'] 
+			},
 			{
 				model: db.Application,
 				include: {
 					model: db.Announcement,
-					attributes: ['announcementName'],
+					where: {
+						companyId
+					},
+					attributes: ['announcementName']
 				}
 			}
 		]
@@ -118,9 +126,10 @@ const getInternship = async (id) => {
 	const internship = await db.Internship.findOne({
 		where: {
 			id,
-			companyStatus: {
-				[Op.in]: [3, 4, 5, 6]
-			}
+			studentStatus: {
+				[Op.in]: [1, 3, 4, 5, 6, 7]
+			},
+			status: 1
 		},
 		include: [
 			{ model: db.Student, attributes: ['id', 'username', 'email'] },

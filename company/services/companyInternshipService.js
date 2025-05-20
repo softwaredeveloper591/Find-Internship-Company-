@@ -46,8 +46,8 @@ const uploadFiles = async (token, files) => {
 	return { status: 201, message: "Files uploaded successfully." };
 }
 
-const getInternships = async () => {
-	return await internshipRepository.getInternships();
+const getInternships = async (companyId) => {
+	return await internshipRepository.getInternships(companyId);
 };
 
 const getInternship = async (id) => {
