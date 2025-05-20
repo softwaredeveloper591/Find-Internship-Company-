@@ -10,4 +10,4 @@ router.put("/manualApplications/:id/:studentId", upload.single('EmploymentCertif
 
 router.get("/download/:applicationId/:fileType", asyncErrorHandler(internshipController.downloadFile));
 
-module.exports = router;
+module.exports = router; 
