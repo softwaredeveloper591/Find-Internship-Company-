@@ -575,8 +575,7 @@ router.get("/announcementRequests", [auth, checkUserRole("admin")], asyncErrorHa
 	})
 	const announcementsWithImages = announcements.map(announcement => {
 		return {
-			...announcement.dataValues,
-			image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
+			...announcement.dataValues
 		};
 	});
 	res.status(200).json({ dataValues: admin.dataValues, announcements: announcementsWithImages });
@@ -610,8 +609,7 @@ router.get("/announcement/:announcementId", [auth, checkUserRole("admin")], asyn
 		const formattedAnnouncement = {
 			...announcement.dataValues,
 			formattedStartDate: moment(announcement.startDate).tz('Europe/Istanbul').format('DD/MM/YYYY'),
-			formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD/MM/YYYY'),
-			image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
+			formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD/MM/YYYY')
 		};
 		res.status(200).json({ dataValues: admin.dataValues, announcement: formattedAnnouncement });
 	} catch (error) {
@@ -779,7 +777,7 @@ router.put("/applications/:applicationId", upload.single('studentFile'), [auth, 
 	let binaryData = null;
 	if (file) {
 		binaryData = file.buffer;
-		await db.Document.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "ApplicationForm" } });
+		await db.Document.update({ name: file.originalname, data: binaryData }, { where: { applicationId, fileType: "UpdatedApplicationForm" } });
 	}
 	const { isApproved, feedback } = req.body;
 

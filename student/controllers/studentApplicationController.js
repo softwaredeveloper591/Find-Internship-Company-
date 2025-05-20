@@ -24,15 +24,21 @@ const updateStudentInfo = async (req, res) => {
 }
 
 const getOpportunities = async (req, res) => {
-	return await applicationService.getOpportunities(req.user.id);
+	const opportunities = await applicationService.getOpportunities(req.user.id);
+
+	return res.status(200).json( { opportunities });
 }
 
 const getOpportunitiesSkills = async (req, res) => {
-	return await applicationService.getOpportunitiesSkills(req.user.id);
+	const opportunities = await applicationService.getOpportunitiesSkills(req.user.id);
+
+	return res.status(200).json( { opportunities });
 }
 
 const getOneOpportunity = async (req, res) => {
-	return await applicationService.getOneOpportunity(req.user.id, req.params.opportunityId);
+	const opportunity = await applicationService.getOneOpportunity(req.user.id, req.params.opportunityId);
+
+	return res.status(200).json( { opportunity });
 }
 
 const applyToAnnouncement = async (req, res) => {
@@ -46,7 +52,9 @@ const applyToAnnouncement = async (req, res) => {
 }
 
 const getApplications = async (req, res) => {
-	return await applicationService.getApplications(req.user.id);
+	const applications = await applicationService.getApplications(req.user.id);
+
+	return res.status(200).json( { applications });
 }
 
 module.exports = {

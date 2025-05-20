@@ -31,7 +31,7 @@ const postAnnouncement = async (skillIds, announcementData) => {
 const getAnnouncements = async (companyId) => {
 	const announcements = await db.Announcement.findAll({
 		where:{ companyId },
-		attributes: {exclude:['companyId', 'status']}
+		attributes: {exclude:['companyId']}
 	});
 	
 	return announcements;

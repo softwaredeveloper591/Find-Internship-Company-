@@ -3,6 +3,7 @@ const { Op } = require('sequelize');
 const moment = require('moment-timezone');
 const path = require('path');
 const AdmZip = require("adm-zip");
+const { Sequelize } = require('sequelize');
 
 const createStudentInfo = async (body) => {
 	await db.StudentInfo.create(body);
@@ -52,9 +53,9 @@ const getOpportunities = async (studentId) => {
 	});
 
 	const formattedAnnouncements = announcements.map(announcement => ({
-		...announcement.dataValues,
-		image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
+		...announcement.dataValues
 	}));
+	
 	return formattedAnnouncements;
 };
 
@@ -106,8 +107,7 @@ const getOpportunitiesSkills = async (studentId) => {
 	});
 
 	const formattedAnnouncements = announcements.map(a => ({
-		...a.dataValues,
-		image: a.image ? `data:image/png;base64,${a.image.toString('base64')}` : null
+		...a.dataValues
 	}));
 
 	return formattedAnnouncements;
@@ -160,8 +160,7 @@ const getOneOpportunity = async (studentId, announcementId) => {
 	const formattedAnnouncement = {
 		...announcement.dataValues,
 		remainingSeconds,
-		isApplied: !!isApplied,
-		image: announcement.image ? `data:image/png;base64,${announcement.image.toString('base64')}` : null
+		isApplied: !!isApplied
 	};
 	return formattedAnnouncement;
 };
