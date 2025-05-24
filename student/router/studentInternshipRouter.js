@@ -18,4 +18,6 @@ router.post("/requestLink", asyncErrorHandler(internshipController.requestLink))
 
 router.post("/internshipFile", upload.single('internshipFile'), asyncErrorHandler(internshipController.uploadInternshipFile));
 
+router.post("/review/:id", asyncErrorHandler(internshipController.review));
+
 module.exports = router;

@@ -166,64 +166,81 @@ const getOneOpportunity = async (studentId, announcementId) => {
 };
 
 const applyToAnnouncement = async (studentId, announcementId, document) => {
-	const student = await db.Student.findOne({ where: { id: studentId } });
+	const transaction = await db.sequelize.transaction();
+	try {
+		const internship = await db.Internship.findOne( { where: { studentId }, transaction});
+
+		if (internship) {
+			await transaction.rollback();
+			return { status: 403, message: "You already have an internship"};
+		}
+
+		const student = await db.Student.findOne({ where: { id: studentId }, transaction });
   
-	const isApplied = await db.Application.findOne({ where: { announcementId, studentId } });
+		const isApplied = await db.Application.findOne({ where: { announcementId, studentId }, transaction });
 
-	if (isApplied) return { status: 409, message: "Already applied to this announcement"};
-	
-	const studentInfo = await db.StudentInfo.findOne( { where: { studentId } });
+		if (isApplied) {
+			await transaction.rollback();
+			return { status: 409, message: "Already applied to this announcement"};
+		} 
+		
+		const studentInfo = await db.StudentInfo.findOne( { where: { studentId }, transaction });
 
-	if (!studentInfo) return { status: 403, message: "You need to fill the student info before applying to an announcement"};
+		if (!studentInfo) {
+			await transaction.rollback();
+			return { status: 403, message: "You need to fill the student info before applying to an announcement"};
+		} 
+		
+		const templatePath = path.join(__dirname, '../files', 'ApplicationForm.docx');
+		const createFilledDocument = async () => {
+			const zip = new AdmZip(templatePath);
+			const docxTemplate = zip.readAsText("word/document.xml");
+			const filledDocx = docxTemplate
+				.replace(/«name»/g, student.username)
+				.replace(/«studentClass»/g, student.year)
+				.replace(/«studentNumber»/g, student.id)
+				.replace(/«tcNo»/g, student.tc)
+				.replace(/«user_phone»/g, studentInfo.studentPhone)
+				.replace(/«relative_phone»/g, studentInfo.relativePhone)
+				.replace(/«email»/g, studentInfo.formEmail);
+			zip.updateFile("word/document.xml", Buffer.from(filledDocx, "utf-8"));
+			return zip.toBuffer();
+		};
 
-	const templatePath = path.join(__dirname, '../files', 'ApplicationForm.docx');
-	const createFilledDocument = async () => {
-		const zip = new AdmZip(templatePath);
-		const docxTemplate = zip.readAsText("word/document.xml");
-		const filledDocx = docxTemplate
-			.replace(/«name»/g, student.username)
-			.replace(/«studentClass»/g, studentInfo.year)
-			.replace(/«studentNumber»/g, studentInfo.studentNo)
-			.replace(/«tcNo»/g, studentInfo.tc)
-			.replace(/«user_phone»/g, studentInfo.studentPhone)
-			.replace(/«relative_phone»/g, studentInfo.relativePhone)
-			.replace(/«email»/g, studentInfo.email);
-		zip.updateFile("word/document.xml", Buffer.from(filledDocx, "utf-8"));
-		return zip.toBuffer();
-	};
+		bufferedApplicationForm = await createFilledDocument();
 
-	bufferedApplicationForm = await createFilledDocument();
+		const application = await db.Application.create({
+			studentId,
+			announcementId
+		}, { transaction });
 
-	const application = await db.Application.create({
-		studentId,
-		announcementId
-	});
+		await db.Document.create({
+			name: "ApplicationForm.docx",
+			applicationId: application.id,
+			data: bufferedApplicationForm,
+			fileType: 'ApplicationForm',
+		}, { transaction });
 
-	await db.Document.create({
-		name: "ApplicationForm.docx",
-		applicationId: application.id,
-		data: bufferedApplicationForm,
-		fileType: 'ApplicationForm',
-		username: student.username
-	});
+		document.applicationId = application.id;
 
-	document.applicationId = application.id;
+		await db.Document.create(document, { transaction });
 
-	await db.Document.create(document);
+		await transaction.commit();
 
-	return { status: 200, message: "Succesfully applied" };
+		return { status: 200, message: "Successfully applied" };
+	} catch (error) {
+		await transaction.rollback();
+		throw error;
+	}
 };
 
 const getApplications = async (studentId) => {	
 	const applications = await db.Application.findAll({
 		where: {
-			studentId  // Filter applications by the provided student ID
+			studentId,
+			status: { [Op.ne]: 5 }
 		},
 		include: [
-			{
-				model: db.Student,
-				attributes: ['username'] // Fetching only the student name
-			},
 			{
 				model: db.Announcement,
 				attributes: ['announcementName'],
@@ -242,7 +259,14 @@ const getApplications = async (studentId) => {
 		]
 	});
 
-	return applications;
+	const manualApplications = await db.ManualApplication.findAll({ 
+		where: { 
+			studentId,
+			status: { [Op.ne]: 5 }
+		} 
+	});
+
+	return { applications, manualApplications };
 }
 
 module.exports = {

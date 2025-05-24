@@ -7,20 +7,22 @@ const upload = require('../middleware/imageUploader');
 const router = express.Router();
 
 // Get, create, update company profile
-router.get("/", [auth, checkUserRole("company")], asyncErrorHandler(profileController.getProfile));
-router.post("/", [auth, checkUserRole("company")], upload.fields([
+router.get("/", asyncErrorHandler(profileController.getProfile));
+router.post("/", upload.fields([
 		{ name: 'companyLogo', maxCount: 1 },
     	{ name: 'bannerImage', maxCount: 1 }
   	]), 
   	asyncErrorHandler(profileController.createProfile));
 
-router.put("/", [auth, checkUserRole("company")], asyncErrorHandler(profileController.updateProfile));
+router.get("/reviews", asyncErrorHandler(profileController.getReviews));
+
+router.put("/", asyncErrorHandler(profileController.updateProfile));
 
 // Update logo
-router.put("/logo", upload.single('companyLogo'), [auth, checkUserRole("company")], asyncErrorHandler(profileController.updateLogo));
+router.put("/logo", upload.single('companyLogo'), asyncErrorHandler(profileController.updateLogo));
 
 // Update banner image
-router.put("/bannerImage", upload.single('bannerImage'), [auth, checkUserRole("company")], asyncErrorHandler(profileController.updateBannerImage));
+router.put("/bannerImage", upload.single('bannerImage'), asyncErrorHandler(profileController.updateBannerImage));
 
 // Get company profile by companyId
 router.get("/:companyId", asyncErrorHandler(profileController.getProfileById));

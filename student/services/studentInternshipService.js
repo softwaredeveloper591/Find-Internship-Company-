@@ -8,28 +8,24 @@ const getFiles = async (studentId) => {
 	return await internshipRepository.getFiles(studentId);
 };
 
-const uploadApplicationForm = async (file, studentId) => {
-	if (!file) throw new Error("No file uploaded");
-
-  	const fileType = "ManualApplicationForm";
-  	const data = file.buffer;
-	const name = file.originalname;
+const uploadApplicationForm = async (file, studentId, body) => {
+	if (!file) return { status: 400, message: "No file uploaded"};
 
 	const document = {
-		fileType,
-		data,
-		name
+		fileType: "ManualApplicationForm",
+		data: file.buffer,
+		name: file.originalname
 	}
 
-  	return await internshipRepository.uploadApplicationForm(studentId, document);
+  	return await internshipRepository.uploadApplicationForm(studentId, document, body);
 };
 
 const finishInternship = async (studentId) => {
 	return await internshipRepository.finishInternship(studentId);
 }
 
-const requestLink = async (studentId, companyData) => {
-	return await internshipRepository.requestLink(studentId, companyData);
+const requestLink = async (studentId) => {
+	return await internshipRepository.requestLink(studentId);
 }
 
 const uploadInternshipFile = async (file, studentId, uploadedFileType) => {
@@ -50,17 +46,18 @@ const uploadInternshipFile = async (file, studentId, uploadedFileType) => {
 		fileType = "Survey"
 	}
 
-  	const data = file.buffer;
-	const name = file.originalname;
-
 	const document = {
 		fileType,
-		data,
-		name
+		data: file.buffer,
+		name: file.originalname
 	}
 
   	return await internshipRepository.uploadFile(studentId, document, studentStatus);
-}
+};
+
+const review = async (studentId, companyId, body) => {
+	return await internshipRepository.review(studentId, companyId, body);
+};
 
 module.exports = {
 	getInternship,
@@ -68,5 +65,6 @@ module.exports = {
 	uploadApplicationForm,
 	finishInternship,
 	requestLink,
-	uploadInternshipFile
+	uploadInternshipFile,
+	review
 };

@@ -52,9 +52,9 @@ const applyToAnnouncement = async (req, res) => {
 }
 
 const getApplications = async (req, res) => {
-	const applications = await applicationService.getApplications(req.user.id);
+	const { applications, manualApplications } = await applicationService.getApplications(req.user.id);
 
-	return res.status(200).json( { applications });
+	return res.status(200).json( { applications, manualApplications });
 }
 
 module.exports = {

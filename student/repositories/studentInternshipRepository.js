@@ -1,5 +1,6 @@
 const db = require("../data/db");
 const { Op } = require('sequelize');
+const ManualApplication = require("../models/ManualApplication");
 
 const getInternship = async (studentId) => {
 	const internship = await db.Internship.findOne({
@@ -13,7 +14,9 @@ const getInternship = async (studentId) => {
 				  attributes: ['name'], // only fetch company name
 				},
 				attributes: ['announcementName'], // only fetch announcement name
-		  	}
+		  	},
+			model: ManualApplication,
+			attributes: ['companyName','companyEmail']
 		}
 	});
 
@@ -31,31 +34,28 @@ const getFiles = async (studentId) => {
 	});
 };
 
-const uploadApplicationForm = async(studentId, document) => {
-	const existingInternship = await db.Internship.findOne({ where: { studentId }});
+const uploadApplicationForm = async(studentId, document, body) => {
+	const internship = await db.Internship.findOne({ where: { studentId }});
 
-	if (existingInternship) {
+	if (internship) {
 		return { status: 403, message: "You already have an internship" };
 	}
 
 	const transaction = await db.sequelize.transaction(); 
 	try {
-		const student = await db.Student.findByPk(studentId, { transaction });
+		const { companyName, companyEmail } = body;
 
 		const manualApplication = await db.ManualApplication.create(
-			{ studentId },
+			{ studentId, companyEmail, companyName },
 			{ transaction }
 		);
 
 		document.manualApplicationId = manualApplication.id;
-		document.username = student.username;
-		document.userId = studentId;
 
-		const createdDoc = await db.Document.create(document, { transaction });
+		const createdDoc = await db.Document.create( document, { transaction });
 
 		await transaction.commit(); // ✅ Commit if all succeeds
 		return createdDoc;
-
 	} catch (error) {
 		await transaction.rollback(); // ❌ Rollback on error
 		throw error;
@@ -84,7 +84,7 @@ const finishInternship = async (studentId) => {
 	return { status: 200, message: "Internship marked as finished"};
 }
 
-const requestLink = async (studentId, companyData) => {
+const requestLink = async (studentId) => {
 	const internship = await db.Internship.findOne({ 
 		where: { studentId, status: 1 } 
 	});
@@ -105,7 +105,10 @@ const requestLink = async (studentId, companyData) => {
 		return { status: 400, message: "You already requested a link." };
 	}
 
-	const { companyEmail, companyName } = companyData;
+	const { companyEmail, companyName } = await db.ManualApplication.findOne({
+		where: { id: internship.manualApplicationId },
+		attributes: ['companyEmail', 'companyName']
+	});
 
 	await db.CompanyUploadLinkRequest.create({
 		internshipId: internship.id,
@@ -247,11 +250,36 @@ const uploadFile = async (studentId, document, studentStatus) => {
   	}
 };
 
+const review = async (studentId, companyId, body) => {
+	const internship = await db.Internship.findOne({
+		where: { 
+			studentId,
+			status: 1
+		},
+		include: {
+			model: db.Application,
+			include: {
+				model: db.Announcement,
+				where: { companyId } 
+			}
+		}
+	});
+
+	if(!internship) return { status: 403, message: "You are not allowed to review this company or your internship hasn't finished yet"};
+
+	const { rating, comment } = body;
+
+	await db.Review.create({ studentId, companyId, rating, comment });
+
+	return { status: 200 };
+};
+
 module.exports = {
 	getInternship,
     getFiles,
 	uploadApplicationForm,
 	finishInternship,
 	requestLink,
-	uploadFile
+	uploadFile,
+	review
 };

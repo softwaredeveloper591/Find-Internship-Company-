@@ -4,6 +4,10 @@ const createProfile = async (companyId, profileData) => {
     return await profileRepository.create(companyId, profileData);
 };
 
+const getReviews = async (companyId) => {
+	return await profileRepository.getReviews(companyId);
+};
+
 const getProfile = async (companyId) => {
     return await profileRepository.getProfile(companyId);
 };
@@ -25,5 +29,6 @@ module.exports = {
     getProfile,
     updateProfile,
 	updateBannerImage,
-	updateLogo
+	updateLogo,
+	getReviews
 };

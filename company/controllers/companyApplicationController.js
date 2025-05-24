@@ -70,13 +70,7 @@ const uploadApplicationForm = async (req, res) => {
 const downloadFile = async (req, res) => {
 	const { applicationId, fileType } = req.params;
 
-	const whereClause = { fileType, applicationId };
-
-	const document = await applicationService.downloadFile( whereClause );
-
-	if (!document || !document.data) {
-		throw new Error("No such document or file data is missing.");
-	}
+	const document = await applicationService.getFile( applicationId,fileType );
 
 	const { name, data } = document;
 

@@ -1,13 +1,13 @@
 const amqp = require('amqplib/callback_api');
 const { MSG_QUEUE_URL } = require("../config");
 
-exports.sendEmail = (to, subject, body) => {
+exports.sendEmail = (to, subject, body, attachment = null) => {
     amqp.connect(MSG_QUEUE_URL, (err, connection) => {
         if (err) throw err;
         connection.createChannel((err, channel) => {
             if (err) throw err;
 
-            const msg = JSON.stringify({ to, subject, body });
+            const msg = JSON.stringify({ to, subject, body, attachment });
             channel.assertQueue('email_queue', { durable: true });
             channel.sendToQueue('email_queue', Buffer.from(msg), { persistent: true });
 

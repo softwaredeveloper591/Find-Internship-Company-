@@ -16,10 +16,7 @@ const getFiles = async (req, res) => {
 };
 
 const uploadApplicationForm = async (req, res) => {
-	const file = req.file;
-	const studentId = req.user.id;
-  
-	const result = await internshipService.uploadApplicationForm(file, studentId);
+	const result = await internshipService.uploadApplicationForm(req.file, req.user.id, req.body);
 
 	if (result?.status && result?.message) {
 		return res.status(result.status).json({ message: result.message });
@@ -39,7 +36,7 @@ const finishInternship = async (req, res) => {
 }
 
 const requestLink = async (req, res) => {
-	const result = await internshipService.requestLink(req.user.id, req.body);
+	const result = await internshipService.requestLink(req.user.id);
 
 	if (result?.status && result?.message) {
 		return res.status(result.status).json({ message: result.message });
@@ -58,11 +55,22 @@ const uploadInternshipFile = async (req, res) => {
 	return res.status(201).json({ message: "File uploaded successfully" });
 }
 
+const review = async (req, res) => {
+	const result = await internshipService.review(req.user.id, req.params.id, req.body);
+
+	if (result?.status && result?.message) {
+		return res.status(result.status).json({ message: result.message });
+	}
+  
+	return res.status(201).json({ message: "Review published successfully" });
+}
+
 module.exports = {
 	getInternship,
     getFiles,
 	uploadApplicationForm,
 	finishInternship,
 	requestLink,
-	uploadInternshipFile
+	uploadInternshipFile,
+	review
 };

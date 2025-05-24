@@ -1,13 +1,13 @@
 const profileService = require('../services/companyProfileService');
 
 const getProfile = async (req, res) => {
-    const profile = await profileService.getProfile(req.user.id);
-    return res.status(200).json(profile);
+    const { profile, rating } = await profileService.getProfile(req.user.id);
+    return res.status(200).json({ profile, rating });
 };
 
 const getProfileById = async (req, res) => {
-	const profile = await profileService.getProfile(req.params.companyId);
-    return res.status(200).json(profile);
+	const { profile, rating } = await profileService.getProfile(req.params.companyId);
+    return res.status(200).json({ profile, rating });
 }
 
 const createProfile = async (req, res) => {
@@ -31,9 +31,16 @@ const createProfile = async (req, res) => {
 	return res.status(201).json({ message: "Profile created successfully", profile });
 };
 
+const getReviews = async (req, res) => {
+	const reviews = await profileService.getReviews(req.user.id);
+
+	return res.status(200).json( { reviews });
+};
+
 const updateProfile = async (req, res) => {
-    const updatedProfile = await profileService.updateProfile(req.user.id, req.body);
-    return res.status(200).json({ message: "Profile updated succesfully", updatedProfile });
+    await profileService.updateProfile(req.user.id, req.body);
+
+    return res.status(200).json({ message: "Profile updated succesfully" });
 };
 
 const updateBannerImage = async (req, res) => {
@@ -66,5 +73,6 @@ module.exports = {
     getProfile,
     updateProfile,
 	updateBannerImage,
-	updateLogo
+	updateLogo,
+	getReviews
 };

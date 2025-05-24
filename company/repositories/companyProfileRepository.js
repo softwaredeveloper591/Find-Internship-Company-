@@ -12,9 +12,13 @@ const create = async (companyId, profileData) => {
     }
 };
 
+const getReviews = async (companyId) => {
+	return await db.Review.findAll({ where: { companyId }});
+};
+
 const getProfile = async (companyId) => {
-    try {
-        const profile = await db.CompanyProfile.findOne({
+	try {
+		const profile = await db.CompanyProfile.findOne({
 			where: { companyId },
 			include: [
 				{
@@ -24,11 +28,20 @@ const getProfile = async (companyId) => {
 					]
 				}
 			]
-		});		
-        return profile;
-    } catch (error) {
-        throw error;
-    }
+		});
+
+		const averageRatingResult = await db.Review.findOne({
+			where: { companyId },
+			attributes: [[db.sequelize.fn('AVG', db.sequelize.col('rating')), 'avgRating']],
+			raw: true
+		});
+
+		const avgRating = parseFloat(averageRatingResult.avgRating).toFixed(2);
+
+		return { profile, avgRating };
+	} catch (error) {
+		throw error;
+	}
 };
 
 const update = async (companyId, profileData) => {
@@ -58,5 +71,6 @@ module.exports = {
     getProfile,
     update,
 	updateBannerImage,
-	updateLogo
+	updateLogo,
+	getReviews
 };

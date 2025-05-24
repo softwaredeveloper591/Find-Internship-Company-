@@ -2,18 +2,18 @@ const { sendEmail } = require('../utils/emailSender');
 const moment = require('moment');
 const internshipRepository = require("../repositories/adminInternshipRepository");
 
-const getManualApplications = async (adminId) => {
-	return await internshipRepository.getManualApplications(adminId);
-};
+const getFile = async ( id, applicationType, fileType ) => {
 
-const approveManualApplications = async (manualApplicationId, studentId, isApproved, file) => {
-	if (!file) throw new Error("No file uploaded");
-	const data = file.buffer;
-	return await internshipRepository.approveManualApplications(manualApplicationId, studentId, isApproved, data);
-};
+	const whereClause = { fileType };
 
-const downloadFile = async (whereClause) => {
-	return await internshipRepository.downloadFile(whereClause);
+	// Determine whether to use manualApplicationId or applicationId
+	if (applicationType === "Manual") {
+		whereClause.manualApplicationId = id;
+	} else {
+		whereClause.applicationId = id;
+	}
+
+	return await internshipRepository.getFile(whereClause);
 }
 
 const getLinkRequests = async () => {
@@ -150,9 +150,7 @@ const evaluateInternship = async (id, status, feedbackToStudent, feedbackToCompa
 }
 
 module.exports = {
-    getManualApplications,
-	approveManualApplications,
-	downloadFile,
+	getFile,
 	getLinkRequests,
 	approveLinkRequest,
 	getInternships,

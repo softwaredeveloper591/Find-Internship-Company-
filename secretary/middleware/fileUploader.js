@@ -6,21 +6,26 @@ const path = require('path');
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
-	const allowedTypes = /pdf|docx/;
-	const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-	const mimetype = allowedTypes.test(file.mimetype);
+	const allowedExtensions = ['.pdf', '.docx'];
+	const allowedMimeTypes = [
+		'application/pdf',
+		'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+	];
 
-	if (extname && mimetype) {
+	const ext = path.extname(file.originalname).toLowerCase();
+	const mimetype = file.mimetype;
+
+	if (allowedExtensions.includes(ext) && allowedMimeTypes.includes(mimetype)) {
 		cb(null, true);
 	} else {
-		cb(new Error('Invalid file type'));
+		cb(new Error('Invalid file type. Only PDF and DOCX are allowed.'));
 	}
 };
 
 const upload = multer({
 	storage: storage,
 	fileFilter: fileFilter,
-	limits: { fileSize: 7 * 1024 * 1024 }
+	limits: { fileSize: 15 * 1024 * 1024 }
 });
 
 module.exports = upload;

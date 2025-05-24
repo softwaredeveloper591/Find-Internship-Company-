@@ -1,0 +1,218 @@
+const db = require("../data/db");
+const { Op } = require('sequelize');
+
+const getApplications = async () => {
+	const applications = await db.Application.findAll({
+		where: {
+			isApprovedByCompany: true,
+			isApprovedByDIC: null,
+			status: 1
+		},
+		include: [
+			{
+				model: db.Announcement,
+				include: {
+					model: db.Company,
+					attributes: ['name']
+				}
+			},
+			{
+				model: db.Student,
+				attributes: ['username', 'id'] 
+			}
+		]
+	});
+
+	const manualApplications = await db.ManualApplication.findAll({
+		where: {
+			isApprovedByDIC: null,
+			status: 0
+		},
+		include: [
+			{
+				model: db.Student,
+				attributes: ['username', 'id'] 
+			}
+		]
+	})
+
+	return { applications, manualApplications };
+};
+
+const getApplication = async (id) => {
+	const application = await db.Application.findOne({
+		where: {
+			id,
+			status: 1
+		},
+		include: [
+			{
+				model: db.Announcement,
+				include: {
+					model: db.Company,
+					attributes: ['name']
+				}
+			},
+			{
+				model: db.Student,
+				attributes: ['username', 'id']
+			}
+		]
+	});
+
+	return application;
+};
+
+const getManualApplication = async (id) => {
+	const application = await db.ManualApplication.findOne({ 
+		where: { 
+			id,
+			status: 0
+		},
+		include: [
+			{
+				model: db.Student,
+				attributes: ['username', 'id']
+			}
+		]
+	});
+
+	return application;
+};
+
+const getFile = async (whereClause) => {
+	return await db.Document.findOne( { where: whereClause });
+};
+
+const evaluateApplication = async (applicationId, isApproved, fileData) => {
+	const internship = await db.Internship.findOne( { where: { applicationId }});
+	
+	if (internship) {
+		return { status: 400, message: "This student already has an internship"}
+	}
+	
+	const isAlreadyChecked = await db.Application.findOne({
+		where: {
+			id: applicationId, // replace with the actual application ID
+			isApprovedByDIC: {
+				[db.Sequelize.Op.not]: null
+			},
+			status: { [Op.ne]: 1 }
+		}
+	});
+	  
+	if (isAlreadyChecked) {
+		return { status: 403, message: "You already checked this application" };
+	}
+
+	const transaction = await db.sequelize.transaction();
+
+	try {
+		await db.Document.update(
+			fileData,
+			{ where: { applicationId, fileType: "UpdatedApplicationForm" }, transaction }
+		);
+
+		const application = await db.Application.findOne({
+			where: { 
+				id: applicationId,
+				status: 2
+			},
+			include: [
+				{
+					model: db.Student,
+					attributes: ['username', 'email']
+				},
+				{
+					model: db.Announcement,
+					include: [{ model: db.Company }],
+					attributes: ['announcementName']
+				}
+			],
+			transaction
+		});
+
+		if (!application) {
+			await transaction.rollback();
+			return { status: 404, message: "Application not found" };
+		}
+
+		if (isApproved === "true") {
+			application.isApprovedByDIC = true;
+			application.status = 2;
+		} else {
+			application.isApprovedByDIC = false;
+			application.status = 4;
+		}
+
+		await application.save({ transaction });
+
+		await transaction.commit();
+
+		return {
+			status: 200,
+			data: {
+				studentEmail: application.Student.email,
+				studentName: application.Student.username,
+				announcementName: application.Announcement.announcementName
+			},
+			message: isApproved === "true" ? "Application approved" : "Application rejected"
+		};
+	} catch (error) {
+		await transaction.rollback();
+		throw error;
+	}
+};
+
+const evaluateManualApplications = async (manualApplicationId, isApproved, data) => {
+	const internship = await db.Internship.findOne( { where: { manualApplicationId }});
+
+	if (internship) {
+		return { status: 400, message: "This student already has an internship"}
+	}
+	
+	const isAlreadyChecked = await db.ManualApplication.findOne({
+		where: {
+			id: manualApplicationId, // replace with the actual application ID
+			isApprovedByDIC: {
+				[db.Sequelize.Op.not]: null
+			},
+			status: 3
+		}
+	});
+	  
+	if (isAlreadyChecked) {
+		return { status: 403, message: "You already checked this application" };
+	}
+
+	if (isApproved) {
+		const transaction = await db.sequelize.transaction();
+		try {
+			await db.Document.update(
+				{ data }, 
+				{ where: { manualApplicationId, fileType: "ManualApplicationForm"}, transaction }
+			);
+
+			await db.ManualApplication.update(
+				{ isApprovedByDIC: true, status: 2 }, 
+				{ where: {id: manualApplicationId }, transaction }
+			);
+
+			await transaction.commit();
+		} catch (error) {
+			await transaction.rollback();
+			throw error;
+		}
+	}
+
+	return { status: 200 };
+}
+
+module.exports = {
+	getApplications,
+	getApplication,
+	getManualApplication,
+	getFile,
+	evaluateApplication,
+	evaluateManualApplications
+}

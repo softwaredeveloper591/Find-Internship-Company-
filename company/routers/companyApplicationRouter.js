@@ -19,6 +19,6 @@ router.post("/applications/:id/fillApplicationForm", asyncErrorHandler(applicati
 
 router.put("/applications/:id", uploadFile.single('upload-file'), asyncErrorHandler(applicationController.uploadApplicationForm));
 
-router.get("/applications/download/:id/:fileType", asyncErrorHandler(applicationController.downloadFile));
+router.get("/applications/download/:applicationId/:fileType", asyncErrorHandler(applicationController.downloadFile));
 
 module.exports = router;

@@ -147,7 +147,14 @@ const getInternship = async (id) => {
 		return { status: 400, message: "This internship can't be found"};
 	}
 
-	return internship;
+	const applicationId = internship.Application.id;
+
+	const documentId = await db.Document.findOne({
+		where: { applicationId, fileType: "Report" },
+		attributes: ['id']
+	});
+
+	return { internship, documentId };
 }
 
 const uploadFile = async(internshipId, document) => {

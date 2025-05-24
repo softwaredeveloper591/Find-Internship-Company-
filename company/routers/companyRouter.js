@@ -19,7 +19,7 @@ const internshipController = require("../controllers/companyInternshipController
 const internshipRouter = require("./companyInternshipRouter");
 const applicationRouter = require("./companyApplicationRouter")
 
-const db=require("../data/db");
+const db = require("../data/db");
 
 let totalApplicationsCount = 0;
 let totalInternshipsCount = 0;
@@ -118,10 +118,9 @@ router.get("/",[auth,checkUserRole("company")], asyncErrorHandler( async (req, r
             profilePicture: company?.CompanyProfile?.companyLogo || null
         }
     });
-    // return res.status(200).json({ userType: "company", dataValues: company});
 }));
 
-router.post('/announcement', upload.single('image'), [auth, checkUserRole('company')], asyncErrorHandler(async (req, res, next) => {
+/*router.post('/announcement', upload.single('image'), [auth, checkUserRole('company')], asyncErrorHandler(async (req, res, next) => {
     const { skillIds = [], ...announcementData } = req.body;
 
 	const transaction = await db.sequelize.transaction();
@@ -410,7 +409,7 @@ router.put("/applications/:applicationId",upload.single('upload-file'),[auth,che
 	    await application.save();
 	    return res.status(200).json({ message: "Application rejected." });
 	}
-}));
+}));*/
 
 router.get("/applications/download/:applicationId/:fileType",[auth,checkUserRole("company")], asyncErrorHandler(async (req, res , next) => {
 	const applicationId = req.params.applicationId;
