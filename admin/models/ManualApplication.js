@@ -18,7 +18,7 @@ module.exports = function(sequelize, DataTypes) {
     status: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      defaultValue: 0
+      defaultValue: 1
     },
     isApprovedByDIC: {
       type: DataTypes.BOOLEAN,
