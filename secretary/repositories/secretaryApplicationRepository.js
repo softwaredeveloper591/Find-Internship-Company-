@@ -140,7 +140,6 @@ const evaluateApplication = async (id, document) => {
 		};
 	} catch (error) {
 		await transaction.rollback();
-		console.error(error);
 		return { status: 500, message: "An error occurred during evaluation" };
 	}
 };
@@ -149,15 +148,16 @@ const evaluateManualApplications = async (id, document) => {
 	const transaction = await db.sequelize.transaction();
 
 	try {
-		const internship = await db.Internship.findOne( { where: { manualApplicationId: id }, transaction});
-	
+		const internship = await db.Internship.findOne({ where: { manualApplicationId: id }, transaction });
+
 		if (internship) {
 			await transaction.rollback();
-			return { status: 400, message: "This student already has an internship"}
+			return { status: 400, message: "This student already has an internship" };
 		}
 
 		const manualApplication = await db.ManualApplication.findOne({
 			where: { id, status: 2 },
+			include: [{ model: db.Student, attributes: ['email', 'username'] }],
 			transaction
 		});
 
@@ -172,30 +172,24 @@ const evaluateManualApplications = async (id, document) => {
 
 		const studentId = manualApplication.studentId;
 
-		// Mark other applications (both Application and ManualApplication) as '5' (not available)
+		// Mark other applications as unavailable (status = 5)
 		await db.Application.update(
-		{ status: 5 },
-			{
-				where: {
-					studentId
-				},
-				transaction
-			}
+			{ status: 5 },
+			{ where: { studentId }, transaction }
 		);
 
 		await db.ManualApplication.update(
-		{ status: 5 },
+			{ status: 5 },
 			{
 				where: {
 					studentId,
-					id: { [db.Sequelize.Op.ne]: id } // exclude the accepted one
+					id: { [db.Sequelize.Op.ne]: id }
 				},
 				transaction
 			}
 		);
 
-		await db.Document.create( document, { transaction });
-
+		await db.Document.create(document, { transaction });
 		await db.Internship.create({ manualApplicationId: id, studentId }, { transaction });
 
 		await transaction.commit();
@@ -210,9 +204,8 @@ const evaluateManualApplications = async (id, document) => {
 			},
 			message: "Application approved"
 		};
-	} catch {
+	} catch (error) {
 		await transaction.rollback();
-		console.error(error);
 		return { status: 500, message: "An error occurred during evaluation" };
 	}
 };

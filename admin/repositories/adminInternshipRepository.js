@@ -88,7 +88,7 @@ const getInternships = async () => {
 	const internships = await db.Internship.findAll({
 		where: {
 			studentStatus: {
-				[Op.in]: [3, 4, 6]
+				[Op.in]: [3, 4, 6, 7]
 			},
 			companyStatus: {
 				[Op.in]: [3, 4, 5]
@@ -124,7 +124,7 @@ const getInternship = async (id) => {
 		where: {
 			id,
 			studentStatus: {
-				[Op.in]: [3, 4, 6]
+				[Op.in]: [3, 4, 6, 7]
 			},
 			companyStatus: {
 				[Op.in]: [3, 4, 5]
@@ -160,7 +160,7 @@ const evaluateInternship = async (id, status, feedbackToStudent, feedbackToCompa
 		where: {
 			id,
 			studentStatus: {
-				[Op.in]: [3, 4, 6]
+				[Op.in]: [3, 4, 6, 7]
 			},
 			companyStatus: {
 				[Op.in]: [3, 4, 5]

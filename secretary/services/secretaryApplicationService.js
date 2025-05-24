@@ -67,7 +67,7 @@ const evaluateManualApplications = async (manualApplicationId, file) => {
 		name: file.originalname
 	};
 
-	const result = await applicationRepository.evaluateManualApplications(id, document);
+	const result = await applicationRepository.evaluateManualApplications(manualApplicationId, document);
 
 	if (result.status !== 200) return result; 
 

@@ -5,19 +5,27 @@ const ManualApplication = require("../models/ManualApplication");
 const getInternship = async (studentId) => {
 	const internship = await db.Internship.findOne({
 		where: { studentId },
-		include: {
-		  	model: db.Application,
-		  	include: {
-				model: db.Announcement,
-				include: {
-				  model: db.Company,
-				  attributes: ['name'], // only fetch company name
-				},
-				attributes: ['announcementName'], // only fetch announcement name
-		  	},
-			model: ManualApplication,
-			attributes: ['companyName','companyEmail']
-		}
+		include: [
+			{
+				model: db.Application,
+				include: [
+					{
+						model: db.Announcement,
+						include: [
+							{
+								model: db.Company,
+								attributes: ['name']
+							}
+						],
+						attributes: ['announcementName']
+					}
+				]
+			},
+			{
+				model: db.ManualApplication,
+				attributes: ['companyName', 'companyEmail']
+			}
+		]
 	});
 
 	if (!internship) {

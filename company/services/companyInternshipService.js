@@ -24,7 +24,7 @@ const getUploadPage = async (token) => {
 const uploadFiles = async (token, files) => {
 
 	if (!token || !files || !files.manualReport || !files.manualForm) {
-        return res.status(400).json({ message: "Both token and files should be provided"});
+		return { status: 400, message: "Both token and files should be provided" };
     }
 
     const result = await internshipRepository.saveFiles(token, files);
