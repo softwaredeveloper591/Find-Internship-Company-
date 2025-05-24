@@ -36,13 +36,13 @@ const getInternships = async (req, res) => {
 };
 
 const getInternship = async (req, res) => {
-	const { result, documentId } = await internshipService.getInternship(req.params.id);
+	const result = await internshipService.getInternship(req.params.id);
 
-	if (result?.status && result?.message) {
+	if (result.status !== 200) {
 		return res.status(result.status).json({ message: result.message });
 	}
 
-	return res.status(200).json( {result, documentId} );
+	return res.status(200).json(result.data);
 };
 
 const uploadInternshipFile = async (req, res) => {

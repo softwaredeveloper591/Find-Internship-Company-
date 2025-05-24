@@ -100,7 +100,7 @@ const getInternships = async (companyId) => {
 		include: [
 			{ 
 				model: db.Student, 
-				attributes: ['id', 'username', 'email'] 
+				attributes: ['id', 'username', 'email', 'year'] 
 			},
 			{
 				model: db.Application,
@@ -144,18 +144,28 @@ const getInternship = async (id) => {
 	});
 
 	if (!internship) {
-		return { status: 400, message: "This internship can't be found"};
+		return {
+			status: 400,
+			data: null,
+			message: "This internship can't be found"
+		};
 	}
 
-	const applicationId = internship.Application.id;
+	const applicationId = internship.Application?.id;
 
-	const documentId = await db.Document.findOne({
+	const document = await db.Document.findOne({
 		where: { applicationId, fileType: "Report" },
 		attributes: ['id']
 	});
 
-	return { internship, documentId };
-}
+	return {
+		status: 200,
+		data: {
+			internship,
+			documentId: document?.id || null
+		}
+	};
+};
 
 const uploadFile = async(internshipId, document) => {
 	const existingInternship = await db.Internship.findOne({

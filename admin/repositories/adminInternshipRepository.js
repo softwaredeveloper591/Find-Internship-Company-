@@ -97,7 +97,7 @@ const getInternships = async () => {
 			isApprovedByDIC: null
 		},
 		include: [
-			{ model: db.Student, attributes: ['id', 'username', 'email'] },
+			{ model: db.Student, attributes: ['id', 'username', 'email', 'year'] },
 			{
 				model: db.Application,
 				include: {

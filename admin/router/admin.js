@@ -147,7 +147,7 @@ router.get("/applications/:id", asyncErrorHandler(applicationController.getAppli
 router.get("/manualApplications/:id", asyncErrorHandler(applicationController.getManualApplication));
 router.get("/applications/download/:id/:fileType", asyncErrorHandler(applicationController.downloadFile));
 
-router.put("/applications/:id", uploadFile.single('studentFile'), asyncErrorHandler(applicationController.evaluateApplication));
+router.put("/applications/:id", uploadFile.single('ApplicationForm'), asyncErrorHandler(applicationController.evaluateApplication));
 router.put("/manualApplications/:id", uploadFile.single('ApplicationForm'), asyncErrorHandler(applicationController.evaluateManualApplications));
 
 router.get("/personalInfo",[auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
