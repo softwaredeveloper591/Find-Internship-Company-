@@ -59,7 +59,7 @@ const ai = new GoogleGenAI({apiKey: GEMINI_API_KEY});
 router.post("/chatWithAI", checkUserRole(["student"]), asyncErrorHandler(async (req, res, next) => {
 	const student = await db.Student.findOne({ where: { id: req.user.id } });
 	const userMessage = req.body.userMessage;
-	
+	const tempMessageId = req.body.tempMessageId;
 	// const genAI = new GoogleGenerativeAI();  		
 	// const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -110,7 +110,13 @@ router.post("/chatWithAI", checkUserRole(["student"]), asyncErrorHandler(async (
 		// wait for the message to be created in the database
 		await studentMessageDb;
 
-		res.status(200).json({ userMessage: studentMessageDb.message, aiMessage: aiMessageDb.message }); // Response of AI is returned. 
+		res.status(200).json({ 
+			userMessage: studentMessageDb.message,
+			aiMessage: aiMessageDb.message,
+			tempMessageId: tempMessageId,            
+			userMessageId: studentMessageDb.id,     
+			aiMessageId: aiMessageDb.id    
+		 }); 
 	} catch (error) {
 		console.error("Error generating AI content:", error);
 		res.status(500).json({ error: "Failed to generate content from AI" });
@@ -173,6 +179,35 @@ router.get("/conversation/ai",checkUserRole(["student"]), asyncErrorHandler(asyn
 	return res.status(200).json({ messages: unifiedMessages });
   })
 );
+
+router.delete("/deleteMessage/:id", checkUserRole(["student"]), asyncErrorHandler(async (req, res, next) => {
+	const id = req.params.id;
+	const student = await db.Student.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const message = await db.Message.findOne({ where: { id } });
+	
+	if (!message) {
+        return res.status(404).json({ error: "Message not found with the given id" });
+    }
+	
+	if (message.from !== student.email && message.to !== student.email) {
+        return res.status(403).json({ error: "You are not authorized to delete this message!" });
+    }
+
+	if (message.is_read === false) {
+		const conversation = await db.Conversations.findOne({ where: { id: message.conversation_id } });
+        if (conversation.user1_email === student.email) {
+            const numberOfNewMessages = conversation.user2_new_messages - 1;
+            await conversation.update({ user2_new_messages: numberOfNewMessages });
+        } else if (conversation.user2_email === student.email) {
+            const numberOfNewMessages = conversation.user1_new_messages - 1;
+            await conversation.update({ user1_new_messages: numberOfNewMessages });
+        }
+    }
+
+	await message.destroy();
+	res.status(200).json({ message: "Message deleted successfully", deletedMessage: message });
+}));
+
 
 router.get("/users", asyncErrorHandler(async (req, res, next) => {
 	const secretary = await db.Secretary.findAll({ attributes: ['username', 'email'] });

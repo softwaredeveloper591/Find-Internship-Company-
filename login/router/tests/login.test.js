@@ -1,9 +1,9 @@
 // tests/user.test.js
 const request = require('supertest');
-const app = require('../app');
-const db = require("../data/db");
+const app = require('../../app');
+const db = require("../../data/db");
 const jwt = require("jsonwebtoken");
-const { APP_SECRET } = require("../config");
+const { APP_SECRET } = require("../../config");
 const bcrypt = require('bcrypt');
 
 
@@ -39,6 +39,8 @@ const createUser = async () => {
 let user;
 beforeAll(async () => {
   try {
+    if(process.env.NODE_ENV!== "test")
+        throw new Error("Environment is not test! DB sync should not be executed!")
     await db.sequelize.sync({ force: true });
     console.log('Database synced successfully');
     user= await createUser();
