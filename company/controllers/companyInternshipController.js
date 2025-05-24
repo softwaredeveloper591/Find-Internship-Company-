@@ -47,8 +47,8 @@ const getInternship = async (req, res) => {
 	return res.status(200).json(result.data);
 };
 
-const uploadInternshipFile = async (req, res) => {
-	const result = await internshipService.uploadInternshipFile(req.file, req.params.id, req.body.fileType);
+const uploadCompanyForm = async (req, res) => {
+	const result = await internshipService.uploadCompanyForm(req.file, req.params.id);
 
 	if (result?.status && result?.message) {
 		return res.status(result.status).json({ message: result.message });
@@ -103,7 +103,7 @@ module.exports = {
 	uploadFiles,
 	getInternships,
 	getInternship,
-	uploadInternshipFile,
+	uploadCompanyForm,
 	evaluateInternship,
 	downloadFileFromServer
 }

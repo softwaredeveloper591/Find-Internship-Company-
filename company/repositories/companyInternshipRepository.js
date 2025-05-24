@@ -167,37 +167,44 @@ const getInternship = async (id) => {
 	};
 };
 
-const uploadFile = async(internshipId, document) => {
-	const existingInternship = await db.Internship.findOne({
-		where: {
-			id: internshipId,
-			status: 1
+const uploadCompanyForm = async(internshipId, document) => {
+	const transaction = await db.sequelize.transaction();
+
+	try {
+		const existingInternship = await db.Internship.findOne({
+			where: {
+				id: internshipId,
+				status: 1
+			},
+			lock: transaction.LOCK.UPDATE, // 🔒 prevent race condition,
+			transaction
+		});
+
+		if (!existingInternship) {
+			await transaction.rollback();
+			return { status: 403, message: "Student's internship hasn't finished yet or student doesn't have an internship" };
 		}
-	});
 
-	if (!existingInternship) {
-		return { status: 403, message: "Student's internship hasen't finished yet or student doesn't have an internship" };
-	}
+		const student = await db.Student.findOne( {
+			where: { id: existingInternship.studentId },
+			transaction
+		});
 
-	const student = await db.Student.findOne( {
-		where: { id: existingInternship.studentId }
-	});
-
-	if(!student) {
-		return { status: 403, message: "No student can be found that is the owner of this internship" };
-	}
-
-	// Check if a document of the same fileType already exists
-	const existingDoc = await db.Document.findOne({
-		where: {
-			userId: student.id,
-			fileType: document.fileType
+		if(!student) {
+			await transaction.rollback();
+			return { status: 403, message: "No student can be found that is the owner of this internship" };
 		}
-	});
 
-	if (existingDoc) {
-		const transaction = await db.sequelize.transaction();
-		try {
+		// Check if a document of the same fileType already exists
+		const existingDoc = await db.Document.findOne({
+			where: {
+				userId: student.id,
+				fileType: document.fileType
+			},
+			transaction
+		});
+
+		if (existingDoc) { 
 			await existingDoc.update(
 				{ data: document.data },
 				{ transaction }
@@ -229,40 +236,31 @@ const uploadFile = async(internshipId, document) => {
 
 			await transaction.commit();
 			return { status: 200, message: `${document.fileType} has been updated.` };
-		} catch (error) {
-			await transaction.rollback();
-			throw error;
-		}
-	}
-
-	const transaction = await db.sequelize.transaction(); 
-	try {
-		if (existingInternship.manualApplicationId) {
-			document.manualApplicationId = existingInternship.manualApplicationId;
 		} else {
-			document.applicationId = existingInternship.applicationId;
-		}
+			if (existingInternship.manualApplicationId) {
+				document.manualApplicationId = existingInternship.manualApplicationId;
+			} else {
+				document.applicationId = existingInternship.applicationId;
+			}
 
-		document.username = student.username;
-		document.userId = student.id;
+			document.username = student.username;
+			document.userId = student.id;
+
+			await db.Document.create(document, { transaction });
+
+			let newCompanyStatus = existingInternship.companyStatus;
+
+			if (existingInternship.companyStatus === 1) {
+				newCompanyStatus = 3; // Report already approved, now CompanyForm uploaded
+			} else {
+				newCompanyStatus = 2; // Only CompanyForm uploaded
+			}
 		
-		const createdDoc = await db.Document.create(document, { transaction });
+			await existingInternship.update({ companyStatus: newCompanyStatus }, { transaction });
 
-		let newCompanyStatus = existingInternship.companyStatus;
-
-		if (existingInternship.companyStatus === 1) {
-			newCompanyStatus = 3; // Report already approved, now CompanyForm uploaded
-		} else {
-			newCompanyStatus = 2; // Only CompanyForm uploaded
+			await transaction.commit();
+			return { status: 201, message: "Document uploaded successfully." };
 		}
-	
-		await db.Internship.update(
-			{ companyStatus: newCompanyStatus },
-			{ where: { id: existingInternship.id }, transaction }
-		);
-
-		await transaction.commit();
-		return createdDoc;
 	} catch (error) {
 		await transaction.rollback();
 		throw error;
@@ -372,6 +370,6 @@ module.exports = {
 	saveFiles,
 	getInternships,
 	getInternship,
-	uploadFile,
+	uploadCompanyForm,
 	evaluateInternship
 }

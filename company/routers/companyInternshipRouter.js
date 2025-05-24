@@ -7,7 +7,7 @@ const upload = require('../middleware/fileUploader');
 router.get("/internships", asyncErrorHandler(internshipController.getInternships));
 router.get("/internships/:id", asyncErrorHandler(internshipController.getInternship));
 
-router.post("/internshipFile/:id", upload.single('internshipFile'), asyncErrorHandler(internshipController.uploadInternshipFile));
+router.post("/companyForm/:id", upload.single('CompanyForm'), asyncErrorHandler(internshipController.uploadCompanyForm));
 router.put("/internships/:id", asyncErrorHandler(internshipController.evaluateInternship));
 
 module.exports = router;

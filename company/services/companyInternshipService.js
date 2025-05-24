@@ -54,19 +54,19 @@ const getInternship = async (id) => {
 	return await internshipRepository.getInternship(id);
 };
 
-const uploadInternshipFile = async (file, internshipId, fileType) => {
+const uploadCompanyForm = async (file, internshipId) => {
 	if (!file) return { status: 400, message: "No file uploaded" };
 	
 	const data = file.buffer;
 	const name = file.originalname;
 
 	const document = {
-		fileType,
+		fileType: "CompanyForm",
 		data,
 		name
 	}
 
-	return await internshipRepository.uploadFile(internshipId, document);
+	return await internshipRepository.uploadCompanyForm(internshipId, document);
 }
 
 const evaluateInternship = async (id, status, feedbackToStudent, feedbackContextStudent) => {
@@ -108,6 +108,6 @@ module.exports = {
 	uploadFiles,
 	getInternships,
 	getInternship,
-	uploadInternshipFile,
+	uploadCompanyForm,
 	evaluateInternship
 }

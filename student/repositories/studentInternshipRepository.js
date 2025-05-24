@@ -1,6 +1,5 @@
 const db = require("../data/db");
 const { Op } = require('sequelize');
-const ManualApplication = require("../models/ManualApplication");
 
 const getInternship = async (studentId) => {
 	const internship = await db.Internship.findOne({
@@ -220,7 +219,7 @@ const uploadFile = async (studentId, document, studentStatus) => {
     	}
 
     	// Create new doc
-    	let docs = null;
+    	let docs = [];
     	let createdDoc = null;
 
     	if (existingInternship.manualApplicationId) {
@@ -232,8 +231,10 @@ const uploadFile = async (studentId, document, studentStatus) => {
 
     	  	docs = await db.Document.findAll({
     	  	  	where: {
-    	  	  	  applicationId: existingInternship.applicationId,
-    	  	  	  fileType: ['Report', 'Survey']
+    	  	  	  	applicationId: existingInternship.applicationId,
+    	  	  	  	fileType: {
+					  	[Op.in]: ['Report', 'Survey']
+					}
     	  	  	},
     	  	  	transaction
     	  	});
