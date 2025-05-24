@@ -48,16 +48,18 @@ const fillApplicationForm = async (companyId, applicationId, body) => {
 };
 
 const uploadApplicationForm = async (companyId, applicationId, file, body) => {
-	if(!file) return { status: 400, message: "No file uploaded"};
+	const { isApproved } = body.isApproved;
 
+	if ( isApproved === "true") {
+		if(!file) return { status: 400, message: "No file uploaded"};
+	}
+	
 	const document = {
 		applicationId,
 		fileType: "UpdatedApplicationForm",
 		data: file.buffer,
 		name: file.originalname
 	}
-
-	const { isApproved } = body.isApproved;
 
 	const result = await applicationRepository.uploadApplicationForm(companyId, applicationId, document, body);
 

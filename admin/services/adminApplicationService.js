@@ -26,14 +26,16 @@ const getFile = async (id, fileType) => {
 };
 
 const evaluateApplication = async (applicationId, body, file) => {
-	if (!file) return { status: 400, message: "No file uploaded"};
+	const { isApproved, feedback } = body;
 
+	if( isApproved === "true") {
+		if (!file) return { status: 400, message: "No file uploaded"};
+	}
+	
 	const data = file.buffer;
 	const name = file.originalname;
 
 	const fileData = { data, name };
-
-	const { isApproved, feedback } = body;
 
 	const result = applicationRepository.evaluateApplication(applicationId, isApproved, fileData);
 
@@ -52,13 +54,28 @@ const evaluateApplication = async (applicationId, body, file) => {
 };
 
 const evaluateManualApplications = async (manualApplicationId, body, file) => {
-	if (!file) return { status: 400, message: "No file uploaded"};
-
 	const { isApproved, feedback } = body;
 
-	const data = file.buffer;
+	if (isApproved) {
+		if (!file) return { status: 400, message: "No file uploaded"};
+	}
 
-	return await applicationRepository.evaluateManualApplications(manualApplicationId, isApproved, data);
+	const data = { data: file.buffer, name: file.originalname };
+
+	const result = await applicationRepository.evaluateManualApplications(manualApplicationId, isApproved, data);
+
+	if (result.status !== 200) return result;
+
+	const { studentEmail, studentName } = result.data;
+
+	const emailSubject = isApproved ? 'Application Approved' : 'Application Rejected';
+	const emailBody = `Hello ${studentName},<br><br>
+		Your application has been ${isApproved ? "approved" : `rejected and will be removed from our system. <br><br> ${feedback ? `Feedback: <br> ${feedback}.` : ""}`} <br><br>
+		Best Regards,<br>Admin Team`;
+
+	sendEmail(studentEmail, emailSubject, emailBody);
+
+	return { status: 200, message: isApproved ? "Approved and email sent." : "Rejected and student notified." };
 };
 
 module.exports = {

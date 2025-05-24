@@ -8,6 +8,8 @@ const moment = require('moment-timezone');
 const multer = require("multer");
 const upload = multer();
 
+const uploadFile = require("../middleware/fileUploader");
+
 const auth = require("../middleware/auth");
 const checkUserRole = require("../middleware/checkUserRole")
 const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
@@ -145,8 +147,8 @@ router.get("/applications/:id", asyncErrorHandler(applicationController.getAppli
 router.get("/manualApplications/:id", asyncErrorHandler(applicationController.getManualApplication));
 router.get("/applications/download/:id/:fileType", asyncErrorHandler(applicationController.downloadFile));
 
-router.put("/applications/:id", upload.single('studentFile'), asyncErrorHandler(applicationController.evaluateApplication));
-router.put("/manualApplications/:id", upload.single('ApplicationForm'), asyncErrorHandler(applicationController.evaluateManualApplications));
+router.put("/applications/:id", uploadFile.single('studentFile'), asyncErrorHandler(applicationController.evaluateApplication));
+router.put("/manualApplications/:id", uploadFile.single('ApplicationForm'), asyncErrorHandler(applicationController.evaluateManualApplications));
 
 router.get("/personalInfo",[auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
     const admin = await db.Admin.findOne({ 

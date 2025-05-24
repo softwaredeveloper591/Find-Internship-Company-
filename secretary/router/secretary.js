@@ -9,11 +9,18 @@ const bcrypt = require("bcrypt");
 const auth = require("../middleware/auth");
 const checkUserRole = require("../middleware/checkUserRole");
 const asyncErrorHandler = require("../utils/asyncErrorHandler");
-const { Op } = require("sequelize");
+const applicationController = require("../controllers/secretaryApplicationController");
 
 const db = require("../data/db");
 
 router.use(auth, checkUserRole("secretary"));
+
+router.get("/", asyncErrorHandler(applicationController.getApplications));
+
+router.get("/applications/download/:id/:fileType", asyncErrorHandler(applicationController.downloadFile));
+
+router.post("/applications/:id", uploadFile.single('studentFile'), asyncErrorHandler(applicationController.evaluateApplication));
+router.post("/manualApplications/:id", uploadFile.single('EmploymentCertificate'), asyncErrorHandler(applicationController.evaluateManualApplications));
 
 router.get("/personalInfo",[auth,checkUserRole("secretary")], asyncErrorHandler( async (req, res, next) => {
     const secretary = await db.Secretary.findOne({ 
