@@ -54,16 +54,6 @@ const evaluateApplication = async (id, document) => {
 	const transaction = await db.sequelize.transaction();
 
 	try {
-		const internship = await db.Internship.findOne({
-			where: { applicationId: id },
-			transaction
-		});
-
-		if (internship) {
-			await transaction.rollback();
-			return { status: 403, message: "This student already has an internship" };
-		}
-
 		const application = await db.Application.findOne({
 			where: { id, status: 2 },
 			include: [
@@ -88,6 +78,16 @@ const evaluateApplication = async (id, document) => {
 		if (!application) {
 			await transaction.rollback();
 			return { status: 404, message: "Application not found" };
+		}
+
+		const internship = await db.Internship.findOne({
+			where: { studentId: application.studentId },
+			transaction
+		});
+
+		if (internship) {
+			await transaction.rollback();
+			return { status: 403, message: "This student already has an internship" };
 		}
 
 		await db.Document.create( document, { transaction });
@@ -148,13 +148,6 @@ const evaluateManualApplications = async (id, document) => {
 	const transaction = await db.sequelize.transaction();
 
 	try {
-		const internship = await db.Internship.findOne({ where: { manualApplicationId: id }, transaction });
-
-		if (internship) {
-			await transaction.rollback();
-			return { status: 400, message: "This student already has an internship" };
-		}
-
 		const manualApplication = await db.ManualApplication.findOne({
 			where: { id, status: 2 },
 			include: [{ model: db.Student, attributes: ['email', 'username'] }],
@@ -164,6 +157,13 @@ const evaluateManualApplications = async (id, document) => {
 		if (!manualApplication) {
 			await transaction.rollback();
 			return { status: 404, message: "Manual application not found." };
+		}
+
+		const internship = await db.Internship.findOne({ where: { studentId: manualApplication.studentId }, transaction });
+
+		if (internship) {
+			await transaction.rollback();
+			return { status: 400, message: "This student already has an internship" };
 		}
 
 		manualApplication.status = 3;

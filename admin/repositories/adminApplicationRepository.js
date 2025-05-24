@@ -26,7 +26,7 @@ const getApplications = async () => {
 	const manualApplications = await db.ManualApplication.findAll({
 		where: {
 			isApprovedByDIC: null,
-			status: 0
+			status: 1
 		},
 		include: [
 			{
@@ -86,7 +86,7 @@ const getFile = async (whereClause) => {
 
 const evaluateApplication = async (applicationId, isApproved, data) => {
 	const transaction = await db.sequelize.transaction();
-	
+
 	const application = await db.Application.findOne({
 		where: { 
 			id: applicationId,
