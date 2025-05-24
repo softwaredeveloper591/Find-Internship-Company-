@@ -1,4 +1,6 @@
 const internshipService = require("../services/companyInternshipService");
+const path = require('path');
+const fs = require('fs');
 
 const getUploadPage = async (req, res) => {	
 	const token = req.query.token;
@@ -79,11 +81,29 @@ const evaluateInternship = async (req, res) => {
 	return res.status(200).json( result );
 };
 
+const downloadFileFromServer = (req, res, next) => {
+  const fileName = req.params.fileName;
+  const filePath = path.join(__dirname, '../files', fileName);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ message: 'File not found' });
+  }
+
+  res.header('Access-Control-Expose-Headers', 'Content-Disposition');
+  res.download(filePath, fileName, (error) => {
+    if (error) {
+      // Pass error to Express error handler instead of throwing
+      return next(error);
+    }
+  });
+};
+
 module.exports = {
 	getUploadPage,
 	uploadFiles,
 	getInternships,
 	getInternship,
 	uploadInternshipFile,
-	evaluateInternship
+	evaluateInternship,
+	downloadFileFromServer
 }

@@ -146,6 +146,28 @@ const evaluateApplication = async (applicationId, isApproved, data) => {
 					transaction
 				}
 			);
+
+			await db.Application.update(
+				{ status: 5 },
+				{
+					where: {
+						studentId: application.studentId,
+						id: { [db.Sequelize.Op.ne]: applicationId } // exclude the accepted one
+					},
+					transaction
+				}
+			);
+			
+			await db.ManualApplication.update(
+				{ status: 5 },
+				{ 
+					where: 
+					{ 
+						studentId: application.studentId
+					}, 
+					transaction 
+				}
+			);
 		} else {
 			application.isApprovedByDIC = false;
 			application.status = 4;
@@ -221,6 +243,27 @@ const evaluateManualApplications = async (manualApplicationId, isApproved, data)
 					where: {
 						manualApplicationId,
 						fileType: "ManualApplicationForm"
+					},
+					transaction
+				}
+			);
+
+			await db.Application.update(
+				{ status: 5 },
+				{ 
+					where: { 
+						studentId: application.studentId
+					}, 
+					transaction 
+				}
+			);
+	
+			await db.ManualApplication.update(
+				{ status: 5 },
+				{
+					where: {
+						studentId: application.studentId,
+						id: { [db.Sequelize.Op.ne]: manualApplicationId }
 					},
 					transaction
 				}

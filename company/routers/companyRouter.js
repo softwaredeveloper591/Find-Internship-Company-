@@ -17,7 +17,7 @@ const { sendEmail } = require("../utils/emailSender");
 const profileRouter = require("./companyProfileRouter"); // Import profile router
 const internshipController = require("../controllers/companyInternshipController"); // Import profile router
 const internshipRouter = require("./companyInternshipRouter");
-const applicationRouter = require("./companyApplicationRouter")
+const applicationRouter = require("./companyApplicationRouter");
 
 const db = require("../data/db");
 
@@ -102,6 +102,8 @@ router.use((req, res, next) => {
   }
   return auth(req, res, () => checkUserRole("company")(req, res, next));
 });
+
+router.get("/internship/download/:fileName", internshipController.downloadFileFromServer);
 
 router.get("/",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
     const company = await db.Company.findOne({ 

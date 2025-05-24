@@ -27,12 +27,11 @@ router.use((req, res, next) => {
   return auth(req, res, () => checkUserRole("student")(req, res, next));
 });
 
-
 const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
-const { uploadFile } = require('../utils/fileUploader');
 const profileRouter = require("./studentProfileRouter"); 
 const internshipRouter = require("./studentInternshipRouter");
 const applicationRouter = require("./studentApplicationRouter");
+const internshipController = require("../controllers/studentInternshipController");
 
 const db = require('../data/db');
 
@@ -59,6 +58,8 @@ async function findReceiverByEmail(email) {
 
 	return null;
 }
+
+router.get("/internship/download/:fileName", internshipController.downloadFileFromServer);
 
 router.get("/", asyncErrorHandler(async (req, res, next) => {
 	const student = await db.Student.findOne({

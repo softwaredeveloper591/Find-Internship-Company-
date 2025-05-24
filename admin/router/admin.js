@@ -150,6 +150,16 @@ router.get("/applications/download/:id/:fileType", asyncErrorHandler(application
 router.put("/applications/:id", uploadFile.single('ApplicationForm'), asyncErrorHandler(applicationController.evaluateApplication));
 router.put("/manualApplications/:id", uploadFile.single('ApplicationForm'), asyncErrorHandler(applicationController.evaluateManualApplications));
 
+router.get('/serveFile/:id', [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+	const file = await db.Document.findByPk(req.params.id);
+	if (file) {
+	  res.setHeader('Content-Type', 'application/pdf');
+	  res.send(file.data);
+	} else {
+	  res.status(404).send('File not found');
+	}
+}));
+
 router.get("/personalInfo",[auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
     const admin = await db.Admin.findOne({ 
 		where: {id: req.user.id},

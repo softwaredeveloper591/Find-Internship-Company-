@@ -103,28 +103,6 @@ const evaluateApplication = async (id, document) => {
 			studentId
 		}, { transaction });
 
-		await db.Application.update(
-			{ status: 5 },
-			{
-				where: {
-					studentId,
-					id: { [db.Sequelize.Op.ne]: id } // exclude the accepted one
-				},
-				transaction
-			}
-		);
-		
-		await db.ManualApplication.update(
-			{ status: 5 },
-			{ 
-				where: 
-				{ 
-					studentId 
-				}, 
-				transaction 
-			}
-		);
-
 		await transaction.commit();
 
 		return {
@@ -171,23 +149,6 @@ const evaluateManualApplications = async (id, document) => {
 		await manualApplication.save({ transaction });
 
 		const studentId = manualApplication.studentId;
-
-		// Mark other applications as unavailable (status = 5)
-		await db.Application.update(
-			{ status: 5 },
-			{ where: { studentId }, transaction }
-		);
-
-		await db.ManualApplication.update(
-			{ status: 5 },
-			{
-				where: {
-					studentId,
-					id: { [db.Sequelize.Op.ne]: id }
-				},
-				transaction
-			}
-		);
 
 		await db.Document.create(document, { transaction });
 		await db.Internship.create({ manualApplicationId: id, studentId }, { transaction });

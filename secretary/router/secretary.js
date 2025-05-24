@@ -19,7 +19,7 @@ router.get("/", asyncErrorHandler(applicationController.getApplications));
 
 router.get("/applications/download/:id/:fileType", asyncErrorHandler(applicationController.downloadFile));
 
-router.post("/applications/:id", uploadFile.single('studentFile'), asyncErrorHandler(applicationController.evaluateApplication));
+router.post("/applications/:id", uploadFile.single('EmploymentCertificate'), asyncErrorHandler(applicationController.evaluateApplication));
 router.post("/manualApplications/:id", uploadFile.single('EmploymentCertificate'), asyncErrorHandler(applicationController.evaluateManualApplications));
 
 router.get("/personalInfo",[auth,checkUserRole("secretary")], asyncErrorHandler( async (req, res, next) => {
