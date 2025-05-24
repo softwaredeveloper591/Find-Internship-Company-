@@ -27,17 +27,15 @@ const getFile = async (id, fileType) => {
 
 const evaluateApplication = async (applicationId, body, file) => {
 	const { isApproved, feedback } = body;
+	
+	let data = null;
 
 	if( isApproved === "true") {
 		if (!file) return { status: 400, message: "No file uploaded"};
+		data = { data: file.buffer, name: file.originalname };
 	}
-	
-	const data = file.buffer;
-	const name = file.originalname;
 
-	const fileData = { data, name };
-
-	const result = applicationRepository.evaluateApplication(applicationId, isApproved, fileData);
+	const result = applicationRepository.evaluateApplication(applicationId, isApproved, data);
 
 	if (result.status !== 200) return result;
 
@@ -56,11 +54,12 @@ const evaluateApplication = async (applicationId, body, file) => {
 const evaluateManualApplications = async (manualApplicationId, body, file) => {
 	const { isApproved, feedback } = body;
 
+	let data = null;
+
 	if (isApproved) {
 		if (!file) return { status: 400, message: "No file uploaded"};
+		data = { data: file.buffer, name: file.originalname };
 	}
-
-	const data = { data: file.buffer, name: file.originalname };
 
 	const result = await applicationRepository.evaluateManualApplications(manualApplicationId, isApproved, data);
 

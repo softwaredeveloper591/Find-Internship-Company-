@@ -7,7 +7,7 @@ const getAnnouncements = async (req, res) => {
 };
 
 const getAnnouncement = async (req, res) => {
-	const announcement = await announcementService.getAnnouncements(req.params.id);
+	const announcement = await announcementService.getAnnouncement(req.params.id);
 
 	return res.status(200).json( { announcement });
 };
