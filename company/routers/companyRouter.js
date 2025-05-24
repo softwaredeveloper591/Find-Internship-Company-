@@ -93,7 +93,15 @@ router.post("/internship/upload", uploadFile.fields([
   	]), 
 	asyncErrorHandler(internshipController.uploadFiles));
 
-router.use(auth, checkUserRole("company"));
+router.use((req, res, next) => {
+  if (
+	req.method === "GET" &&
+	/^\/profile\/\d+$/.test(req.path)
+  ) {
+	return next();
+  }
+  return auth(req, res, () => checkUserRole("company")(req, res, next));
+});
 
 router.get("/",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
     const company = await db.Company.findOne({ 

@@ -247,7 +247,7 @@ const getApplications = async (studentId) => {
 				include: [
 					{
 						model: db.Company,
-						attributes: ['name'],
+						attributes: ['name', 'id'],
 						include: [ {
 								model: db.CompanyProfile,
 								attributes: ['companyLogo']
