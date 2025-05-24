@@ -268,101 +268,114 @@ const uploadCompanyForm = async(internshipId, document) => {
 };
 
 const evaluateInternship = async (id, status, feedbackToStudent, feedbackContextStudent) => {
-	const internship = await db.Internship.findOne({
-		where: {
-			id,
-			studentStatus: {
-				[Op.in]: [1, 3, 4, 5, 6, 7]
+	const transaction = await db.sequelize.transaction();
+
+	try {
+		const internship = await db.Internship.findOne({
+			where: {
+				id,
+				studentStatus: {
+					[Op.in]: [1, 3, 4, 5, 6, 7]
+				},
+				isApprovedByDIC: null
 			},
-			isApprovedByDIC: null
-		},
-		include: [
-			{ 
-				model: db.Student, 
-				attributes: ['id', 'username', 'email'] 
-			},
-			{
-				model: db.Application,
-				include: {
-					model: db.Announcement,
-					attributes: ['announcementName'],
+			include: [
+				{ 
+					model: db.Student, 
+					attributes: ['id', 'username', 'email'] 
+				},
+				{
+					model: db.Application,
+					include: {
+						model: db.Announcement,
+						attributes: ['announcementName'],
+					}
 				}
-			}
-		]
-	});
+			],
+			lock: transaction.LOCK.UPDATE, // 🔒 prevent race condition
+			transaction
+		});
 
-	if (!internship) {
-		return { status: 400, message: "This internship can't be found"};
-	}
-
-	let studentStatus = internship.studentStatus;
-	let previousFeedbackContextStudent = internship.feedbackContextStudent;
-
-	// Helper function
-	const updateCompanyStatusOnFileUpload = (status, studentStatus, previousFeedbackContextStudent) => {
-	  switch (previousFeedbackContextStudent) {
-	    case "SurveyMissing":
-	      if (status === "Approved") {
-	        return [6, "SurveyMissing"];
-	      }
-	      break;
-
-		case "Both":
-		  if (status === "Approved") {
-		    if (studentStatus === 6) return [7, "Both"];
-		  }
-		  break;
-
-		case "Report":
-  		  if (status === "Approved") {
-  		    if (studentStatus === 7) return [3, null];
-  		    if (studentStatus === 6) return [3, "Report"];
-  		  }
-  		  break;
-
-	  }
-	
-	  return [studentStatus, previousFeedbackContextStudent]; // default fallback
-	}
-
-	[studentStatus, previousFeedbackContextStudent] = updateCompanyStatusOnFileUpload(status, studentStatus, previousFeedbackContextStudent);
-
-	await internship.update(
-		{ studentStatus, feedbackContextStudent: previousFeedbackContextStudent }
-	);
-
-	switch (status) {
-		case "Approved":
-			if (previousFeedbackContextStudent === null) {
-				if (internship.companyStatus === 1) {
-					return { status: 403, message: "You already approved this report"};
-				} else if(internship.companyStatus === 2) {
-					await internship.update({ companyStatus: 3 });
-				} else {
-					await internship.update({ companyStatus: 1 });
-				}
-			}
-			break;
-
-		case "FeedbackToStudent":
-			if (studentStatus === 5 || studentStatus === 7) {
-				return { status: 403, message: "You already gave a feedback to the student" };
-			} else if (studentStatus === 4 || studentStatus === 6) {
-				return { status: 403, message: "Admin gave a feedback to the student" };
-			}
-			await internship.update({ studentStatus: 5, feedbackToStudent, feedbackContextStudent });
-			break;
-
-		default:
-			return { status: 400, message: "Invalid status" };
-	}
-
-	return {
-		status: 200,
-		data: {
-			student: internship.Student
+		if (!internship) {
+			await transaction.rollback();
+			return { status: 400, message: "This internship can't be found"};
 		}
-	};
+
+		let studentStatus = internship.studentStatus;
+		let previousFeedbackContextStudent = internship.feedbackContextStudent;
+
+		// Helper function
+		const updateStudentStatusOnFileUpload = (status, studentStatus, previousFeedbackContextStudent) => {
+		  switch (previousFeedbackContextStudent) {
+		    case "SurveyMissing":
+		      if (status === "Approved") {
+		        return [6, "SurveyMissing"];
+		      }
+		      break;
+
+			case "Both":
+			  if (status === "Approved") {
+			    if (studentStatus === 6) return [7, "Both"];
+			  }
+			  break;
+
+			case "Report":
+  			  if (status === "Approved") {
+  			    if (studentStatus === 7) return [3, null];
+  			    if (studentStatus === 6) return [3, "Report"];
+  			  }
+  			  break;
+
+		  }
+	  
+		  return [studentStatus, previousFeedbackContextStudent]; // default fallback
+		}
+
+		[studentStatus, previousFeedbackContextStudent] = updateStudentStatusOnFileUpload(status, studentStatus, previousFeedbackContextStudent);
+
+		await internship.update(
+		  	{ studentStatus, feedbackContextStudent: previousFeedbackContextStudent },
+		  	{ transaction }
+		);
+
+		switch (status) {
+			case "Approved":
+				if (previousFeedbackContextStudent === null) {
+					if (internship.companyStatus === 1) {
+						return { status: 403, message: "You already approved this report"};
+					} else if(internship.companyStatus === 2) {
+						await internship.update({ companyStatus: 3 }, { transaction });
+					} else {
+						await internship.update({ companyStatus: 1 }, { transaction });
+					}
+				}
+				break;
+
+			case "FeedbackToStudent":
+				if (studentStatus === 5 || studentStatus === 7) {
+					return { status: 403, message: "You already gave a feedback to the student" };
+				} else if (studentStatus === 4 || studentStatus === 6) {
+					return { status: 403, message: "Admin gave a feedback to the student" };
+				}
+				await internship.update({ studentStatus: 5, feedbackToStudent, feedbackContextStudent, transaction });
+				break;
+
+			default:
+				return { status: 400, message: "Invalid status" };
+		}
+
+		await transaction.commit();
+
+		return {
+			status: 200,
+			data: {
+				student: internship.Student
+			}
+		};
+	} catch (error) {
+		await transaction.rollback();
+		throw error;
+	}
 };
 
 module.exports = {
