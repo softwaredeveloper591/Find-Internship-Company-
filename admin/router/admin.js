@@ -717,7 +717,7 @@ router.put("/announcement/:announcementId", [auth, checkUserRole("admin")], asyn
 	announcement.status = "approved";
 	await announcement.save();
 	res.status(200).json({ message: "Announcement approved." });
-}));
+}));*/
 
 router.get("/companyRequests", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	// let admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
@@ -746,7 +746,7 @@ router.put("/company/:companyId", [auth, checkUserRole("admin")], asyncErrorHand
 	company.statusByDIC = true;
 	await company.save();
 	res.status(200).json({ message: "Company registration request approved." });
-}));*/
+}));
 
 router.use("/internship", internshipRouter);
 
