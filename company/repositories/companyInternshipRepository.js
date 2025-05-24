@@ -95,7 +95,8 @@ const getInternships = async (companyId) => {
 			studentStatus: {
 				[Op.in]: [1, 3, 4, 5, 6, 7]
 			},
-			status: 1
+			status: 1,
+			manualApplicationId: null 
 		},
 		include: [
 			{ 
@@ -309,13 +310,17 @@ const evaluateInternship = async (id, status, feedbackToStudent, feedbackContext
 		  switch (previousFeedbackContextStudent) {
 		    case "SurveyMissing":
 		      if (status === "Approved") {
-		        return [6, "SurveyMissing"];
-		      }
+		        if (studentStatus === 4 || studentStatus === 7) return [6, "SurveyMissing"];
+		      } else if (status === "FeedbackToStudent") {
+				if (studentStatus === 4 || studentStatus === 7) return [5, "SurveyMissing"];
+			  }
 		      break;
 
 			case "Both":
 			  if (status === "Approved") {
-			    if (studentStatus === 6) return [7, "Both"];
+			    if (studentStatus === 6 || studentStatus === 7) return [3, "Both"];
+			  } else if (status === "FeedbackToStudent") {
+				if (studentStatus === 6 || studentStatus === 7) return [5, "Both"];
 			  }
 			  break;
 
@@ -323,8 +328,19 @@ const evaluateInternship = async (id, status, feedbackToStudent, feedbackContext
   			  if (status === "Approved") {
   			    if (studentStatus === 7) return [3, null];
   			    if (studentStatus === 6) return [3, "Report"];
-  			  }
+  			  } else if (status === "FeedbackToStudent") {
+				if (studentStatus === 6) return [5, "ReportAfterAdmin"];
+				if (studentStatus === 7) return [5, "Report"];
+			  }
   			  break;
+
+			case "ReportAfterAdmin":
+			  if (status === "Approved") {
+			    if (studentStatus === 7) return [3, "Report"];
+			  } else if (status === "FeedbackToStudent") {
+				if (studentStatus === 7) return [5, "ReportAfterAdmin"];
+			  }
+			  break;
 
 		  }
 	  

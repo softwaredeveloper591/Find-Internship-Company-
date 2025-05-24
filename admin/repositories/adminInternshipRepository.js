@@ -93,7 +93,6 @@ const getInternships = async () => {
 			companyStatus: {
 				[Op.in]: [3, 4, 5]
 			},
-			isApprovedByCompany: 1,
 			isApprovedByDIC: null
 		},
 		include: [
@@ -129,7 +128,6 @@ const getInternship = async (id) => {
 			companyStatus: {
 				[Op.in]: [3, 4, 5]
 			},
-			isApprovedByCompany: 1,
 			isApprovedByDIC: null
 		},
 		include: [
@@ -221,7 +219,7 @@ const evaluateInternship = async (id, status, feedbackToStudent, feedbackToCompa
 			break;
 
 		case "FeedbackToStudent":
-			if (studentStatus === 4 || (studentStatus === 6 && currentfeedbackContextStudent === "Both" || currentfeedbackContextStudent === "Report")) {
+			if (studentStatus === 4 || (studentStatus === 6 && currentfeedbackContextStudent !== "Survey")) {
 				return { status: 403, message: "You already gave a feedback to the student" };
 			}
 			await internship.update({ studentStatus: 4, feedbackToStudent, feedbackContextStudent });

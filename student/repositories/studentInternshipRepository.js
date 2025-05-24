@@ -184,6 +184,12 @@ const uploadFile = async (studentId, document, studentStatus) => {
     	  	  	  	  	}
     	  	  	  	  	break;
 
+					case "ReportAfterAdmin":
+    					if (fileType === "Report") {
+    					  return [7, "ReportAfterAdmin"];
+    					}
+    					break;
+
     	  	  	  	case "Survey":
     	  	  	  	  	if (fileType === "Survey") {
     	  	  	  	  	  return [6, "Survey"];
@@ -191,12 +197,19 @@ const uploadFile = async (studentId, document, studentStatus) => {
     	  	  	  	  	break;
 
     	  	  	  	case "Both":
-    	  	  	  	  	if (fileType === "Report") return [studentStatus, "SurveyMissing"];
+    	  	  	  	  	if (fileType === "Report") {
+							if (studentStatus === 5) return [7, "Both"]
+							return [studentStatus, "SurveyMissing"];
+						}
+							
     	  	  	  	  	if (fileType === "Survey") return [studentStatus, "ReportMissing"];
     	  	  	  	  	break;
 
     	  	  	  	case "SurveyMissing":
-    	  	  	  	  	if (fileType === "Survey") return [6, "Both"];
+    	  	  	  	  	if (fileType === "Survey") {
+							if (studentStatus === 5) return [7, "SurveyMissing"];
+							return [6, "Both"];
+						}	
     	  	  	  	  	break;
 
     	  	  	  	case "ReportMissing":
