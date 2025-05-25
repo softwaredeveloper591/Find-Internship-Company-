@@ -1,5 +1,10 @@
 const applicationService = require("../services/companyApplicationService");
 
+const getAllSkills = async (req, res) => {
+	skills = await applicationService.getAllSkills();
+	return res.status(200).json( skills );
+};
+
 const postAnnouncement = async (req, res) => {
 	let image = null;
 
@@ -83,6 +88,7 @@ const downloadFile = async (req, res) => {
 };
 
 module.exports = {
+	getAllSkills,
 	postAnnouncement,
 	getAnnouncements,
 	getAnnouncement,

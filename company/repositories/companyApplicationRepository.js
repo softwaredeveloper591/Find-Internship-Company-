@@ -3,6 +3,10 @@ const moment = require('moment-timezone');
 const AdmZip = require("adm-zip");
 const { Op } = require('sequelize');
 
+const getAllSkills = async () => {
+	return await db.Skill.findAll();
+};
+
 const postAnnouncement = async (skillIds, announcementData) => {
 	const transaction = await db.sequelize.transaction();
 	try {
@@ -336,6 +340,7 @@ const getFile = async (whereClause) => {
 };
 
 module.exports = {
+	getAllSkills,
 	postAnnouncement,
 	getAnnouncements,
 	getAnnouncement,

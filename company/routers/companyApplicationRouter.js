@@ -5,6 +5,8 @@ const applicationController = require("../controllers/companyApplicationControll
 const uploadFile = require('../middleware/fileUploader'); 
 const uploadImage = require('../middleware/imageUploader'); 
 
+router.get("/skills", asyncErrorHandler(applicationController.getAllSkills));
+
 router.post("/announcement", uploadImage.single('image'), asyncErrorHandler(applicationController.postAnnouncement));
 
 router.get("/announcements", asyncErrorHandler(applicationController.getAnnouncements));

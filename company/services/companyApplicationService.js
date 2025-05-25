@@ -2,6 +2,10 @@ const applicationRepository = require("../repositories/companyApplicationReposit
 const moment = require('moment-timezone');
 const { sendEmail } = require('../utils/emailSender');
 
+const getAllSkills = async () => {
+	return await applicationRepository.getAllSkills();
+};
+
 const postAnnouncement = async (companyId, skillIds, announcementData, image) => {
 	if (image) announcementData.image = image.path;
 
@@ -90,6 +94,7 @@ const getFile = async (applicationId, fileType) => {
 };
 
 module.exports = {
+	getAllSkills,
 	postAnnouncement,
 	getAnnouncements,
 	getAnnouncement,
