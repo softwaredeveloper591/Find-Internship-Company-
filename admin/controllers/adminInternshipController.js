@@ -50,7 +50,7 @@ const getInternship = async (req, res) => {
 		return res.status(result.status).json({ message: result.message });
 	}
 
-	return res.status(200).json( result );
+	return res.status(200).json( result.data );
 }
 
 const evaluateInternship = async (req, res) => {

@@ -150,7 +150,40 @@ const getInternship = async (id) => {
 		return { status: 400, message: "This internship can't be found"};
 	}
 
-	return internship;
+	const latestStudentFeedbacks = await db.InternshipFeedback.findAll({
+	  where: {
+		internshipId: id,
+		target: 'student',
+		cycleId: db.Sequelize.literal(`(
+		  SELECT MAX(cycleId) FROM InternshipFeedback 
+		  WHERE internshipId = ${id} AND target = 'student'
+		)`)
+	  },
+	  order: [['createdAt', 'ASC']],
+	  transaction,
+	});
+
+	const latestCompanyFeedbacks = await db.InternshipFeedback.findAll({
+	  where: {
+		internshipId: id,
+		target: 'company',
+		cycleId: db.Sequelize.literal(`(
+		  SELECT MAX(cycleId) FROM InternshipFeedback 
+		  WHERE internshipId = ${id} AND target = 'company'
+		)`)
+	  },
+	  order: [['createdAt', 'ASC']],
+	  transaction,
+	});
+
+	return {
+		status: 200,
+		data: {
+			internship,
+			latestStudentFeedbacks,
+			latestCompanyFeedbacks
+		}
+	};
 }
 
 const evaluateInternship = async (id, status, feedbackToStudent, feedbackToCompany, feedbackContextStudent, feedbackContextCompany) => {
@@ -209,6 +242,16 @@ const evaluateInternship = async (id, status, feedbackToStudent, feedbackToCompa
 	const currentfeedbackContextStudent = internship.feedbackContextStudent;
 	const companyStatus = internship.companyStatus;
 
+	let cycleIdStudent = (await db.InternshipFeedback.max('cycleId', {
+		where: { internshipId: id, target: 'student', },
+		transaction
+	})) ?? 0;
+
+	let cycleIdCompany = (await db.InternshipFeedback.max('cycleId', {
+		where: { internshipId: id, target: 'company', },
+		transaction
+	})) ?? 0;
+
 	switch (status) {
 		case "Approved":
 			await internship.update({ score: 100, isApprovedByDIC: true, status: 2 });
@@ -222,6 +265,8 @@ const evaluateInternship = async (id, status, feedbackToStudent, feedbackToCompa
 			if (studentStatus === 4 || (studentStatus === 6 && currentfeedbackContextStudent !== "Survey")) {
 				return { status: 403, message: "You already gave a feedback to the student" };
 			}
+
+			cycleIdStudent += 1;
 			await internship.update({ studentStatus: 4, feedbackToStudent, feedbackContextStudent });
 			break;
 
@@ -229,11 +274,37 @@ const evaluateInternship = async (id, status, feedbackToStudent, feedbackToCompa
 			if (companyStatus === 4) {
 				return { status: 403, message: "You already gave a feedback to the company" };
 			}
+
+			cycleIdCompany += 1;
 			await internship.update({ companyStatus: 4, feedbackToCompany, feedbackContextCompany });
 			break;
 
 		default:
 			return { status: 400, message: "Invalid status" };
+	}
+
+	if ( feedbackToStudent.length !== 0) {
+		const feedback = { 
+			internshipId: id, 
+			author: 'admin', 
+			target: 'student', 
+			context: feedbackContextStudent, 
+			content: feedbackToStudent,
+			cycleId
+		};
+		await db.InternshipFeedback.create( feedback, { transaction } );
+	}
+
+	if ( feedbackToCompany.length !== 0) {
+		const feedback = { 
+			internshipId: id, 
+			author: 'admin', 
+			target: 'company', 
+			context: feedbackContextCompany, 
+			content: feedbackToCompany,
+			cycleId
+		};
+		await db.InternshipFeedback.create( feedback, { transaction } );
 	}
 
 	return {

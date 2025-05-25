@@ -152,6 +152,32 @@ const getInternship = async (id) => {
 		};
 	}
 
+	const latestStudentFeedbacks = await db.InternshipFeedback.findAll({
+	  where: {
+	    internshipId: id,
+	    target: 'student',
+	    cycleId: db.Sequelize.literal(`(
+	      SELECT MAX(cycleId) FROM InternshipFeedback 
+	      WHERE internshipId = ${id} AND target = 'student'
+	    )`)
+	  },
+	  order: [['createdAt', 'ASC']],
+	  transaction,
+	});
+
+	const latestCompanyFeedbacks = await db.InternshipFeedback.findAll({
+	  where: {
+	    internshipId: id,
+	    target: 'company',
+	    cycleId: db.Sequelize.literal(`(
+	      SELECT MAX(cycleId) FROM InternshipFeedback 
+	      WHERE internshipId = ${id} AND target = 'company'
+	    )`)
+	  },
+	  order: [['createdAt', 'ASC']],
+	  transaction,
+	});
+
 	const applicationId = internship.Application?.id;
 
 	const document = await db.Document.findOne({
@@ -163,7 +189,9 @@ const getInternship = async (id) => {
 		status: 200,
 		data: {
 			internship,
-			documentId: document?.id || null
+			documentId: document?.id || null,
+			latestStudentFeedbacks,
+			latestCompanyFeedbacks
 		}
 	};
 };
@@ -305,6 +333,11 @@ const evaluateInternship = async (id, status, feedbackToStudent) => {
 		let studentStatus = internship.studentStatus;
 		let previousFeedbackContextStudent = internship.feedbackContextStudent;
 
+		let cycleId = (await db.InternshipFeedback.max('cycleId', {
+			where: { internshipId: id },
+			transaction
+		})) ?? 0;
+
 		// Helper function
 		const updateStudentStatusOnFileUpload = (status, studentStatus, previousFeedbackContextStudent) => {
 		  switch (previousFeedbackContextStudent) {
@@ -368,16 +401,31 @@ const evaluateInternship = async (id, status, feedbackToStudent) => {
 				break;
 
 			case "FeedbackToStudent":
-				if (studentStatus === 5 || studentStatus === 7) {
+				if (studentStatus === 5) {
 					return { status: 403, message: "You already gave a feedback to the student" };
 				} else if (studentStatus === 4 || studentStatus === 6) {
 					return { status: 403, message: "Admin gave a feedback to the student" };
 				}
+
+				cycleId += 1;
 				await internship.update({ studentStatus: 5, feedbackToStudent, feedbackContextStudent: "Report", transaction });
 				break;
 
 			default:
 				return { status: 400, message: "Invalid status" };
+		}
+
+		if ( feedbackToStudent.length !== 0) {
+			const feedback = { 
+				internshipId: id, 
+				author: 'company', 
+				target: 'student', 
+				context: 'Report', 
+				content: feedbackToStudent,
+				cycleId
+			};
+
+			await db.InternshipFeedback.create( feedback, { transaction } );
 		}
 
 		await transaction.commit();
