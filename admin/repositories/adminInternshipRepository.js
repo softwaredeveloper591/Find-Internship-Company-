@@ -281,7 +281,7 @@ const evaluateInternship = async (id, status, feedbackToStudent, feedbackToCompa
 			return { status: 400, message: "Invalid status" };
 	}
 
-	if ( feedbackToStudent.length !== 0) {
+	if (typeof feedbackToStudent === "string" && feedbackToStudent.trim().length !== 0) {
 		const feedback = { 
 			internshipId: id, 
 			author: 'admin', 
@@ -293,7 +293,7 @@ const evaluateInternship = async (id, status, feedbackToStudent, feedbackToCompa
 		await db.InternshipFeedback.create( feedback, { transaction } );
 	}
 
-	if ( feedbackToCompany.length !== 0) {
+	if (typeof feedbackToCompany === "string" && feedbackToCompany.trim().length !== 0) {
 		const feedback = { 
 			internshipId: id, 
 			author: 'admin', 
