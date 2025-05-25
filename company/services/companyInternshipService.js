@@ -24,7 +24,7 @@ const getUploadPage = async (token) => {
 const uploadFiles = async (token, files) => {
 
 	if (!token || !files || !files.manualReport || !files.manualForm) {
-        return res.status(400).json({ message: "Both token and files should be provided"});
+		return { status: 400, message: "Both token and files should be provided" };
     }
 
     const result = await internshipRepository.saveFiles(token, files);
@@ -54,23 +54,23 @@ const getInternship = async (id) => {
 	return await internshipRepository.getInternship(id);
 };
 
-const uploadInternshipFile = async (file, internshipId, fileType) => {
+const uploadCompanyForm = async (file, internshipId) => {
 	if (!file) return { status: 400, message: "No file uploaded" };
 	
 	const data = file.buffer;
 	const name = file.originalname;
 
 	const document = {
-		fileType,
+		fileType: "CompanyForm",
 		data,
 		name
 	}
 
-	return await internshipRepository.uploadFile(internshipId, document);
+	return await internshipRepository.uploadCompanyForm(internshipId, document);
 }
 
-const evaluateInternship = async (id, status, feedbackToStudent, feedbackContextStudent) => {
-	const result = await internshipRepository.evaluateInternship(id, status, feedbackToStudent, feedbackContextStudent);
+const evaluateInternship = async (id, status, feedbackToStudent) => {
+	const result = await internshipRepository.evaluateInternship(id, status, feedbackToStudent);
 
 	if (result.status !== 200) return result;
 
@@ -108,6 +108,6 @@ module.exports = {
 	uploadFiles,
 	getInternships,
 	getInternship,
-	uploadInternshipFile,
+	uploadCompanyForm,
 	evaluateInternship
 }

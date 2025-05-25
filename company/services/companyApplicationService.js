@@ -2,6 +2,10 @@ const applicationRepository = require("../repositories/companyApplicationReposit
 const moment = require('moment-timezone');
 const { sendEmail } = require('../utils/emailSender');
 
+const getAllSkills = async () => {
+	return await applicationRepository.getAllSkills();
+};
+
 const postAnnouncement = async (companyId, skillIds, announcementData, image) => {
 	if (image) announcementData.image = image.path;
 
@@ -48,25 +52,26 @@ const fillApplicationForm = async (companyId, applicationId, body) => {
 };
 
 const uploadApplicationForm = async (companyId, applicationId, file, body) => {
+	const { isApproved } = body.isApproved;
+
 	let document = null;
-	
-	if (file) {
-		const data = file.buffer;
-		const name = file.originalname;
+
+	if ( isApproved === "true") {
+		if(!file) return { status: 400, message: "No file uploaded"};
 
 		document = {
 			applicationId,
 			fileType: "UpdatedApplicationForm",
-			data,
-			name
+			data: file.buffer,
+			name: file.originalname
 		}
-	};
-
-	const { isApproved } = body.isApproved;
+	}
 
 	const result = await applicationRepository.uploadApplicationForm(companyId, applicationId, document, body);
 
-	const { application, message } = result.data;
+	if (result.status !== "200") return result;
+
+	const { application } = result.data;
 
 	const emailSubject = isApproved === "true" ? 'Application Approved' : 'Application Rejected';
 	const emailBody = `Hello ${application.Student.username},<br><br>
@@ -75,14 +80,21 @@ const uploadApplicationForm = async (companyId, applicationId, file, body) => {
 
 	sendEmail(application.Student.email, emailSubject, emailBody);
 
-	return { status: 200, message};
+	return result;
 };
 
-const downloadFile = async (whereClause) => {
-	return await applicationRepository.downloadFile(whereClause);
+const getFile = async (applicationId, fileType) => {
+	const whereClause = { fileType, applicationId };
+
+	const document = await applicationRepository.getFile(whereClause);
+
+	if(!document) return { status: 400, message: "Document can't be found"};
+
+	return document;
 };
 
 module.exports = {
+	getAllSkills,
 	postAnnouncement,
 	getAnnouncements,
 	getAnnouncement,
@@ -91,5 +103,5 @@ module.exports = {
 	getApplication,
 	fillApplicationForm,
 	uploadApplicationForm,
-	downloadFile
+	getFile
 }

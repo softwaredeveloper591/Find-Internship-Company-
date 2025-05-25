@@ -2,19 +2,25 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const upload = multer();
+const uploadFile = require("../middleware/fileUploader");
 const amqp = require('amqplib/callback_api');
 const bcrypt = require("bcrypt");
 
 const auth = require("../middleware/auth");
 const checkUserRole = require("../middleware/checkUserRole");
 const asyncErrorHandler = require("../utils/asyncErrorHandler");
-const { Op } = require("sequelize");
+const applicationController = require("../controllers/secretaryApplicationController");
 
 const db = require("../data/db");
 
-const internshipRouter = require("./secretaryInternshipRouter");
-
 router.use(auth, checkUserRole("secretary"));
+
+router.get("/", asyncErrorHandler(applicationController.getApplications));
+
+router.get("/applications/download/:id/:fileType", asyncErrorHandler(applicationController.downloadFile));
+
+router.post("/applications/:id", uploadFile.single('EmploymentCertificate'), asyncErrorHandler(applicationController.evaluateApplication));
+router.post("/manualApplications/:id", uploadFile.single('EmploymentCertificate'), asyncErrorHandler(applicationController.evaluateManualApplications));
 
 router.get("/personalInfo",[auth,checkUserRole("secretary")], asyncErrorHandler( async (req, res, next) => {
     const secretary = await db.Secretary.findOne({ 
@@ -71,8 +77,7 @@ router.post('/personalInfo',[auth,checkUserRole("secretary")], asyncErrorHandler
 	res.status(200).json({ success: 'User information updated succesfully.' });
 }));
 
-
-router.get("/", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
+/*router.get("/", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
 	const secretary = await db.Secretary.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
 	const applications = await db.Application.findAll({
 		where: {
@@ -99,56 +104,6 @@ router.get("/", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req
 		]
 	});
 	res.status(200).json({ userType: "secretary", dataValues: secretary.dataValues, applications });
-}));
-
-router.get("/applicationForms", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
-	/* There will be application forms of more than one student, so we need to organize them according to each student
-	(i.e according to different applicationIds) to be able to seperate them from each other. This way we can get the applicationId 
-	of the file a student sent and secretary can send employment certificate to the student with the same applicationId. */
-	const secretary = await db.Secretary.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-	const applicationForms = await db.Document.findAll({ where: { fileType: "Updated Manual Application Form" } });
-
-	res.send(applicationForms);
-
-	/*res.render("applicationForms", {
-		usertype: "secretary",
-		dataValues: secretary.dataValues,
-		applicationForms
-	});*/
-}));
-
-router.post("/employmentCertificate", upload.single('employmentCertificate'), [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
-	const { applicationId, id } = req.body; //can get both from the document table 
-
-	const student = await db.Student.findOne({ where: { id } });
-
-	const file = req.file;
-	let binaryData = null;
-	if (!file) {
-		return res.status(404).json({ errors: "Error uploading file" });
-	}
-	binaryData = file.buffer;
-
-	await db.Document.update(
-		{
-			status: "checkedBySecretary"
-		},
-		{
-			where: { applicationId }
-		}
-	);
-
-	await db.Document.create({
-		applicationId,
-		name: file.originalname,
-		fileType: 'Manual Employment Certificate',
-		username: student.username,
-		userId: id,
-		data: binaryData
-	});
-
-	res.status(200).json({ message: "Employment Certificate is uploaded" });
-
 }));
 
 router.get("/applications/download/:applicationId/:fileType", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
@@ -246,7 +201,7 @@ router.post("/applications/:applicationId", upload.single('studentFile'), [auth,
 	});
 	
 	res.status(200).json({ message: "Employment certificate is uploded"});
-}));
+}));*/
 
 router.get("/users", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
 	const students = await db.Student.findAll({ attributes: ['username', 'email'] });
@@ -256,7 +211,5 @@ router.get("/users", [auth, checkUserRole("secretary")], asyncErrorHandler(async
 	res.status(200).json({ allUsers });
 }));
 
-
-router.use("/internship", internshipRouter);
 
 module.exports = router;

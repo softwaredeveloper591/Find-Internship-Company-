@@ -18,7 +18,7 @@ module.exports = function(sequelize, DataTypes) {
     status: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      defaultValue: 0
+      defaultValue: 1
     },
     isApprovedByDIC: {
       type: DataTypes.BOOLEAN,
@@ -37,6 +37,14 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: Sequelize.Sequelize.literal('CURRENT_TIMESTAMP')
+    },
+    companyEmail: {
+      type: DataTypes.STRING(45),
+      allowNull: false
+    },
+    companyName: {
+      type: DataTypes.STRING(45),
+      allowNull: false
     }
   }, {
     sequelize,

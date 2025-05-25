@@ -1,5 +1,10 @@
 const applicationService = require("../services/companyApplicationService");
 
+const getAllSkills = async (req, res) => {
+	skills = await applicationService.getAllSkills();
+	return res.status(200).json( skills );
+};
+
 const postAnnouncement = async (req, res) => {
 	let image = null;
 
@@ -70,13 +75,7 @@ const uploadApplicationForm = async (req, res) => {
 const downloadFile = async (req, res) => {
 	const { applicationId, fileType } = req.params;
 
-	const whereClause = { fileType, applicationId };
-
-	const document = await applicationService.downloadFile( whereClause );
-
-	if (!document || !document.data) {
-		throw new Error("No such document or file data is missing.");
-	}
+	const document = await applicationService.getFile( applicationId,fileType );
 
 	const { name, data } = document;
 
@@ -89,6 +88,7 @@ const downloadFile = async (req, res) => {
 };
 
 module.exports = {
+	getAllSkills,
 	postAnnouncement,
 	getAnnouncements,
 	getAnnouncement,

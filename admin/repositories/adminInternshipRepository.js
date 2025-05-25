@@ -2,73 +2,7 @@ const db = require("../data/db");
 const { generateSecureToken } = require('../utils/tokenUtil');
 const { Op } = require("sequelize");
 
-const getManualApplications = async (adminId) => {
-
-	const admin = await db.Admin.findOne({
-		where: { id: adminId },
-		attributes: { exclude: ['password'] }
-	});
-
-	if (!admin) {
-		return { status: 400, message: 'Admin not found' } ;
-	}
-
-	const manualApplications = await db.ManualApplication.findAll({
-		where: {
-			isApprovedByDIC: null
-		},
-		include: [
-			{
-				model: db.Student,
-				attributes: ['username', 'id']
-			}
-		]
-	});
-
-	return manualApplications;
-};
-
-const approveManualApplications = async (manualApplicationId, studentId, isApproved, data) => {
-	const hasInternship = await db.Internship.findOne( { where: { studentId }});
-
-	if (hasInternship) {
-		return { status: 400, message: "This student already has an internship"}
-	}
-	
-	const isAlreadyChecked = await db.ManualApplication.findOne({
-		where: {
-		  	id: manualApplicationId, // replace with the actual application ID
-		  	isApprovedByDIC: {
-				[db.Sequelize.Op.not]: null
-		  	}
-		}
-	});
-	  
-	if (isAlreadyChecked) {
-		return { status: 400, message: "You already checked this application" };
-	}
-
-	if (isApproved) {
-		const transaction = await db.sequelize.transaction();
-		try {
-			await db.Document.update(
-				{ data, status:"UpdatedByAdmin" }, 
-				{ where: {manualApplicationId, fileType: "ManualApplicationForm"}, transaction }
-			);
-			await db.ManualApplication.update(
-				{ isApprovedByDIC: true, status: 1 }, 
-				{ where: {id: manualApplicationId }, transaction }
-			);
-
-			await transaction.commit();
-		} catch (error) {
-			await transaction.rollback();
-		    throw error;
-		}
-	}
-}
-
-const downloadFile = async (whereClause) => {
+const getFile = async (whereClause) => {
 	return await db.Document.findOne({ where: whereClause });
 }
 
@@ -154,16 +88,15 @@ const getInternships = async () => {
 	const internships = await db.Internship.findAll({
 		where: {
 			studentStatus: {
-				[Op.in]: [3, 4, 6]
+				[Op.in]: [3, 4, 6, 7]
 			},
 			companyStatus: {
 				[Op.in]: [3, 4, 5]
 			},
-			isApprovedByCompany: 1,
 			isApprovedByDIC: null
 		},
 		include: [
-			{ model: db.Student, attributes: ['id', 'username', 'email'] },
+			{ model: db.Student, attributes: ['id', 'username', 'email', 'year'] },
 			{
 				model: db.Application,
 				include: {
@@ -190,12 +123,11 @@ const getInternship = async (id) => {
 		where: {
 			id,
 			studentStatus: {
-				[Op.in]: [3, 4, 6]
+				[Op.in]: [3, 4, 6, 7]
 			},
 			companyStatus: {
 				[Op.in]: [3, 4, 5]
 			},
-			isApprovedByCompany: 1,
 			isApprovedByDIC: null
 		},
 		include: [
@@ -210,114 +142,210 @@ const getInternship = async (id) => {
 					},
 					attributes: ['announcementName'],
 				}
-			}
-		]
-	});
-
-	if (!internship) {
-		return { status: 400, message: "This internship can't be found"};
-	}
-
-	return internship;
-}
-
-const evaluateInternship = async (id, status, feedbackToStudent, feedbackToCompany, feedbackContextStudent, feedbackContextCompany) => {
-	const internship = await db.Internship.findOne({
-		where: {
-			id,
-			studentStatus: {
-				[Op.in]: [3, 4, 6]
-			},
-			companyStatus: {
-				[Op.in]: [3, 4, 5]
-			},
-			isApprovedByCompany: 1,
-			isApprovedByDIC: null
-		},
-		include: [
-			{ 
-				model: db.Student, 
-				attributes: ['id', 'username', 'email'] 
 			},
 			{
-				model: db.Application,
-				include: {
-					model: db.Announcement,
-					include: {
-						model: db.Company,
-						attributes: ['name', 'email'], 
-					},
-					attributes: ['announcementName'],
-				}
+				model: db.ManualApplication,
+				attributes: ['companyName', 'companyEmail']
 			}
 		]
 	});
 
 	if (!internship) {
-		return { status: 400, message: "This internship can't be found"};
+		return { status: 400, data: null, message: "This internship can't be found"};
 	}
 
-	const linkRequest = await db.CompanyUploadLinkRequest.findOne({
-		where: { internshipId: id },
-		order: [['createdAt', 'DESC']],
+	const latestStudentFeedbacks = await db.InternshipFeedback.findAll({
+	  where: {
+		internshipId: id,
+		target: 'student',
+		cycleId: db.Sequelize.literal(`(
+		  SELECT MAX(cycleId) FROM InternshipFeedback 
+		  WHERE internshipId = ${id} AND target = 'student'
+		)`)
+	  },
+	  order: [['createdAt', 'ASC']]
 	});
 
-	let companyEmail = null;
-	let companyName = null;
+	const latestCompanyFeedbacks = await db.InternshipFeedback.findAll({
+	  where: {
+		internshipId: id,
+		target: 'company',
+		cycleId: db.Sequelize.literal(`(
+		  SELECT MAX(cycleId) FROM InternshipFeedback 
+		  WHERE internshipId = ${id} AND target = 'company'
+		)`)
+	  },
+	  order: [['createdAt', 'ASC']]
+	});
 
-	if (internship?.Application?.Announcement?.Company) {
-		companyEmail = internship.Application.Announcement.Company.email;
-		companyName = internship.Application.Announcement.Company.name;
-	} else if (linkRequest) {
-		companyEmail = linkRequest.companyEmail;
-		companyName = linkRequest.companyName;
-	}
-
-	const studentStatus = internship.studentStatus;
-	const currentfeedbackContextStudent = internship.feedbackContextStudent;
-	const companyStatus = internship.companyStatus;
-
-	switch (status) {
-		case "Approved":
-			await internship.update({ score: 100, isApprovedByDIC: true, status: 2 });
-			break;
-
-		case "Rejected":
-			await internship.update({ score: 0, isApprovedByDIC: false, feedbackToStudent, status: 3 });
-			break;
-
-		case "FeedbackToStudent":
-			if (studentStatus === 4 || (studentStatus === 6 && currentfeedbackContextStudent === "Both" || currentfeedbackContextStudent === "Report")) {
-				return { status: 403, message: "You already gave a feedback to the student" };
+	const documents = await db.Document.findAll({
+		where: {
+			[Op.or]: [
+				{ applicationId: internship.applicationId },
+				{ manualApplicationId: internship.manualApplicationId }
+			],
+			fileType: {
+				[Op.in]: ["Report", "CompanyForm", "Survey"]
 			}
-			await internship.update({ studentStatus: 4, feedbackToStudent, feedbackContextStudent });
-			break;
-
-		case "FeedbackToCompany":
-			if (companyStatus === 4) {
-				return { status: 403, message: "You already gave a feedback to the company" };
-			}
-			await internship.update({ companyStatus: 4, feedbackToCompany, feedbackContextCompany });
-			break;
-
-		default:
-			return { status: 400, message: "Invalid status" };
-	}
+		},
+		attributes: ['id', 'fileType']
+	});
 
 	return {
 		status: 200,
 		data: {
-			student: internship.Student,
-			company: { companyName, companyEmail},
-			linkRequest	
+			internship,
+			latestStudentFeedbacks,
+			latestCompanyFeedbacks,
+			documents
 		}
 	};
-}
+};
+
+const evaluateInternship = async (id, status, feedbackToStudent, feedbackToCompany, feedbackContextStudent, feedbackContextCompany) => {
+	const transaction = await db.sequelize.transaction();
+	try {
+		const internship = await db.Internship.findOne({
+			where: {
+				id,
+				studentStatus: {
+					[Op.in]: [3, 4, 6, 7]
+				},
+				companyStatus: {
+					[Op.in]: [3, 4, 5]
+				},
+				isApprovedByCompany: 1,
+				isApprovedByDIC: null
+			},
+			include: [
+				{ 
+					model: db.Student, 
+					attributes: ['id', 'username', 'email'] 
+				},
+				{
+					model: db.Application,
+					include: {
+						model: db.Announcement,
+						include: {
+							model: db.Company,
+							attributes: ['name', 'email'], 
+						},
+						attributes: ['announcementName'],
+					}
+				}
+			],
+			transaction
+		});
+
+		if (!internship) {
+			await transaction.rollback();
+			return { status: 400, message: "This internship can't be found" };
+		}
+
+		const linkRequest = await db.CompanyUploadLinkRequest.findOne({
+			where: { internshipId: id },
+			order: [['createdAt', 'DESC']],
+			transaction
+		});
+
+		let companyEmail = null;
+		let companyName = null;
+
+		if (internship?.Application?.Announcement?.Company) {
+			companyEmail = internship.Application.Announcement.Company.email;
+			companyName = internship.Application.Announcement.Company.name;
+		} else if (linkRequest) {
+			companyEmail = linkRequest.companyEmail;
+			companyName = linkRequest.companyName;
+		}
+
+		const studentStatus = internship.studentStatus;
+		const currentfeedbackContextStudent = internship.feedbackContextStudent;
+		const companyStatus = internship.companyStatus;
+
+		let cycleIdStudent = (await db.InternshipFeedback.max('cycleId', {
+			where: { internshipId: id, target: 'student' },
+			transaction
+		})) ?? 0;
+
+		let cycleIdCompany = (await db.InternshipFeedback.max('cycleId', {
+			where: { internshipId: id, target: 'company' },
+			transaction
+		})) ?? 0;
+
+		switch (status) {
+			case "Approved":
+				await internship.update({ score: 100, isApprovedByDIC: true, status: 2 }, { transaction });
+				break;
+
+			case "Rejected":
+				await internship.update({ score: 0, isApprovedByDIC: false, feedbackToStudent, status: 3 }, { transaction });
+				break;
+
+			case "FeedbackToStudent":
+				if (studentStatus === 4 || (studentStatus === 6 && currentfeedbackContextStudent !== "Survey")) {
+					await transaction.rollback();
+					return { status: 403, message: "You already gave a feedback to the student" };
+				}
+				cycleIdStudent += 1;
+				await internship.update({ studentStatus: 4, feedbackToStudent, feedbackContextStudent }, { transaction });
+				break;
+
+			case "FeedbackToCompany":
+				if (companyStatus === 4) {
+					await transaction.rollback();
+					return { status: 403, message: "You already gave a feedback to the company" };
+				}
+				cycleIdCompany += 1;
+				await internship.update({ companyStatus: 4, feedbackToCompany, feedbackContextCompany }, { transaction });
+				break;
+
+			default:
+				await transaction.rollback();
+				return { status: 400, message: "Invalid status" };
+		}
+
+		if (typeof feedbackToStudent === "string" && feedbackToStudent.trim().length !== 0) {
+			await db.InternshipFeedback.create({
+				internshipId: id,
+				author: 'admin',
+				target: 'student',
+				context: feedbackContextStudent,
+				content: feedbackToStudent,
+				cycleId: cycleIdStudent
+			}, { transaction });
+		}
+
+		if (typeof feedbackToCompany === "string" && feedbackToCompany.trim().length !== 0) {
+			await db.InternshipFeedback.create({
+				internshipId: id,
+				author: 'admin',
+				target: 'company',
+				context: feedbackContextCompany,
+				content: feedbackToCompany,
+				cycleId: cycleIdCompany
+			}, { transaction });
+		}
+
+		await transaction.commit();
+
+		return {
+			status: 200,
+			data: {
+				student: internship.Student,
+				company: { companyName, companyEmail },
+				linkRequest	
+			}
+		};
+
+	} catch (error) {
+		await transaction.rollback();
+		throw error;
+	}
+};
 
 module.exports = {
-    getManualApplications,
-	approveManualApplications,
-	downloadFile,
+	getFile,
 	getLinkRequests,
 	approveLinkRequest,
 	createLinkRequest,

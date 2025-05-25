@@ -25,16 +25,12 @@ const getOneOpportunity = async (studentId, announcementId) => {
 };
 
 const applyToAnnouncement = async (studentId, announcementId, file) => {
-	if (!file) throw new Error("No file uploaded");
-
-	const fileType = "CV";
-  	const data = file.buffer;
-	const name = file.originalname;
+	if (!file) return { status: 400, message: "No file uploaded"};
 
 	const document = {
-		fileType,
-		data,
-		name
+		fileType: "CV",
+		data: file.buffer,
+		name: file.originalname
 	}
 
 	return await applicationRepository.applyToAnnouncement(studentId, announcementId, document);

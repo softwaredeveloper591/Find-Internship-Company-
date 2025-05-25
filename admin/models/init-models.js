@@ -12,6 +12,7 @@ var _Document = require("./Document");
 var _Experience = require("./Experience");
 var _ExperienceSkill = require("./ExperienceSkill");
 var _Internship = require("./Internship");
+var _InternshipFeedback = require("./InternshipFeedback");
 var _Language = require("./Language");
 var _ManualApplication = require("./ManualApplication");
 var _Message = require("./Message");
@@ -39,6 +40,7 @@ function initModels(sequelize) {
   var Experience = _Experience(sequelize, DataTypes);
   var ExperienceSkill = _ExperienceSkill(sequelize, DataTypes);
   var Internship = _Internship(sequelize, DataTypes);
+  var InternshipFeedback = _InternshipFeedback(sequelize, DataTypes);
   var Language = _Language(sequelize, DataTypes);
   var ManualApplication = _ManualApplication(sequelize, DataTypes);
   var Message = _Message(sequelize, DataTypes);
@@ -80,6 +82,8 @@ function initModels(sequelize) {
   Experience.hasMany(ExperienceSkill, { foreignKey: "experienceId"});
   CompanyUploadLinkRequest.belongsTo(Internship, { foreignKey: "internshipId"});
   Internship.hasMany(CompanyUploadLinkRequest, { foreignKey: "internshipId"});
+  InternshipFeedback.belongsTo(Internship, { foreignKey: "internshipId"});
+  Internship.hasMany(InternshipFeedback, { foreignKey: "internshipId"});
   StudentLanguage.belongsTo(Language, { foreignKey: "languageId"});
   Language.hasMany(StudentLanguage, { foreignKey: "languageId"});
   Document.belongsTo(ManualApplication, { foreignKey: "manualApplicationId"});
@@ -129,6 +133,7 @@ function initModels(sequelize) {
     Experience,
     ExperienceSkill,
     Internship,
+    InternshipFeedback,
     Language,
     ManualApplication,
     Message,

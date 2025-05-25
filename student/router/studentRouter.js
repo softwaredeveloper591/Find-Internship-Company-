@@ -27,12 +27,11 @@ router.use((req, res, next) => {
   return auth(req, res, () => checkUserRole("student")(req, res, next));
 });
 
-
 const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
-const { uploadFile } = require('../utils/fileUploader');
 const profileRouter = require("./studentProfileRouter"); 
 const internshipRouter = require("./studentInternshipRouter");
 const applicationRouter = require("./studentApplicationRouter");
+const internshipController = require("../controllers/studentInternshipController");
 
 const db = require('../data/db');
 
@@ -60,6 +59,8 @@ async function findReceiverByEmail(email) {
 	return null;
 }
 
+router.get("/internship/download/:fileName", internshipController.downloadFileFromServer);
+
 router.get("/", asyncErrorHandler(async (req, res, next) => {
 	const student = await db.Student.findOne({
 		where: { id: req.user.id },
@@ -86,7 +87,15 @@ router.get("/", asyncErrorHandler(async (req, res, next) => {
 	// return res.status(200).json({ userType: "student", dataValues: student });
 }));
 
-router.post("/createStudentInfo",asyncErrorHandler(async (req, res, next) => {
+router.get("/studentInfo", asyncErrorHandler(async (req, res, next) => {
+	const studentId = req.user.id;
+
+	const studentInfo = await db.StudentInfo.findOne( { where: { studentId }});
+
+	return res.status(200).json({ studentInfo });
+}));
+
+router.post("/studentInfo", asyncErrorHandler(async (req, res, next) => {
 	const id = req.user.id;
     const body = { studentId: id, ...req.body }; // Merge user ID with request body
 
@@ -95,7 +104,7 @@ router.post("/createStudentInfo",asyncErrorHandler(async (req, res, next) => {
     return res.status(200).json({ message: "Student info created successfully." });
 }));
 
-router.put("/updateStudentInfo", asyncErrorHandler(async (req, res, next) => {
+router.put("/studentInfo", asyncErrorHandler(async (req, res, next) => {
     const id = req.user.id; 
     const updates = req.body; 
 
@@ -228,7 +237,7 @@ router.post("/conversation/ai", asyncErrorHandler(async (req, res, next) => {
 	res.status(200).json({ conversations });
 }));
 
-router.get("/opportunities", asyncErrorHandler(async (req, res, next) => {
+/*router.get("/opportunities", asyncErrorHandler(async (req, res, next) => {
 
 	const student = await db.Student.findOne({ where: { id: req.user.id } });
 	const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
@@ -450,7 +459,7 @@ router.get("/applications", asyncErrorHandler(async (req, res, next) => {
 	});
 
 	res.status(200).json({ applications });
-}));
+}));*/
 
 // what is this for?
 router.get("/download/:studentId/:fileType", asyncErrorHandler(async (req, res, next) => {

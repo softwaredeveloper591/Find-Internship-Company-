@@ -1,5 +1,11 @@
 const db = require("../data/db");
 const moment = require('moment-timezone');
+const AdmZip = require("adm-zip");
+const { Op } = require('sequelize');
+
+const getAllSkills = async () => {
+	return await db.Skill.findAll();
+};
 
 const postAnnouncement = async (skillIds, announcementData) => {
 	const transaction = await db.sequelize.transaction();
@@ -126,6 +132,7 @@ const getApplications = async (companyId) => {
 	const applications = await db.Application.findAll({
 		where: {
 			isApprovedByCompany: null,
+			status: 0
 		},
 		include: [
 			{
@@ -146,7 +153,9 @@ const getApplications = async (companyId) => {
 const getApplication = async (companyId, applicationId) => {
 	const application = await db.Application.findOne({
 		where: {
-			id: applicationId
+			id: applicationId,
+			status: 0,
+			isApprovedByCompany: null,
 		},
 		include: [
 			{
@@ -180,6 +189,8 @@ const fillApplicationForm = async (companyId, applicationId, body) => {
 		where: { applicationId, fileType: "ApplicationForm" },
 		include: {
 			model: db.Application,
+			status: 0,
+			isApprovedByCompany: null,
 			include: [
 				{
 					model: db.Announcement,
@@ -262,7 +273,11 @@ const uploadApplicationForm = async (companyId, applicationId, document, body) =
 	const transaction = await db.sequelize.transaction();
 	try {
 		const application = await db.Application.findOne({
-			where: { id: applicationId },
+			where: { 
+				id: applicationId,
+				status: 0,
+				isApprovedByCompany: null,
+			},
 			include: [
 				{
 					model: db.Student,
@@ -309,9 +324,9 @@ const uploadApplicationForm = async (companyId, applicationId, document, body) =
 		return {
 			status: 200,
 			data: {
-				application,
-				message: isApproved === "true" ? "Application approved" : "Application rejected"
-			}
+				application
+			},
+			message: isApproved === "true" ? "Application approved" : "Application rejected"
 		};
 
 	} catch (error) {
@@ -320,11 +335,12 @@ const uploadApplicationForm = async (companyId, applicationId, document, body) =
 	}
 };
 
-const downloadFile = async (whereClause) => {
+const getFile = async (whereClause) => {
 	return await db.Document.findOne( { where: whereClause });
 };
 
 module.exports = {
+	getAllSkills,
 	postAnnouncement,
 	getAnnouncements,
 	getAnnouncement,
@@ -333,5 +349,5 @@ module.exports = {
 	getApplication,
 	fillApplicationForm,
 	uploadApplicationForm,
-	downloadFile
+	getFile
 }

@@ -165,6 +165,12 @@ const getAllLanguages = async (req, res) => {
     return res.status(200).json( languages );
 };
 
+const getReviews = async (req, res) => {
+	const reviews = await profileService.getReviews(req.params.id);
+
+	return res.status(200).json( { reviews });
+};
+
 module.exports = {
     getProfile,
 	getProfileById,
@@ -190,5 +196,6 @@ module.exports = {
 	updateLanguageLevel,
 	deleteLanguage,
 	getAllSkills,
-	getAllLanguages
+	getAllLanguages,
+	getReviews
 };

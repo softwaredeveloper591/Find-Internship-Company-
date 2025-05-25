@@ -8,16 +8,20 @@ const moment = require('moment-timezone');
 const multer = require("multer");
 const upload = multer();
 
+const uploadFile = require("../middleware/fileUploader");
+
 const auth = require("../middleware/auth");
 const checkUserRole = require("../middleware/checkUserRole")
 const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
 const { sendEmail } = require("../utils/emailSender");
 
+router.use(auth, checkUserRole("admin"));
+
 const internshipRouter = require("./adminInternshipRouter");
+const announcementController = require("../controllers/adminAnnouncementController");
+const applicationController = require("../controllers/adminApplicationController");
 
 const db = require("../data/db");
-
-router.use(auth, checkUserRole("admin"));
 
 let totalAnnouncementsCount = 0;
 let totalApplicationsCount = 0;
@@ -133,6 +137,28 @@ async function deactivateExpiredAnnouncements() {
 
 cron.schedule('0 0 * * *', deactivateExpiredAnnouncements);
 
+router.get("/announcementRequests", asyncErrorHandler(announcementController.getAnnouncements));
+router.get("/announcement/:id", asyncErrorHandler(announcementController.getAnnouncement));
+
+router.put("/announcement/:id", asyncErrorHandler(announcementController.approveAnnouncement));
+
+router.get("/applicationRequests", asyncErrorHandler(applicationController.getApplications));
+router.get("/applications/:id", asyncErrorHandler(applicationController.getApplication));
+router.get("/manualApplications/:id", asyncErrorHandler(applicationController.getManualApplication));
+router.get("/applications/download/:id/:fileType", asyncErrorHandler(applicationController.downloadFile));
+
+router.put("/applications/:id", uploadFile.single('ApplicationForm'), asyncErrorHandler(applicationController.evaluateApplication));
+router.put("/manualApplications/:id", uploadFile.single('ApplicationForm'), asyncErrorHandler(applicationController.evaluateManualApplications));
+
+router.get('/serveFile/:id', [auth, checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
+	const file = await db.Document.findByPk(req.params.id);
+	if (file) {
+	  res.setHeader('Content-Type', 'application/pdf');
+	  res.send(file.data);
+	} else {
+	  res.status(404).send('File not found');
+	}
+}));
 
 router.get("/personalInfo",[auth,checkUserRole("admin")], asyncErrorHandler( async (req, res, next) => {
     const admin = await db.Admin.findOne({ 
@@ -412,7 +438,6 @@ router.post("/sendMessage", upload.single('file'), [auth, checkUserRole("admin")
 	});
 }));
 
-
 router.delete("/deleteMessage/:id", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	const id = req.params.id;
 	const admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
@@ -461,228 +486,7 @@ router.put("/updateMessage/:id", [auth, checkUserRole("admin")], asyncErrorHandl
 	res.status(200).json({ message: "Message updated successfully", Message: message.message });
 }));
 
-router.get("/files", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	/* There will be application forms of more than one student, so we need to organize them according to each student
-	(i.e according to different studentIds) to be able to seperate them from each other. This way we can get the studentId 
-	of the file a student sent and admin can send a feedback to the student. */
-	// also each application form of a student should be organized according to applicationId.
-	/* there should be a part to show internship files too and this part should also separate from each other according to file type 
-	for admin to be able to send feedback for each of them separately. */
-	const admin = await db.Admin.findOne({ where: { id: req.user.id } });
-
-	const applicationForms = await db.Document.findAll({
-		where: {
-			fileType: "Manual Application Form",
-			[Op.or]: [
-				{ status: { [Op.ne]: "deleted" } },
-				{ status: null }
-			]
-		}
-	});
-
-	res.status(200).json(applicationForms); 
-}));
-
-router.put("/feedback/:studentId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	const studentId = req.params.studentId;
-	const { applicationId, feedback } = req.body; // we need applicationId to update document table
-
-	await db.Document.update(
-		{
-			status: "checkedByAdmin"
-		},
-		{
-			where: { applicationId }
-		}
-	);
-
-	// checked files should be signed as "feedback is sent" so admin can understand which files are checked.
-
-	const student = await db.Student.findOne({ where: { id: studentId } });
-
-	const emailSubject = 'Application Form Checked';
-	const emailBody = `Hello ${student.username},<br><br>
-        Your application form has been checked by admin. <br><br> Feedback: <br> ${feedback}. <br><br>
-        Best Regards,<br>Admin Team`;
-
-	/* admin must send a feedback to the student for student to know if the application form is correct or not. 
-	If it is correct, student should wait for the employment certificate. If it is not, student should know this so he can 
-	upload the corrected application form. */
-	// admin must download the file before sending a feedback.
-	sendEmail(student.email, emailSubject, emailBody);
-
-	res.status(200).json({ message: "Feedback sent" });
-}));
-
-router.put("/applicationForms/:applicationId", upload.single('ApplicationForm'), [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-
-	const applicationId = req.params.applicationId;
-
-	const file = req.file;
-
-	if (!file) {
-		return res.status(404).json({ errors: "Error uploading file" });
-	}
-
-	const binaryData = file.buffer;
-
-	await db.Document.update(
-		{
-			name: file.originalname,
-			data: binaryData, fileType: "Updated Manual Application Form"
-		},
-		{
-			where: { applicationId }
-		}
-	);
-
-	res.status(200).json({ message: "Application form sent to secretary" });
-}));
-
-router.put("/deleteApplicationForm/:applicationId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	/* admin should be able to delete the application forms which are checked after sending a feedback and uploading application form
-	for secretary to download. */
-
-	const applicationId = req.params.applicationId;
-	await db.Document.update({ status: "deleted" }, { where: { applicationId } });
-
-	res.status(200).json({ message: "Application form deleted" });
-}));
-
-router.get("/announcementRequests", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	const admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-	const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
-
-	const announcements = await db.Announcement.findAll({
-		where: {
-			status: {
-				[Sequelize.Op.in]: ["pending", "edited"] // Match status to either "pending" or "edited"
-			},
-
-			// We should indicate at the frontend whether the announcement has been edited or not.
-			endDate: {
-				[Sequelize.Op.gt]: now // Check if the current time is less than the endDate
-			}
-
-			// we can automaticly reject the announcements with pass due dates.
-		},
-		include: [
-			{
-				model: db.Company,
-				attributes: ['name']
-			}
-		]
-	})
-	const announcementsWithImages = announcements.map(announcement => {
-		return {
-			...announcement.dataValues
-		};
-	});
-	res.status(200).json({ dataValues: admin.dataValues, announcements: announcementsWithImages });
-}));
-
-router.get("/announcement/:announcementId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	try {
-		const admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-		const announcementId = req.params.announcementId;
-
-		const announcement = await db.Announcement.findOne({
-			where: { id: announcementId },
-			include: [
-				{ 
-					model: db.Company, 
-					attributes: ['name'] 
-				},
-				{
-					model: db.Skill,
-					as: 'skillId_Skills', // Make sure this matches your association alias
-					through: { attributes: [] }, // hide join table columns
-					attributes: ['id', 'name'], // customize skill fields if needed
-				}
-			]
-		});
-
-		if (!announcement) {
-			return res.status(404).json({ message: 'Announcement not found' });
-		}
-
-		const formattedAnnouncement = {
-			...announcement.dataValues,
-			formattedStartDate: moment(announcement.startDate).tz('Europe/Istanbul').format('DD/MM/YYYY'),
-			formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD/MM/YYYY')
-		};
-		res.status(200).json({ dataValues: admin.dataValues, announcement: formattedAnnouncement });
-	} catch (error) {
-		console.error('Error fetching announcement:', error); // Hata günlüğe yaz
-		res.status(500).json({ message: 'Internal server error', error: error.message });
-	}
-}));
-
-
-router.put("/announcement/:announcementId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	const announcementId = req.params.announcementId;
-	const { isApproved, feedback } = req.body;
-
-	const announcement = await db.Announcement.findOne({
-		where: {
-			id: announcementId
-		},
-		include: [
-			{
-				model: db.Company,
-				attributes: ['username', 'email']
-			}
-		]
-	})
-	if (!announcement) {
-		return res.status(404).json({ errors: "Announcement not found." });
-	}
-	const emailSubject = isApproved ? 'Announcement Approved' : 'Announcement Rejected';
-	const emailBody = `Hello ${announcement.Company.username},<br><br>
-        Your announcement titled "${announcement.announcementName}" has been ${isApproved ? "approved" : `rejected and will be removed from our system. <br><br> ${feedback ? `Feedback: <br> ${feedback}.` : ""}`} <br><br>
-        Best Regards,<br>Admin Team`;
-
-	sendEmail(announcement.Company.email, emailSubject, emailBody);
-
-	if (!isApproved) {
-		await db.Announcement.destroy({ where: { id: announcement.id } });
-		return res.status(200).json({ message: "Announcement rejected and removed from the system." });
-	}
-	announcement.status = "approved";
-	await announcement.save();
-	res.status(200).json({ message: "Announcement approved." });
-}));
-
-router.get("/companyRequests", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	// let admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
-	const pendingCompanies = await db.Company.findAll({ where: { statusByDIC: null } });
-	res.status(200).json({ companies: pendingCompanies });
-}));
-
-router.put("/company/:companyId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	const companyId = req.params.companyId;
-	const { isApproved } = req.body;
-	const company = await db.Company.findOne({ where: { id: companyId } });
-	if (!company) {
-		return res.status(404).json({ errors: "Company not found." });
-	}
-	const emailSubject = isApproved ? 'Company Registration Approved' : 'Company Registration Rejected';
-	const emailBody = `Hello ${company.username},<br><br>
-        Your registration request has been ${isApproved ? "approved" : "rejected and removed from our system"}.<br><br>
-        Best Regards,<br>Admin Team`;
-	// Connect to RabbitMQ
-	sendEmail(company.email, emailSubject, emailBody);
-
-	if (!isApproved) {
-		await company.destroy();
-		return res.status(200).json({ message: "Company registration request rejected and deleted." });
-	}
-	company.statusByDIC = true;
-	await company.save();
-	res.status(200).json({ message: "Company registration request approved." });
-}));
-
-router.get("/applicationRequests", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
+/*router.get("/applicationRequests", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	try {
 		// Fetch the admin details, excluding the password
 		const admin = await db.Admin.findOne({
@@ -750,7 +554,6 @@ router.get("/applications/:applicationId", [auth, checkUserRole("admin")], async
 
 	res.status(200).json({ application });
 }));
-
 
 router.get("/applications/download/:applicationId/:fileType", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	const applicationId = req.params.applicationId;
@@ -823,85 +626,136 @@ router.put("/applications/:applicationId", upload.single('studentFile'), [auth, 
 	}
 }));
 
-router.get("/interns", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
+router.get("/announcementRequests", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
 	const admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+	const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
 
-	const interns = await db.Internship.findAll({
-		include: [
-			{
-				model: db.Application,
-				attributes: [],
-				include: {
-					model: db.Announcement,
-					attributes: ["announcementName", "description", "image"],
-					include: {
-						model: db.Company,
-						attributes: ['name', 'email']
-					}
-				}
-			}
-		]
-	});
-	const internships = interns.get();
-	console.log(interns);
-	res.status(200).json(internships); 
-}));
-
-router.get("/interns/:applicationId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	// there will be all files off the student at this page
-	// admin should be able to see if the internship of the student rejected by the company.
-	const admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
-	const applicationId = req.params.applicationId;
-
-	const intern = await db.Internship.findOne({
+	const announcements = await db.Announcement.findAll({
 		where: {
-			id: applicationId
+			status: {
+				[Sequelize.Op.in]: ["pending", "edited"] // Match status to either "pending" or "edited"
+			},
+
+			// We should indicate at the frontend whether the announcement has been edited or not.
+			endDate: {
+				[Sequelize.Op.gt]: now // Check if the current time is less than the endDate
+			}
+
+			// we can automaticly reject the announcements with pass due dates.
 		},
 		include: [
 			{
-				model: db.Application,
-				include: [
-					{
-						model: db.Announcement,
-						include:
-						{
-							model: db.Company,
-							attributes: ['name']
-						}
-					},
-					{
-						model: db.Student,
-						attributes: ['username', 'id']
-					}
-				]
+				model: db.Company,
+				attributes: ['name']
 			}
 		]
+	})
+	const announcementsWithImages = announcements.map(announcement => {
+		return {
+			...announcement.dataValues
+		};
 	});
-
-	res.status(200).json(intern); 
+	res.status(200).json({ dataValues: admin.dataValues, announcements: announcementsWithImages });
 }));
 
-router.put("/interns/:applicationId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
-	/* I think admin doesn't have to approve summer practice report or survey but should be able to give feedback to companies and students.
-	This way companies and students can upload the files again if there is a mistake. It is enough to check the necessary files
-	for admin to enter the score. Files don't have to be approved by admin, there should be just feedback option. */
+router.get("/announcement/:announcementId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
+	try {
+		const admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: { exclude: ['password'] } });
+		const announcementId = req.params.announcementId;
 
-	const applicationId = req.params.applicationId;
-	const { score, feedback } = req.body;
+		const announcement = await db.Announcement.findOne({
+			where: { id: announcementId },
+			include: [
+				{ 
+					model: db.Company, 
+					attributes: ['name'] 
+				},
+				{
+					model: db.Skill,
+					as: 'skillId_Skills', // Make sure this matches your association alias
+					through: { attributes: [] }, // hide join table columns
+					attributes: ['id', 'name'], // customize skill fields if needed
+				}
+			]
+		});
 
-	const internship = await db.Internship.findOne({ where: { id: applicationId } });
+		if (!announcement) {
+			return res.status(404).json({ message: 'Announcement not found' });
+		}
 
-	if (feedback !== null) {
-		// I forgot to add feedback :d
-		internship.isApproved = "feedbackSentByAdmin"
-		await internship.save();
-		return res.status(200).json({ message: "feedback is sent to company" });
-	} else {
-		internship.isApproved = "approved";
-		internship.score = score;
-		await internship.save();
-		return res.status(200).json({ message: "score is entered" });
+		const formattedAnnouncement = {
+			...announcement.dataValues,
+			formattedStartDate: moment(announcement.startDate).tz('Europe/Istanbul').format('DD/MM/YYYY'),
+			formattedEndDate: moment(announcement.endDate).tz('Europe/Istanbul').format('DD/MM/YYYY')
+		};
+		res.status(200).json({ dataValues: admin.dataValues, announcement: formattedAnnouncement });
+	} catch (error) {
+		console.error('Error fetching announcement:', error); // Hata günlüğe yaz
+		res.status(500).json({ message: 'Internal server error', error: error.message });
 	}
+}));
+
+router.put("/announcement/:announcementId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
+	const announcementId = req.params.announcementId;
+	const { isApproved, feedback } = req.body;
+
+	const announcement = await db.Announcement.findOne({
+		where: {
+			id: announcementId
+		},
+		include: [
+			{
+				model: db.Company,
+				attributes: ['username', 'email']
+			}
+		]
+	})
+	if (!announcement) {
+		return res.status(404).json({ errors: "Announcement not found." });
+	}
+	const emailSubject = isApproved ? 'Announcement Approved' : 'Announcement Rejected';
+	const emailBody = `Hello ${announcement.Company.username},<br><br>
+        Your announcement titled "${announcement.announcementName}" has been ${isApproved ? "approved" : `rejected and will be removed from our system. <br><br> ${feedback ? `Feedback: <br> ${feedback}.` : ""}`} <br><br>
+        Best Regards,<br>Admin Team`;
+
+	sendEmail(announcement.Company.email, emailSubject, emailBody);
+
+	if (!isApproved) {
+		await db.Announcement.destroy({ where: { id: announcement.id } });
+		return res.status(200).json({ message: "Announcement rejected and removed from the system." });
+	}
+	announcement.status = "approved";
+	await announcement.save();
+	res.status(200).json({ message: "Announcement approved." });
+}));*/
+
+router.get("/companyRequests", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
+	// let admin = await db.Admin.findOne({ where: { id: req.user.id }, attributes: {exclude: ['password']}});
+	const pendingCompanies = await db.Company.findAll({ where: { statusByDIC: null } });
+	res.status(200).json({ companies: pendingCompanies });
+}));
+
+router.put("/company/:companyId", [auth, checkUserRole("admin")], asyncErrorHandler(async (req, res, next) => {
+	const companyId = req.params.companyId;
+	const { isApproved } = req.body;
+	const company = await db.Company.findOne({ where: { id: companyId } });
+	if (!company) {
+		return res.status(404).json({ errors: "Company not found." });
+	}
+	const emailSubject = isApproved ? 'Company Registration Approved' : 'Company Registration Rejected';
+	const emailBody = `Hello ${company.username},<br><br>
+        Your registration request has been ${isApproved ? "approved" : "rejected and removed from our system"}.<br><br>
+        Best Regards,<br>Admin Team`;
+	// Connect to RabbitMQ
+	sendEmail(company.email, emailSubject, emailBody);
+
+	if (!isApproved) {
+		await company.destroy();
+		return res.status(200).json({ message: "Company registration request rejected and deleted." });
+	}
+	company.statusByDIC = true;
+	await company.save();
+	res.status(200).json({ message: "Company registration request approved." });
 }));
 
 router.use("/internship", internshipRouter);

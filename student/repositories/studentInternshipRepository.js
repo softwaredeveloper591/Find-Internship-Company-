@@ -4,24 +4,52 @@ const { Op } = require('sequelize');
 const getInternship = async (studentId) => {
 	const internship = await db.Internship.findOne({
 		where: { studentId },
-		include: {
-		  	model: db.Application,
-		  	include: {
-				model: db.Announcement,
-				include: {
-				  model: db.Company,
-				  attributes: ['name'], // only fetch company name
-				},
-				attributes: ['announcementName'], // only fetch announcement name
-		  	}
-		}
+		include: [
+			{
+				model: db.Application,
+				include: [
+					{
+						model: db.Announcement,
+						include: [
+							{
+								model: db.Company,
+								attributes: ['name']
+							}
+						],
+						attributes: ['announcementName']
+					}
+				]
+			},
+			{
+				model: db.ManualApplication,
+				attributes: ['companyName', 'companyEmail']
+			}
+		]
 	});
 
 	if (!internship) {
-		return { status: 404, message: "You don't have an internship" };
+		return { status: 404, data: null, message: "You don't have an internship" };
 	}
 
-	return internship;
+	const latestStudentFeedbacks = await db.InternshipFeedback.findAll({
+	  where: {
+		internshipId: internship.id,
+		target: 'student',
+		cycleId: db.Sequelize.literal(`(
+		  SELECT MAX(cycleId) FROM InternshipFeedback 
+		  WHERE internshipId = ${internship.id} AND target = 'student'
+		)`)
+	  },
+	  order: [['createdAt', 'ASC']],
+	});
+
+	return {
+		status: 200,
+		data: {
+			internship,
+			latestStudentFeedbacks
+		}
+	};
 };
 
 const getFiles = async (studentId) => {
@@ -31,31 +59,28 @@ const getFiles = async (studentId) => {
 	});
 };
 
-const uploadApplicationForm = async(studentId, document) => {
-	const existingInternship = await db.Internship.findOne({ where: { studentId }});
+const uploadApplicationForm = async(studentId, document, body) => {
+	const internship = await db.Internship.findOne({ where: { studentId }});
 
-	if (existingInternship) {
+	if (internship) {
 		return { status: 403, message: "You already have an internship" };
 	}
 
 	const transaction = await db.sequelize.transaction(); 
 	try {
-		const student = await db.Student.findByPk(studentId, { transaction });
+		const { companyName, companyEmail } = body;
 
 		const manualApplication = await db.ManualApplication.create(
-			{ studentId },
+			{ studentId, companyEmail, companyName },
 			{ transaction }
 		);
 
 		document.manualApplicationId = manualApplication.id;
-		document.username = student.username;
-		document.userId = studentId;
 
-		const createdDoc = await db.Document.create(document, { transaction });
+		const createdDoc = await db.Document.create( document, { transaction });
 
 		await transaction.commit(); // ✅ Commit if all succeeds
 		return createdDoc;
-
 	} catch (error) {
 		await transaction.rollback(); // ❌ Rollback on error
 		throw error;
@@ -84,7 +109,7 @@ const finishInternship = async (studentId) => {
 	return { status: 200, message: "Internship marked as finished"};
 }
 
-const requestLink = async (studentId, companyData) => {
+const requestLink = async (studentId) => {
 	const internship = await db.Internship.findOne({ 
 		where: { studentId, status: 1 } 
 	});
@@ -105,7 +130,10 @@ const requestLink = async (studentId, companyData) => {
 		return { status: 400, message: "You already requested a link." };
 	}
 
-	const { companyEmail, companyName } = companyData;
+	const { companyEmail, companyName } = await db.ManualApplication.findOne({
+		where: { id: internship.manualApplicationId },
+		attributes: ['companyEmail', 'companyName']
+	});
 
 	await db.CompanyUploadLinkRequest.create({
 		internshipId: internship.id,
@@ -174,6 +202,12 @@ const uploadFile = async (studentId, document, studentStatus) => {
     	  	  	  	  	}
     	  	  	  	  	break;
 
+					case "ReportAfterAdmin":
+    					if (fileType === "Report") {
+    					  return [7, "ReportAfterAdmin"];
+    					}
+    					break;
+
     	  	  	  	case "Survey":
     	  	  	  	  	if (fileType === "Survey") {
     	  	  	  	  	  return [6, "Survey"];
@@ -181,12 +215,19 @@ const uploadFile = async (studentId, document, studentStatus) => {
     	  	  	  	  	break;
 
     	  	  	  	case "Both":
-    	  	  	  	  	if (fileType === "Report") return [studentStatus, "SurveyMissing"];
+    	  	  	  	  	if (fileType === "Report") {
+							if (studentStatus === 5) return [7, "Both"]
+							return [studentStatus, "SurveyMissing"];
+						}
+							
     	  	  	  	  	if (fileType === "Survey") return [studentStatus, "ReportMissing"];
     	  	  	  	  	break;
 
     	  	  	  	case "SurveyMissing":
-    	  	  	  	  	if (fileType === "Survey") return [6, "Both"];
+    	  	  	  	  	if (fileType === "Survey") {
+							if (studentStatus === 5) return [7, "SurveyMissing"];
+							return [6, "Both"];
+						}	
     	  	  	  	  	break;
 
     	  	  	  	case "ReportMissing":
@@ -209,7 +250,7 @@ const uploadFile = async (studentId, document, studentStatus) => {
     	}
 
     	// Create new doc
-    	let docs = null;
+    	let docs = [];
     	let createdDoc = null;
 
     	if (existingInternship.manualApplicationId) {
@@ -221,8 +262,10 @@ const uploadFile = async (studentId, document, studentStatus) => {
 
     	  	docs = await db.Document.findAll({
     	  	  	where: {
-    	  	  	  applicationId: existingInternship.applicationId,
-    	  	  	  fileType: ['Report', 'Survey']
+    	  	  	  	applicationId: existingInternship.applicationId,
+    	  	  	  	fileType: {
+					  	[Op.in]: ['Report', 'Survey']
+					}
     	  	  	},
     	  	  	transaction
     	  	});
@@ -247,11 +290,36 @@ const uploadFile = async (studentId, document, studentStatus) => {
   	}
 };
 
+const review = async (studentId, companyId, body) => {
+	const internship = await db.Internship.findOne({
+		where: { 
+			studentId,
+			status: 1
+		},
+		include: {
+			model: db.Application,
+			include: {
+				model: db.Announcement,
+				where: { companyId } 
+			}
+		}
+	});
+
+	if(!internship) return { status: 403, message: "You are not allowed to review this company or your internship hasn't finished yet"};
+
+	const { rating, comment } = body;
+
+	await db.Review.create({ studentId, companyId, rating, comment });
+
+	return { status: 200 };
+};
+
 module.exports = {
 	getInternship,
     getFiles,
 	uploadApplicationForm,
 	finishInternship,
 	requestLink,
-	uploadFile
+	uploadFile,
+	review
 };

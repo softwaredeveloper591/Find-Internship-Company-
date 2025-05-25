@@ -95,12 +95,13 @@ const getInternships = async (companyId) => {
 			studentStatus: {
 				[Op.in]: [1, 3, 4, 5, 6, 7]
 			},
-			status: 1
+			status: 1,
+			manualApplicationId: null 
 		},
 		include: [
 			{ 
 				model: db.Student, 
-				attributes: ['id', 'username', 'email'] 
+				attributes: ['id', 'username', 'email', 'year'] 
 			},
 			{
 				model: db.Application,
@@ -144,43 +145,93 @@ const getInternship = async (id) => {
 	});
 
 	if (!internship) {
-		return { status: 400, message: "This internship can't be found"};
+		return {
+			status: 400,
+			data: null,
+			message: "This internship can't be found"
+		};
 	}
 
-	return internship;
-}
+	const latestStudentFeedbacks = await db.InternshipFeedback.findAll({
+	  where: {
+	    internshipId: id,
+	    target: 'student',
+	    cycleId: db.Sequelize.literal(`(
+	      SELECT MAX(cycleId) FROM InternshipFeedback 
+	      WHERE internshipId = ${id} AND target = 'student'
+	    )`)
+	  },
+	  order: [['createdAt', 'ASC']],
+	});
 
-const uploadFile = async(internshipId, document) => {
-	const existingInternship = await db.Internship.findOne({
-		where: {
-			id: internshipId,
-			status: 1
+	const latestCompanyFeedbacks = await db.InternshipFeedback.findAll({
+	  where: {
+	    internshipId: id,
+	    target: 'company',
+	    cycleId: db.Sequelize.literal(`(
+	      SELECT MAX(cycleId) FROM InternshipFeedback 
+	      WHERE internshipId = ${id} AND target = 'company'
+	    )`)
+	  },
+	  order: [['createdAt', 'ASC']]
+	});
+
+	const applicationId = internship.Application?.id;
+
+	const document = await db.Document.findOne({
+		where: { applicationId, fileType: "Report" },
+		attributes: ['id']
+	});
+
+	return {
+		status: 200,
+		data: {
+			internship,
+			documentId: document?.id || null,
+			latestStudentFeedbacks,
+			latestCompanyFeedbacks
 		}
-	});
+	};
+};
 
-	if (!existingInternship) {
-		return { status: 403, message: "Student's internship hasen't finished yet or student doesn't have an internship" };
-	}
+const uploadCompanyForm = async(internshipId, document) => {
+	const transaction = await db.sequelize.transaction();
 
-	const student = await db.Student.findOne( {
-		where: { id: existingInternship.studentId }
-	});
+	try {
+		const existingInternship = await db.Internship.findOne({
+			where: {
+				id: internshipId,
+				status: 1
+			},
+			lock: transaction.LOCK.UPDATE, // 🔒 prevent race condition,
+			transaction
+		});
 
-	if(!student) {
-		return { status: 403, message: "No student can be found that is the owner of this internship" };
-	}
-
-	// Check if a document of the same fileType already exists
-	const existingDoc = await db.Document.findOne({
-		where: {
-			userId: student.id,
-			fileType: document.fileType
+		if (!existingInternship) {
+			await transaction.rollback();
+			return { status: 403, message: "Student's internship hasn't finished yet or student doesn't have an internship" };
 		}
-	});
 
-	if (existingDoc) {
-		const transaction = await db.sequelize.transaction();
-		try {
+		const student = await db.Student.findOne( {
+			where: { id: existingInternship.studentId },
+			transaction
+		});
+
+		if(!student) {
+			await transaction.rollback();
+			return { status: 403, message: "No student can be found that is the owner of this internship" };
+		}
+
+		// Check if a document of the same fileType already exists
+		const existingDoc = await db.Document.findOne({
+			where: {
+				userId: student.id,
+				fileType: document.fileType
+			},
+			transaction
+		});
+
+		if (existingDoc) { 
 			await existingDoc.update(
 				{ data: document.data },
 				{ transaction }
@@ -212,142 +263,180 @@ const uploadFile = async(internshipId, document) => {
 
 			await transaction.commit();
 			return { status: 200, message: `${document.fileType} has been updated.` };
-		} catch (error) {
-			await transaction.rollback();
-			throw error;
-		}
-	}
-
-	const transaction = await db.sequelize.transaction(); 
-	try {
-		if (existingInternship.manualApplicationId) {
-			document.manualApplicationId = existingInternship.manualApplicationId;
 		} else {
-			document.applicationId = existingInternship.applicationId;
-		}
+			if (existingInternship.manualApplicationId) {
+				document.manualApplicationId = existingInternship.manualApplicationId;
+			} else {
+				document.applicationId = existingInternship.applicationId;
+			}
 
-		document.username = student.username;
-		document.userId = student.id;
+			document.username = student.username;
+			document.userId = student.id;
+
+			await db.Document.create(document, { transaction });
+
+			let newCompanyStatus = existingInternship.companyStatus;
+
+			if (existingInternship.companyStatus === 1) {
+				newCompanyStatus = 3; // Report already approved, now CompanyForm uploaded
+			} else {
+				newCompanyStatus = 2; // Only CompanyForm uploaded
+			}
 		
-		const createdDoc = await db.Document.create(document, { transaction });
+			await existingInternship.update({ companyStatus: newCompanyStatus }, { transaction });
 
-		let newCompanyStatus = existingInternship.companyStatus;
-
-		if (existingInternship.companyStatus === 1) {
-			newCompanyStatus = 3; // Report already approved, now CompanyForm uploaded
-		} else {
-			newCompanyStatus = 2; // Only CompanyForm uploaded
+			await transaction.commit();
+			return { status: 201, message: "Document uploaded successfully." };
 		}
-	
-		await db.Internship.update(
-			{ companyStatus: newCompanyStatus },
-			{ where: { id: existingInternship.id }, transaction }
-		);
-
-		await transaction.commit();
-		return createdDoc;
 	} catch (error) {
 		await transaction.rollback();
 		throw error;
 	}
 };
 
-const evaluateInternship = async (id, status, feedbackToStudent, feedbackContextStudent) => {
-	const internship = await db.Internship.findOne({
-		where: {
-			id,
-			studentStatus: {
-				[Op.in]: [1, 3, 4, 5, 6, 7]
+const evaluateInternship = async (id, status, feedbackToStudent) => {
+	const transaction = await db.sequelize.transaction();
+
+	try {
+		const internship = await db.Internship.findOne({
+			where: {
+				id,
+				studentStatus: {
+					[Op.in]: [1, 3, 4, 5, 6, 7]
+				},
+				isApprovedByDIC: null
 			},
-			isApprovedByDIC: null
-		},
-		include: [
-			{ 
-				model: db.Student, 
-				attributes: ['id', 'username', 'email'] 
-			},
-			{
-				model: db.Application,
-				include: {
-					model: db.Announcement,
-					attributes: ['announcementName'],
+			include: [
+				{ 
+					model: db.Student, 
+					attributes: ['id', 'username', 'email'] 
 				}
-			}
-		]
-	});
+			],
+			lock: transaction.LOCK.UPDATE, // 🔒 prevent race condition
+			transaction
+		});
 
-	if (!internship) {
-		return { status: 400, message: "This internship can't be found"};
-	}
-
-	let studentStatus = internship.studentStatus;
-	let previousFeedbackContextStudent = internship.feedbackContextStudent;
-
-	// Helper function
-	const updateCompanyStatusOnFileUpload = (status, studentStatus, previousFeedbackContextStudent) => {
-	  switch (previousFeedbackContextStudent) {
-	    case "SurveyMissing":
-	      if (status === "Approved") {
-	        return [6, "SurveyMissing"];
-	      }
-	      break;
-
-		case "Both":
-		  if (status === "Approved") {
-		    if (studentStatus === 6) return [7, "Both"];
-		  }
-		  break;
-
-		case "Report":
-  		  if (status === "Approved") {
-  		    if (studentStatus === 7) return [3, null];
-  		    if (studentStatus === 6) return [3, "Report"];
-  		  }
-  		  break;
-
-	  }
-	
-	  return [studentStatus, previousFeedbackContextStudent]; // default fallback
-	}
-
-	[studentStatus, previousFeedbackContextStudent] = updateCompanyStatusOnFileUpload(status, studentStatus, previousFeedbackContextStudent);
-
-	await internship.update(
-		{ studentStatus, feedbackContextStudent: previousFeedbackContextStudent }
-	);
-
-	switch (status) {
-		case "Approved":
-			if (previousFeedbackContextStudent === null) {
-				if (internship.companyStatus === 1) {
-					return { status: 403, message: "You already approved this report"};
-				} else if(internship.companyStatus === 2) {
-					await internship.update({ companyStatus: 3 });
-				} else {
-					await internship.update({ companyStatus: 1 });
-				}
-			}
-			break;
-
-		case "FeedbackToStudent":
-			if (studentStatus === 5 || studentStatus === 7) {
-				return { status: 403, message: "You already gave a feedback to the student" };
-			} else if (studentStatus === 4 || studentStatus === 6) {
-				return { status: 403, message: "Admin gave a feedback to the student" };
-			}
-			await internship.update({ studentStatus: 5, feedbackToStudent, feedbackContextStudent });
-			break;
-
-		default:
-			return { status: 400, message: "Invalid status" };
-	}
-
-	return {
-		status: 200,
-		data: {
-			student: internship.Student
+		if (!internship) {
+			await transaction.rollback();
+			return { status: 400, message: "This internship can't be found"};
 		}
-	};
+
+		let studentStatus = internship.studentStatus;
+		let previousFeedbackContextStudent = internship.feedbackContextStudent;
+
+		let cycleId = (await db.InternshipFeedback.max('cycleId', {
+			where: { internshipId: id },
+			transaction
+		})) ?? 0;
+
+		// Helper function
+		const updateStudentStatusOnFileUpload = (status, studentStatus, previousFeedbackContextStudent) => {
+		  switch (previousFeedbackContextStudent) {
+		    case "SurveyMissing":
+		      if (status === "Approved") {
+		        if (studentStatus === 4 || studentStatus === 7) return [6, "SurveyMissing"];
+		      } else if (status === "FeedbackToStudent") {
+				if (studentStatus === 4 || studentStatus === 7) return [5, "SurveyMissing"];
+			  }
+		      break;
+
+			case "Both":
+			  if (status === "Approved") {
+			    if (studentStatus === 6 || studentStatus === 7) return [3, "Both"];
+			  } else if (status === "FeedbackToStudent") {
+				if (studentStatus === 6 || studentStatus === 7) return [5, "Both"];
+			  }
+			  break;
+
+			case "Report":
+  			  if (status === "Approved") {
+  			    if (studentStatus === 7) return [3, null];
+  			    if (studentStatus === 6) return [3, "Report"];
+  			  } else if (status === "FeedbackToStudent") {
+				if (studentStatus === 6) return [5, "ReportAfterAdmin"];
+				if (studentStatus === 7) return [5, "Report"];
+			  }
+  			  break;
+
+			case "ReportAfterAdmin":
+			  if (status === "Approved") {
+			    if (studentStatus === 7) return [3, "Report"];
+			  } else if (status === "FeedbackToStudent") {
+				if (studentStatus === 7) return [5, "ReportAfterAdmin"];
+			  }
+			  break;
+
+		  }
+	  
+		  return [studentStatus, previousFeedbackContextStudent]; // default fallback
+		}
+
+		[studentStatus, previousFeedbackContextStudent] = updateStudentStatusOnFileUpload(status, studentStatus, previousFeedbackContextStudent);
+
+		await internship.update(
+		  	{ studentStatus, feedbackContextStudent: previousFeedbackContextStudent },
+		  	{ transaction }
+		);
+
+		switch (status) {
+			case "Approved":
+				if (previousFeedbackContextStudent === null) {
+					if (internship.companyStatus === 1) {
+						await transaction.rollback();
+						return { status: 403, message: "You already approved this report"};
+					} else if(internship.companyStatus === 2) {
+						await internship.update({ companyStatus: 3 }, { transaction });
+					} else {
+						await internship.update({ companyStatus: 1 }, { transaction });
+					}
+				}
+				break;
+
+			case "FeedbackToStudent":
+				if (studentStatus === 5) {
+					await transaction.rollback();
+					return { status: 403, message: "You already gave a feedback to the student" };
+				} else if ( 
+					(studentStatus === 4 && internship.feedbackContextStudent !== "SurveyMissing") ||
+					(studentStatus === 6 && !["Report", "Both"].includes(internship.feedbackContextStudent))) {
+						await transaction.rollback();
+						return { status: 403, message: "Admin gave a feedback to the student" };
+				}
+
+				cycleId += 1;
+				await internship.update({ studentStatus: 5, feedbackToStudent, feedbackContextStudent: "Report" }, { transaction });
+				break;
+
+			default:
+				await transaction.rollback();
+				return { status: 400, message: "Invalid status" };
+		}
+
+		if (typeof feedbackToStudent === "string" && feedbackToStudent.trim().length !== 0) {
+			const feedback = { 
+				internshipId: id, 
+				author: 'company', 
+				target: 'student', 
+				context: 'Report', 
+				content: feedbackToStudent,
+				cycleId
+			};
+
+			await db.InternshipFeedback.create( feedback, { transaction } );
+		}
+
+		await transaction.commit();
+
+		return {
+			status: 200,
+			data: {
+				student: internship.Student
+			}
+		};
+	} catch (error) {
+		await transaction.rollback();
+		throw error;
+	}
 };
 
 module.exports = {
@@ -355,6 +444,6 @@ module.exports = {
 	saveFiles,
 	getInternships,
 	getInternship,
-	uploadFile,
+	uploadCompanyForm,
 	evaluateInternship
 }

@@ -374,7 +374,7 @@ const editExperience = async (experienceId, experienceData) => {
         }
 
         await transaction.commit();
-        return { message: "Experience updated successfully" };
+        return { status: 200, message: "Experience updated successfully" };
     } catch (err) {
         await transaction.rollback();
         throw err;
@@ -438,6 +438,8 @@ const updateLanguageLevel = async (studentId, languageId, newLevel) => {
 			}
 	  	}
 	);
+
+	return { status: 200};
 };  
 
 const deleteLanguage = async (languageId) => {
@@ -446,11 +448,15 @@ const deleteLanguage = async (languageId) => {
 
 const getAllSkills = async () => {
 	return await db.Skill.findAll();
-}
+};
 
 const getAllLanguages = async () => {
 	return await db.Language.findAll();
-}
+};
+
+const getReviews = async (companyId) => {
+	return await db.Review.findAll({ where: { companyId }});
+};
 
 module.exports = {
     getProfile,
@@ -476,5 +482,6 @@ module.exports = {
 	updateLanguageLevel,
 	deleteLanguage,
 	getAllSkills,
-	getAllLanguages
+	getAllLanguages,
+	getReviews
 };

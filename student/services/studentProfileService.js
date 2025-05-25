@@ -94,11 +94,15 @@ const deleteLanguage = async (languageId) => {
 
 const getAllSkills = async () => {
 	return await profileRepository.getAllSkills();
-}
+};
 
 const getAllLanguages = async () => {
 	return await profileRepository.getAllLanguages();
-}
+};
+
+const getReviews = async (companyId) => {
+	return await profileRepository.getReviews(companyId);
+};
 
 module.exports = {
     getProfile,
@@ -124,5 +128,6 @@ module.exports = {
 	updateLanguageLevel,
 	deleteLanguage,
 	getAllSkills,
-	getAllLanguages
+	getAllLanguages,
+	getReviews
 };

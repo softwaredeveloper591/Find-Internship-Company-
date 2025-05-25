@@ -26,23 +26,23 @@ module.exports = function(sequelize, DataTypes) {
     },
     year: {
       type: DataTypes.INTEGER,
-      allowNull: false
+      allowNull: true
     },
     studentNo: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       unique: "studentNo_UNIQUE"
     },
     tc: {
       type: DataTypes.BIGINT,
-      allowNull: false
+      allowNull: true
     },
     studentPhone: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.STRING(15),
       allowNull: false
     },
     relativePhone: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.STRING(15),
       allowNull: false
     },
     formEmail: {

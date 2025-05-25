@@ -2,13 +2,8 @@ const express = require("express");
 const router = express.Router();
 const asyncErrorHandler = require("../utils/errors/asyncErrorHandler");
 const internshipController = require("../controllers/adminInternshipController"); 
-const upload = require('../middleware/fileUploader'); 
 
-router.get("/manualApplications", asyncErrorHandler(internshipController.getManualApplications));
-
-router.put("/manualApplications/:id/:studentId", upload.single('ApplicationForm'), asyncErrorHandler(internshipController.approveManualApplications));
-
-router.get("/download/:applicationId/:applicationType/:fileType", asyncErrorHandler(internshipController.downloadFile));
+router.get("/download/:id/:applicationType/:fileType", asyncErrorHandler(internshipController.downloadFile));
 
 router.get("/linkRequests", asyncErrorHandler(internshipController.getLinkRequests));
 router.put("/approveLinkRequest/:id", asyncErrorHandler(internshipController.approveLinkRequest));

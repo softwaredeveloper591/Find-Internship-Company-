@@ -128,7 +128,7 @@ router.post("/forgotPassword", asyncErrorHandler( async (req, res, next) => {
     	}
     });
     await transporter.sendMail({
-        from: '"Buket Erşahin" <enesbilalbabaturalpro06@gmail.com>',
+        from: '"Automated Internship System" <automatedinternshipsystem@gmail.com>',
         to: email,
         subject: 'Password Reset Link',
 		html: `<a href="http://localhost:5173/changePassword?token=${token}">Reset Password</a>`
