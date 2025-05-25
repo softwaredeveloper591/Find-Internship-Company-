@@ -398,13 +398,13 @@ const evaluateInternship = async (id, status, feedbackToStudent) => {
 					return { status: 403, message: "You already gave a feedback to the student" };
 				} else if ( 
 					(studentStatus === 4 && internship.feedbackContextStudent !== "SurveyMissing") ||
-					(studentStatus === 6 && internship.feedbackContextStudent !== "Report" || internship.feedbackContextStudent !== "Both")) {
+					(studentStatus === 6 && (internship.feedbackContextStudent !== "Report" || internship.feedbackContextStudent !== "Both"))) {
 						await transaction.rollback();
 						return { status: 403, message: "Admin gave a feedback to the student" };
 				}
 
 				cycleId += 1;
-				await internship.update({ studentStatus: 5, feedbackToStudent, feedbackContextStudent: "Report", transaction });
+				await internship.update({ studentStatus: 5, feedbackToStudent, feedbackContextStudent: "Report" }, { transaction });
 				break;
 
 			default:
