@@ -69,8 +69,8 @@ const uploadCompanyForm = async (file, internshipId) => {
 	return await internshipRepository.uploadCompanyForm(internshipId, document);
 }
 
-const evaluateInternship = async (id, status, feedbackToStudent, feedbackContextStudent) => {
-	const result = await internshipRepository.evaluateInternship(id, status, feedbackToStudent, feedbackContextStudent);
+const evaluateInternship = async (id, status, feedbackToStudent) => {
+	const result = await internshipRepository.evaluateInternship(id, status, feedbackToStudent);
 
 	if (result.status !== 200) return result;
 

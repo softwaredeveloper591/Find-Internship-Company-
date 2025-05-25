@@ -58,7 +58,7 @@ const uploadCompanyForm = async (req, res) => {
 };
 
 const evaluateInternship = async (req, res) => {
-	const { status, feedbackToStudent, feedbackContextStudent } = req.body;
+	const { status, feedbackToStudent } = req.body;
 
 	const validStatuses = ['Approved', 'FeedbackToStudent'];
 
@@ -66,13 +66,7 @@ const evaluateInternship = async (req, res) => {
 		return res.status(400).json({ message: "Invalid status" });
 	}
 
-	const validStudentContexts = ['Report', null];
-
-	if (!validStudentContexts.includes(feedbackContextStudent)) {
-		return res.status(400).json({ message: "Invalid context" });
-	}
-
-	const result = await internshipService.evaluateInternship(req.params.id, status, feedbackToStudent, feedbackContextStudent);
+	const result = await internshipService.evaluateInternship(req.params.id, status, feedbackToStudent);
 
 	if (result?.status && result?.message) {
 		return res.status(result.status).json({ message: result.message });

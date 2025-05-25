@@ -244,7 +244,7 @@ const evaluateInternship = async (id, status, feedbackToStudent, feedbackToCompa
 			linkRequest	
 		}
 	};
-}
+};
 
 module.exports = {
 	getFile,

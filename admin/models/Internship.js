@@ -70,7 +70,7 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true
     },
     feedbackContextStudent: {
-      type: DataTypes.ENUM('Report','Survey','Both','ReportMissing','SurveyMissing'),
+      type: DataTypes.ENUM('Report','Survey','Both','ReportMissing','SurveyMissing','ReportAfterAdmin'),
       allowNull: true
     },
     feedbackContextCompany: {

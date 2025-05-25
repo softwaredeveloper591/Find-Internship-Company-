@@ -268,7 +268,7 @@ const uploadCompanyForm = async(internshipId, document) => {
 	}
 };
 
-const evaluateInternship = async (id, status, feedbackToStudent, feedbackContextStudent) => {
+const evaluateInternship = async (id, status, feedbackToStudent) => {
 	const transaction = await db.sequelize.transaction();
 
 	try {
@@ -373,7 +373,7 @@ const evaluateInternship = async (id, status, feedbackToStudent, feedbackContext
 				} else if (studentStatus === 4 || studentStatus === 6) {
 					return { status: 403, message: "Admin gave a feedback to the student" };
 				}
-				await internship.update({ studentStatus: 5, feedbackToStudent, feedbackContextStudent, transaction });
+				await internship.update({ studentStatus: 5, feedbackToStudent, feedbackContextStudent: "Report", transaction });
 				break;
 
 			default:
