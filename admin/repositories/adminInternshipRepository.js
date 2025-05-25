@@ -142,6 +142,10 @@ const getInternship = async (id) => {
 					},
 					attributes: ['announcementName'],
 				}
+			},
+			{
+				model: db.ManualApplication,
+				attributes: ['companyName', 'companyEmail']
 			}
 		]
 	});
@@ -174,15 +178,29 @@ const getInternship = async (id) => {
 	  order: [['createdAt', 'ASC']]
 	});
 
+	const documents = await db.Document.findAll({
+		where: {
+			[Op.or]: [
+				{ applicationId: internship.applicationId },
+				{ manualApplicationId: internship.manualApplicationId }
+			],
+			fileType: {
+				[Op.in]: ["Report", "CompanyForm", "Survey"]
+			}
+		},
+		attributes: ['id', 'fileType']
+	});
+
 	return {
 		status: 200,
 		data: {
 			internship,
 			latestStudentFeedbacks,
-			latestCompanyFeedbacks
+			latestCompanyFeedbacks,
+			documents
 		}
 	};
-}
+};
 
 const evaluateInternship = async (id, status, feedbackToStudent, feedbackToCompany, feedbackContextStudent, feedbackContextCompany) => {
 	const internship = await db.Internship.findOne({
