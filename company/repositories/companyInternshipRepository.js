@@ -310,13 +310,6 @@ const evaluateInternship = async (id, status, feedbackToStudent) => {
 				{ 
 					model: db.Student, 
 					attributes: ['id', 'username', 'email'] 
-				},
-				{
-					model: db.Application,
-					include: {
-						model: db.Announcement,
-						attributes: ['announcementName'],
-					}
 				}
 			],
 			lock: transaction.LOCK.UPDATE, // 🔒 prevent race condition
@@ -389,6 +382,7 @@ const evaluateInternship = async (id, status, feedbackToStudent) => {
 			case "Approved":
 				if (previousFeedbackContextStudent === null) {
 					if (internship.companyStatus === 1) {
+						await transaction.rollback();
 						return { status: 403, message: "You already approved this report"};
 					} else if(internship.companyStatus === 2) {
 						await internship.update({ companyStatus: 3 }, { transaction });
@@ -400,9 +394,13 @@ const evaluateInternship = async (id, status, feedbackToStudent) => {
 
 			case "FeedbackToStudent":
 				if (studentStatus === 5) {
+					await transaction.rollback();
 					return { status: 403, message: "You already gave a feedback to the student" };
-				} else if (studentStatus === 4 || studentStatus === 6) {
-					return { status: 403, message: "Admin gave a feedback to the student" };
+				} else if ( 
+					(studentStatus === 4 && internship.feedbackContextStudent !== "SurveyMissing") ||
+					(studentStatus === 6 && internship.feedbackContextStudent !== "Report" || internship.feedbackContextStudent !== "Both")) {
+						await transaction.rollback();
+						return { status: 403, message: "Admin gave a feedback to the student" };
 				}
 
 				cycleId += 1;
@@ -410,6 +408,7 @@ const evaluateInternship = async (id, status, feedbackToStudent) => {
 				break;
 
 			default:
+				await transaction.rollback();
 				return { status: 400, message: "Invalid status" };
 		}
 

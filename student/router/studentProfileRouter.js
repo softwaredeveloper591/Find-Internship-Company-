@@ -48,6 +48,8 @@ router.delete("/language/:id", asyncErrorHandler(profileController.deleteLanguag
 router.get("/skills", asyncErrorHandler(profileController.getAllSkills));
 router.get("/languages", asyncErrorHandler(profileController.getAllLanguages));
 
+router.get("/reviews/:id", asyncErrorHandler(profileController.getReviews));
+
 // Get student profile by studentId
 router.get("/:studentId", asyncErrorHandler(profileController.getProfileById));
 

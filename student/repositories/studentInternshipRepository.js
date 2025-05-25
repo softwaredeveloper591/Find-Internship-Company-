@@ -28,10 +28,28 @@ const getInternship = async (studentId) => {
 	});
 
 	if (!internship) {
-		return { status: 404, message: "You don't have an internship" };
+		return { status: 404, data: null, message: "You don't have an internship" };
 	}
 
-	return internship;
+	const latestStudentFeedbacks = await db.InternshipFeedback.findAll({
+	  where: {
+		internshipId: internship.id,
+		target: 'student',
+		cycleId: db.Sequelize.literal(`(
+		  SELECT MAX(cycleId) FROM InternshipFeedback 
+		  WHERE internshipId = ${internship.id} AND target = 'student'
+		)`)
+	  },
+	  order: [['createdAt', 'ASC']],
+	});
+
+	return {
+		status: 200,
+		data: {
+			internship,
+			latestStudentFeedbacks
+		}
+	};
 };
 
 const getFiles = async (studentId) => {

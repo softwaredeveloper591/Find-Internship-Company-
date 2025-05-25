@@ -448,11 +448,15 @@ const deleteLanguage = async (languageId) => {
 
 const getAllSkills = async () => {
 	return await db.Skill.findAll();
-}
+};
 
 const getAllLanguages = async () => {
 	return await db.Language.findAll();
-}
+};
+
+const getReviews = async (companyId) => {
+	return await db.Review.findAll({ where: { companyId }});
+};
 
 module.exports = {
     getProfile,
@@ -478,5 +482,6 @@ module.exports = {
 	updateLanguageLevel,
 	deleteLanguage,
 	getAllSkills,
-	getAllLanguages
+	getAllLanguages,
+	getReviews
 };

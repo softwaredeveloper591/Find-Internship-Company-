@@ -95,7 +95,7 @@ const evaluateApplication = async (applicationId, isApproved, data) => {
 		include: [
 			{
 				model: db.Student,
-				attributes: ['username', 'email', 'studentId']
+				attributes: ['username', 'email', 'id']
 			},
 			{
 				model: db.Announcement,

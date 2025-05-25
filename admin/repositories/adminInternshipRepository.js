@@ -147,7 +147,7 @@ const getInternship = async (id) => {
 	});
 
 	if (!internship) {
-		return { status: 400, message: "This internship can't be found"};
+		return { status: 400, data: null, message: "This internship can't be found"};
 	}
 
 	const latestStudentFeedbacks = await db.InternshipFeedback.findAll({
