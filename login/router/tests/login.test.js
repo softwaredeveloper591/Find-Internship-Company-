@@ -41,8 +41,7 @@ beforeAll(async () => {
   try {
     if(process.env.NODE_ENV!== "test")
         throw new Error("Environment is not test! DB sync should not be executed!")
-    await db.sequelize.sync({ force: true });
-    console.log('Database synced successfully');
+    // console.log('Database synced successfully');
     user= await createUser();
   } catch (error) {
     console.error('Error syncing database:', error);

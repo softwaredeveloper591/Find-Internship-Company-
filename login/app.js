@@ -24,7 +24,9 @@ app.use(cookieParser());
 app.set("view engine", "ejs");
 
 const login = require("./router/login");
-app.use(login);
+const signup = require("./router/signup");
+
+app.use('/api/users', [signup, login]);
 
 errorHandler(app);
 
