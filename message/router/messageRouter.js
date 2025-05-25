@@ -210,12 +210,29 @@ router.delete("/deleteMessage/:id", checkUserRole(["student"]), asyncErrorHandle
 
 
 router.get("/users", asyncErrorHandler(async (req, res, next) => {
-	const secretary = await db.Secretary.findAll({ attributes: ['username', 'email'] });
-	const companies = await db.Company.findAll({ attributes: ['username', 'email'] });
-	const admin = await db.Admin.findAll({ attributes: ['username', 'email'] });
-	const students = await db.Student.findAll({ attributes: ['username', 'email'] });
-	const allUsers = [...secretary, ...companies, ...admin, ...students];
-	res.status(200).json({ allUsers });
+    const userType = req.user.userType; // Get the user type from the request
+
+    let allUsers = [];
+
+    // Fetch all users except the current user type
+    if (userType !== "student") {
+        const students = await db.Student.findAll({ attributes: ['username', 'email'] });
+        allUsers = [...allUsers, ...students];
+    }
+    if (userType !== "company") {
+        const companies = await db.Company.findAll({ attributes: ['username', 'email'] });
+        allUsers = [...allUsers, ...companies];
+    }
+    if (userType !== "secretary") {
+        const secretaries = await db.Secretary.findAll({ attributes: ['username', 'email'] });
+        allUsers = [...allUsers, ...secretaries];
+    }
+    if (userType !== "admin") {
+        const admins = await db.Admin.findAll({ attributes: ['username', 'email'] });
+        allUsers = [...allUsers, ...admins];
+    }
+
+    res.status(200).json({ allUsers });
 }));
 
 router.get("/conversations", asyncErrorHandler(async (req, res, next) => {
