@@ -13,32 +13,10 @@ module.exports = function(sequelize, DataTypes) {
     email: {
       type: DataTypes.STRING(45),
       allowNull: false
-    },
-    password: {
-      type: DataTypes.STRING(100),
-      allowNull: false
     }
   }, {
     sequelize,
     tableName: 'Secretary',
     timestamps: false,
-    indexes: [
-      {
-        name: "PRIMARY",
-        unique: true,
-        using: "BTREE",
-        fields: [
-          { name: "id" },
-        ]
-      },
-      {
-        name: "id",
-        unique: true,
-        using: "BTREE",
-        fields: [
-          { name: "id" },
-        ]
-      },
-    ]
   });
 };

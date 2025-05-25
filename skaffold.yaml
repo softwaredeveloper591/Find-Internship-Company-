@@ -15,3 +15,11 @@ build:
         manual:
           - src: '**/*.js'
             dest: .
+    - image: message
+      context: ./message
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: '**/*.js'
+            dest: .

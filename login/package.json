@@ -11,9 +11,10 @@
   "license": "ISC",
   "dependencies": {
     "@sentry/node": "^9.16.1",
+    "amqplib": "^0.10.8",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
-    "cors": "^2.8.5", 
+    "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "ejs": "^3.1.10",
     "express": "^5.1.0",

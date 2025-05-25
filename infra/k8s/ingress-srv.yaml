@@ -15,3 +15,10 @@ spec:
                 name: user-srv
                 port:
                   number: 3001
+          - path: /api/message
+            pathType: Prefix
+            backend:
+              service:
+                name: message-srv
+                port:
+                  number: 3007

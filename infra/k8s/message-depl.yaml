@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: message-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: message
+  template:
+    metadata:
+      labels:
+        app: message
+    spec:
+      containers:
+        - name: message
+          image: message
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: message-srv
+spec:
+  selector: 
+    app: message
+  ports:
+    - name: message
+      protocol: TCP
+      port: 3007
+      targetPort: 3007

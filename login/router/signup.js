@@ -5,6 +5,7 @@ const { isEmail } = require('validator');
 const { APP_SECRET } = require("../config");
 
 const db = require("../data/db");
+const { publishEvent } = require('../rabbitmq');
 
 const router = express.Router();
 const userType = require("../middleware/userType");
@@ -63,14 +64,15 @@ router.post("/company",async function(req,res){
                 throw Error('Passwords do not match');
             }
 
-            await db.Company.create({
+            const company= await db.Company.create({
                 name,
                 username,
                 email,
                 password: hashedPassword,
                 address
             });
-        
+            const companyCreated={id:company.id, username: company.username, email:company.email};
+            await publishEvent('user-events', 'company.created', companyCreated);
             res.status(200).json({ message: "Your registration request has been sent to the admin." });
         } catch (err) {
             const errors = handleErrors(err);
@@ -120,6 +122,9 @@ router.post("/student",async function(req,res){
             department:ubysStudent.department,
             password: hashedPassword
         });
+
+        const StudentCreated={id:newStudent.id, username: newStudent.username, email:newStudent.email};
+            await publishEvent('user-events', 'student.created', StudentCreated);
         const token= createTokenWithIdandUserType(newStudent.id,"student");
         res.cookie('jwt', token);
         res.status(200).json({ student: newStudent.id });
