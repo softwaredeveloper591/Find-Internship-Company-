@@ -43,7 +43,7 @@ const getOpportunities = async (studentId) => {
                 )`)
 			}
 		},
-		attributes: ["id", "announcementName", "image"],
+		attributes: ["id", "announcementName", "image", "description", "endDate"],
 		include: [
 			{
 				model: db.Company,

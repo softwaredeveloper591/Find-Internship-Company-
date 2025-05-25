@@ -162,7 +162,6 @@ const getInternship = async (id) => {
 	    )`)
 	  },
 	  order: [['createdAt', 'ASC']],
-	  transaction,
 	});
 
 	const latestCompanyFeedbacks = await db.InternshipFeedback.findAll({
@@ -174,8 +173,7 @@ const getInternship = async (id) => {
 	      WHERE internshipId = ${id} AND target = 'company'
 	    )`)
 	  },
-	  order: [['createdAt', 'ASC']],
-	  transaction,
+	  order: [['createdAt', 'ASC']]
 	});
 
 	const applicationId = internship.Application?.id;
