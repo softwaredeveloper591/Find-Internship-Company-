@@ -14,11 +14,11 @@ const getFile = async ( id, applicationType, fileType ) => {
 	}
 
 	return await internshipRepository.getFile(whereClause);
-}
+};
 
 const getLinkRequests = async () => {
 	return await internshipRepository.getLinkRequests();
-}
+};
 
 const approveLinkRequest = async (requestId, isApproved) => {
 	const result = await internshipRepository.approveLinkRequest(requestId, isApproved);
@@ -147,7 +147,7 @@ const evaluateInternship = async (id, status, feedbackToStudent, feedbackToCompa
 	}
 
 	return { status: 200, message: "" };
-}
+};
 
 module.exports = {
 	getFile,

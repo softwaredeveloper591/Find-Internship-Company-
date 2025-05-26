@@ -4,11 +4,11 @@ const { Op } = require("sequelize");
 
 const getFile = async (whereClause) => {
 	return await db.Document.findOne({ where: whereClause });
-}
+};
 
 const getLinkRequests = async () => {
 	return await db.CompanyUploadLinkRequest.findAll({ where: { status: "Pending" }});
-}
+};
 
 const approveLinkRequest = async (requestId, isApproved) => {
 	const request = await db.CompanyUploadLinkRequest.findByPk(requestId, {
@@ -82,7 +82,7 @@ const createLinkRequest = async (request) => {
 			expiresAt
 		}
 	}
-}
+};
 
 const getInternships = async () => {
 	const internships = await db.Internship.findAll({

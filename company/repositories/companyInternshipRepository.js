@@ -5,7 +5,7 @@ const getUploadPage = async (token) => {
 	return await db.CompanyUploadLinkRequest.findOne({
 		where: { token, status: "Approved" }
 	});
-}
+};
 
 const saveFiles = async (token, files) => {
 	const request = await db.CompanyUploadLinkRequest.findOne({
@@ -87,7 +87,7 @@ const saveFiles = async (token, files) => {
 		}
 
     return { status: 200, data: { student: request.Student, companyName}};
-}
+};
 
 const getInternships = async (companyId) => {
 	const internships = await db.Internship.findAll({
@@ -152,29 +152,37 @@ const getInternship = async (id) => {
 		};
 	}
 
-	const latestStudentFeedbacks = await db.InternshipFeedback.findAll({
-	  where: {
-	    internshipId: id,
-	    target: 'student',
-	    cycleId: db.Sequelize.literal(`(
-	      SELECT MAX(cycleId) FROM InternshipFeedback 
-	      WHERE internshipId = ${id} AND target = 'student'
-	    )`)
-	  },
-	  order: [['createdAt', 'ASC']],
+	// Step 1: Get latest cycleId for each target
+	const latestStudentCycle = await db.InternshipFeedback.max('cycleId', {
+		where: { internshipId: id, target: 'student' }
 	});
-
-	const latestCompanyFeedbacks = await db.InternshipFeedback.findAll({
-	  where: {
-	    internshipId: id,
-	    target: 'company',
-	    cycleId: db.Sequelize.literal(`(
-	      SELECT MAX(cycleId) FROM InternshipFeedback 
-	      WHERE internshipId = ${id} AND target = 'company'
-	    )`)
-	  },
-	  order: [['createdAt', 'ASC']]
+	
+	const latestCompanyCycle = await db.InternshipFeedback.max('cycleId', {
+		where: { internshipId: id, target: 'company' }
 	});
+	
+	// Step 2: Fetch feedbacks for the latest cycleId
+	const latestStudentFeedbacks = latestStudentCycle !== null
+		? await db.InternshipFeedback.findAll({
+			where: {
+				internshipId: id,
+				target: 'student',
+				cycleId: latestStudentCycle
+			},
+			order: [['createdAt', 'ASC']],
+		})
+		: [];
+	
+	const latestCompanyFeedbacks = latestCompanyCycle !== null
+		? await db.InternshipFeedback.findAll({
+			where: {
+				internshipId: id,
+				target: 'company',
+				cycleId: latestCompanyCycle
+			},
+			order: [['createdAt', 'ASC']],
+		})
+		: [];
 
 	const applicationId = internship.Application?.id;
 

@@ -18,8 +18,10 @@ async function findUserByEmail(email) {
     const parts = mail.split("@");
     const domain = parts[1]; 
 
-    if (email === "buketoksuzoglu@iyte.edu.tr") {
-      	user = await db.Admin.findOne({ where: { email } });
+	const admin = await db.Admin.findOne({ where: { email } });
+	
+    if (email === admin.email) {
+      	user = admin;
 		userType = "admin";
     }
 	else if(domain === "iyte.edu.tr") {
