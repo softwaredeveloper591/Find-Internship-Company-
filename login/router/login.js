@@ -20,7 +20,7 @@ async function findUserByEmail(email) {
 
 	const admin = await db.Admin.findOne({ where: { email } });
 	
-    if (email === admin.email) {
+    if (email === admin?.email) {
       	user = admin;
 		userType = "admin";
     }
