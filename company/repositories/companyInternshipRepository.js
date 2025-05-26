@@ -332,6 +332,7 @@ const evaluateInternship = async (id, status, feedbackToStudent) => {
 
 		let studentStatus = internship.studentStatus;
 		let previousFeedbackContextStudent = internship.feedbackContextStudent;
+		let newStudentStatus = studentStatus;
 
 		let cycleId = (await db.InternshipFeedback.max('cycleId', {
 			where: { internshipId: id },
@@ -383,10 +384,10 @@ const evaluateInternship = async (id, status, feedbackToStudent) => {
 		  return [studentStatus, previousFeedbackContextStudent]; // default fallback
 		}
 
-		[studentStatus, previousFeedbackContextStudent] = updateStudentStatusOnFileUpload(status, studentStatus, previousFeedbackContextStudent);
+		[newStudentStatus, previousFeedbackContextStudent] = updateStudentStatusOnFileUpload(status, studentStatus, previousFeedbackContextStudent);
 
 		await internship.update(
-		  	{ studentStatus, feedbackContextStudent: previousFeedbackContextStudent },
+		  	{ studentStatus: newStudentStatus, feedbackContextStudent: previousFeedbackContextStudent },
 		  	{ transaction }
 		);
 
