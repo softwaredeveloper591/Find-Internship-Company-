@@ -203,13 +203,5 @@ router.post("/applications/:applicationId", upload.single('studentFile'), [auth,
 	res.status(200).json({ message: "Employment certificate is uploded"});
 }));*/
 
-router.get("/users", [auth, checkUserRole("secretary")], asyncErrorHandler(async (req, res, next) => {
-	const students = await db.Student.findAll({ attributes: ['username', 'email'] });
-	const companies = await db.Company.findAll({ attributes: ['username', 'email'] });
-	const admin = await db.Admin.findAll({ attributes: ['username', 'email'] });
-	const allUsers = [...students, ...companies, ...admin];
-	res.status(200).json({ allUsers });
-}));
-
 
 module.exports = router;
