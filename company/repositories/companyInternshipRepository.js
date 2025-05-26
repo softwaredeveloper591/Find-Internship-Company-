@@ -363,7 +363,10 @@ const evaluateInternship = async (id, status, feedbackToStudent) => {
   			    if (studentStatus === 6) return [3, "Report"];
   			  } else if (status === "FeedbackToStudent") {
 				if (studentStatus === 6) return [5, "ReportAfterAdmin"];
-				if (studentStatus === 7) return [5, "Report"];
+				if (studentStatus === 7) { 
+					cycleId += 1;
+					return [5, "Report"] 
+				};
 			  }
   			  break;
 
@@ -412,7 +415,6 @@ const evaluateInternship = async (id, status, feedbackToStudent) => {
 						return { status: 403, message: "Admin gave a feedback to the student" };
 				}
 
-				cycleId += 1;
 				await internship.update({ studentStatus: 5, feedbackToStudent, feedbackContextStudent: "Report" }, { transaction });
 				break;
 
