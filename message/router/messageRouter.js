@@ -57,70 +57,69 @@ const GEMINI_API_KEY = 'AIzaSyAtjOy-QJ3UxN9f-Npw69zoHjCcOc6-E6Y';
 const ai = new GoogleGenAI({apiKey: GEMINI_API_KEY});		
 //client: no need to provide a conversation id, it will be found by the email of the student
 router.post("/chatWithAI", checkUserRole(["student"]), asyncErrorHandler(async (req, res, next) => {
-	const student = await db.Student.findOne({ where: { id: req.user.id } });
-	const userMessage = req.body.userMessage;
-	const tempMessageId = req.body.tempMessageId;
-	// const genAI = new GoogleGenerativeAI();  		
-	// const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const student = await db.Student.findOne({ where: { id: req.user.id } });
+  const userMessage = req.body.userMessage;
+  const tempMessageId = req.body.tempMessageId;
 
-	const prompt = userMessage; // Message sent by student
+  const prompt = userMessage;
 
-	const conversationExists = await db.Conversations.findOne({
-		where: {
-			user1_email: student.email,
-			isDeletedByUser1: false,
-			user2_email: "-",   
-			user2_name: "AI",   // The condition to find the conversation with AI
-		},
-	});
-	
-	if (!conversationExists) {
-		return res.status(404).json({ error: "Conversation not found" });
-	}
-
-	if (conversationExists.user1_email !== student.email) {
-		return res.status(403).json({ error: "You are not authorized to send messages in this conversation" });
-	}
-
-	const studentMessageDb = db.Message.create({
-		from: student.email,
-		senderName: student.username,
-		to: "-",
-		receiverName: "AI",
-		conversation_id: conversationExists.id,
-		message: userMessage
-	});
-
-	try {
-		const response = await ai.models.generateContent({
-			model: 'tunedModels/internship-chatbot-akoqstzz8k5crm00pk4dr',
-			contents: prompt,
+  const conversationExists = await db.Conversations.findOne({
+    where: {
+      user1_email: student.email,
+      isDeletedByUser1: false,
+      user2_email: "-",
+      user2_name: "AI",
+    },
   });
-		const aiMessage = response.text;
 
-		const aiMessageDb = await db.Message.create({
-			from: "-",
-			senderName: "AI",
-			to: student.email,
-			receiverName: student.username,
-			conversation_id: conversationExists.id,
-			message: aiMessage
-		});
+  if (!conversationExists) {
+    return res.status(404).json({ error: "Conversation not found" });
+  }
 
-		// wait for the message to be created in the database
-		await studentMessageDb;
+  if (conversationExists.user1_email !== student.email) {
+    return res.status(403).json({ error: "You are not authorized to send messages in this conversation" });
+  }
 
-		res.status(200).json({ 
-			userMessage: studentMessageDb.message,
-			aiMessage: aiMessageDb.message,
-			tempMessageId: tempMessageId,            
-			userMessageId: studentMessageDb.id,     
-			aiMessageId: aiMessageDb.id    
-		 }); 
-	} catch (error) {
-		console.error("Error generating AI content:", error);
-		res.status(500).json({ error: "Failed to generate content from AI" });
-	}
+  try {
+    // DÜZELTME: await kullanarak mesajı önce oluştur
+    const studentMessageDb = await db.Message.create({
+      from: student.email,
+      senderName: student.username,
+      to: "-",
+      receiverName: "AI",
+      conversation_id: conversationExists.id,
+      message: userMessage
+    });
+
+    const response = await ai.models.generateContent({
+      model: 'tunedModels/internship-chatbot-akoqstzz8k5crm00pk4dr',
+      contents: prompt,
+    });
+
+    const aiMessage = response.text;
+
+    const aiMessageDb = await db.Message.create({
+      from: "-",
+      senderName: "AI",
+      to: student.email,
+      receiverName: student.username,
+      conversation_id: conversationExists.id,
+      message: aiMessage
+    });
+
+    // DÜZELTME: Artık gerçek ID'leri dönebiliriz
+    res.status(200).json({
+      userMessage: studentMessageDb.message,
+      aiMessage: aiMessageDb.message,
+      tempMessageId: tempMessageId,
+      userMessageId: studentMessageDb.id, // Artık gerçek ID
+      aiMessageId: aiMessageDb.id
+    });
+
+  } catch (error) {
+    console.error("Error generating AI content:", error);
+    res.status(500).json({ error: "Failed to generate content from AI" });
+  }
 }));
 
 // client rules : will get all the conversation messages it has with AI, if there is not itll be created, no post for creating a conversation with AI
