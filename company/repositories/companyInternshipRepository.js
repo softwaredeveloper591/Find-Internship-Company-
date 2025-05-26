@@ -166,10 +166,11 @@ const getInternship = async (id) => {
 		? await db.InternshipFeedback.findAll({
 			where: {
 				internshipId: id,
+				author: 'company',
 				target: 'student',
 				cycleId: latestStudentCycle
 			},
-			order: [['createdAt', 'ASC']],
+			order: [['createdAt', 'DESC']],
 		})
 		: [];
 	

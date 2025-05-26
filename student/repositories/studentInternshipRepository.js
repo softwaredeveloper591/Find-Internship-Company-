@@ -31,17 +31,21 @@ const getInternship = async (studentId) => {
 		return { status: 404, data: null, message: "You don't have an internship" };
 	}
 
-	const latestStudentFeedbacks = await db.InternshipFeedback.findAll({
-	  where: {
-		internshipId: internship.id,
-		target: 'student',
-		cycleId: db.Sequelize.literal(`(
-		  SELECT MAX(cycleId) FROM InternshipFeedback 
-		  WHERE internshipId = ${internship.id} AND target = 'student'
-		)`)
-	  },
-	  order: [['createdAt', 'ASC']],
+	const latestStudentCycle = await db.InternshipFeedback.max('cycleId', {
+		where: { internshipId: internship.id, target: 'student' }
 	});
+	
+	// Step 2: Fetch feedbacks for the latest cycleId
+	const latestStudentFeedbacks = latestStudentCycle !== null
+		? await db.InternshipFeedback.findAll({
+			where: {
+				internshipId: internship.id,
+				target: 'student',
+				cycleId: latestStudentCycle
+			},
+			order: [['createdAt', 'DESC']],
+		})
+		: [];
 
 	return {
 		status: 200,
