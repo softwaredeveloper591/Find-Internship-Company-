@@ -181,7 +181,7 @@ const getInternship = async (id) => {
 				target: 'company',
 				cycleId: latestCompanyCycle
 			},
-			order: [['createdAt', 'ASC']],
+			order: [['createdAt', 'DESC']],
 		})
 		: [];
 
