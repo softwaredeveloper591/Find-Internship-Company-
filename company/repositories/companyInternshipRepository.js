@@ -406,6 +406,8 @@ const evaluateInternship = async (id, status, feedbackToStudent) => {
 						await internship.update({ companyStatus: 1 }, { transaction });
 					}
 				}
+
+				await internship.update({ studentStatus: newStudentStatus, feedbackContextStudent: newFeedbackContextStudent }, { transaction });
 				break;
 
 			case "FeedbackToStudent":

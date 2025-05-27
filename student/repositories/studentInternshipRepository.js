@@ -229,13 +229,21 @@ const uploadFile = async (studentId, document, studentStatus) => {
 
     	  	  	  	case "SurveyMissing":
     	  	  	  	  	if (fileType === "Survey") {
-							if (studentStatus === 5) return [7, "SurveyMissing"];
+							if (studentStatus === 5) return [5, "ReportMissing"];
+							if (studentStatus === 6) return [3, "Both"];
 							return [6, "Both"];
 						}	
+						if (fileType === "Report") {
+							if (studentStatus === 5) return [7, "SurveyMissing"];
+						}
     	  	  	  	  	break;
 
     	  	  	  	case "ReportMissing":
-    	  	  	  	  	if (fileType === "Report") return [6, "Both"];
+    	  	  	  	  	if (fileType === "Report") {
+							if (studentStatus === 5) return [7, "Both"];
+							return [6, "Both"];
+						}
+						
     	  	  	  	  	break;
     	  	  	}
 
@@ -244,6 +252,7 @@ const uploadFile = async (studentId, document, studentStatus) => {
 
     	  	[currentStatus, context] = updateStatusOnFileUpload(currentStatus, context, fileType);
 
+			console.log(currentStatus, context);
     	  	await existingInternship.update(
     	  	  	{ studentStatus: currentStatus, feedbackContextStudent: context },
     	  	  	{ transaction }
