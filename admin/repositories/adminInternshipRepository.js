@@ -7,7 +7,15 @@ const getFile = async (whereClause) => {
 };
 
 const getLinkRequests = async () => {
-	return await db.CompanyUploadLinkRequest.findAll({ where: { status: "Pending" }});
+  return await db.CompanyUploadLinkRequest.findAll({
+    where: { status: 'Pending' },
+    include: [
+      {
+        model: db.Student,
+        attributes: ['username'], // or ['firstName', 'lastName'] if you store separately
+      }
+    ]
+  });
 };
 
 const approveLinkRequest = async (requestId, isApproved) => {
