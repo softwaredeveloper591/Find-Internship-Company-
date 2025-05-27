@@ -223,7 +223,6 @@ const evaluateInternship = async (id, status, feedbackToStudent, feedbackToCompa
 				companyStatus: {
 					[Op.in]: [3, 4, 5]
 				},
-				isApprovedByCompany: 1,
 				isApprovedByDIC: null
 			},
 			include: [

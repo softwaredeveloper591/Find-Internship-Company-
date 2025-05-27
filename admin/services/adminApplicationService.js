@@ -56,7 +56,7 @@ const evaluateManualApplications = async (manualApplicationId, body, file) => {
 
 	let data = null;
 
-	if (isApproved) {
+	if (isApproved === "true") {
 		if (!file) return { status: 400, message: "No file uploaded"};
 		data = { data: file.buffer, name: file.originalname };
 	}
@@ -67,9 +67,9 @@ const evaluateManualApplications = async (manualApplicationId, body, file) => {
 
 	const { studentEmail, studentName } = result.data;
 
-	const emailSubject = isApproved ? 'Application Approved' : 'Application Rejected';
+	const emailSubject = isApproved === "true" ? 'Application Approved' : 'Application Rejected';
 	const emailBody = `Hello ${studentName},<br><br>
-		Your application has been ${isApproved ? "approved" : `rejected and will be removed from our system. <br><br> ${feedback ? `Feedback: <br> ${feedback}.` : ""}`} <br><br>
+		Your application has been ${isApproved === "true" ? "approved" : `rejected and will be removed from our system. <br><br> ${feedback ? `Feedback: <br> ${feedback}.` : ""}`} <br><br>
 		Best Regards,<br>Admin Team`;
 
 	sendEmail(studentEmail, emailSubject, emailBody);

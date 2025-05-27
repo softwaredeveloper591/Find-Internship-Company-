@@ -105,7 +105,7 @@ router.use((req, res, next) => {
 
 router.get("/internship/download/:fileName", internshipController.downloadFileFromServer);
 
-router.get("/",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
+router.get("/", [auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
     const company = await db.Company.findOne({ 
 		where: {id: req.user.id},
 		attributes: {

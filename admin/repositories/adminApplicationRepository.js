@@ -233,7 +233,7 @@ const evaluateManualApplications = async (manualApplicationId, isApproved, data)
 	}
 	
 	try {
-		if (isApproved) {
+		if (isApproved === "true") {
 			application.isApprovedByDIC = true;
 			application.status = 2;
 
@@ -283,7 +283,7 @@ const evaluateManualApplications = async (manualApplicationId, isApproved, data)
 				studentEmail: application.Student.email,
 				studentName: application.Student.username,
 			},
-			message: isApproved ? "Application approved" : "Application rejected"
+			message: isApproved === "true" ? "Application approved" : "Application rejected"
 		};
 	} catch (error) {
 		await transaction.rollback();

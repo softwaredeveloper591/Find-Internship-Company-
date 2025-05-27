@@ -29,6 +29,7 @@ const saveFiles = async (token, files) => {
     const manualForm = files.manualForm[0].buffer;
 
 	const companyName = request.companyName;
+	const manualApplicationId = internship.manualApplicationId;
 
     const transaction = await db.sequelize.transaction();
 		try {
