@@ -29,7 +29,7 @@ const approveLinkRequest = async (requestId, isApproved) => {
 
 	if (approved) {
 		// Company Email
-		const uploadLink = `https://localhost:5173/internship/upload?token=${token}`;
+		const uploadLink = `http://localhost:5173/internship/upload?token=${token}`;
 		const expirationDate = moment(expiresAt).format('YYYY-MM-DD HH:mm');
 
 		const companySubject = `Upload Internship Document for ${student.username}`;
@@ -118,7 +118,7 @@ const evaluateInternship = async (id, status, feedbackToStudent, feedbackToCompa
 			const request = await internshipRepository.createLinkRequest(linkRequest);
 			const { token, expiresAt } = request.data;
 
-			const uploadLink = `https://localhost:5173/internship/upload?token=${token}`;
+			const uploadLink = `http://localhost:5173/internship/upload?token=${token}`;
 			const expirationDate = moment(expiresAt).format('YYYY-MM-DD HH:mm');
 
 			const subject = "Internship Document Feedback – Action Required";

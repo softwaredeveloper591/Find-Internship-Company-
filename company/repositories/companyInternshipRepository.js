@@ -331,9 +331,10 @@ const evaluateInternship = async (id, status, feedbackToStudent) => {
 			return { status: 400, message: "This internship can't be found"};
 		}
 
-		let studentStatus = internship.studentStatus;
-		let previousFeedbackContextStudent = internship.feedbackContextStudent;
+		const studentStatus = internship.studentStatus;
+		const feedbackContextStudent = internship.feedbackContextStudent;
 		let newStudentStatus = studentStatus;
+		let newFeedbackContextStudent = feedbackContextStudent;
 
 		let cycleId = (await db.InternshipFeedback.max('cycleId', {
 			where: { internshipId: id },
@@ -341,8 +342,8 @@ const evaluateInternship = async (id, status, feedbackToStudent) => {
 		})) ?? 0;
 
 		// Helper function
-		const updateStudentStatusOnFileUpload = (status, studentStatus, previousFeedbackContextStudent) => {
-		  switch (previousFeedbackContextStudent) {
+		const updateStudentStatusOnFileUpload = (status, studentStatus, feedbackContextStudent) => {
+		  switch (feedbackContextStudent) {
 		    case "SurveyMissing":
 		      if (status === "Approved") {
 		        if (studentStatus === 4 || studentStatus === 7) return [6, "SurveyMissing"];
@@ -380,21 +381,22 @@ const evaluateInternship = async (id, status, feedbackToStudent) => {
 			  }
 			  break;
 
+			case null:
+			  if (status === "FeedbackToStudent") {
+				if (studentStatus === 3) return [5, "Report"];
+			  }
+			  break;
+
 		  }
 	  
-		  return [studentStatus, previousFeedbackContextStudent]; // default fallback
+		  return [studentStatus, feedbackContextStudent]; // default fallback
 		}
 
-		[newStudentStatus, previousFeedbackContextStudent] = updateStudentStatusOnFileUpload(status, studentStatus, previousFeedbackContextStudent);
-
-		await internship.update(
-		  	{ studentStatus: newStudentStatus, feedbackContextStudent: previousFeedbackContextStudent },
-		  	{ transaction }
-		);
+		[newStudentStatus, newFeedbackContextStudent] = updateStudentStatusOnFileUpload(status, studentStatus, feedbackContextStudent);
 
 		switch (status) {
 			case "Approved":
-				if (previousFeedbackContextStudent === null) {
+				if (feedbackContextStudent === null) {
 					if (internship.companyStatus === 1) {
 						await transaction.rollback();
 						return { status: 403, message: "You already approved this report"};
@@ -411,13 +413,13 @@ const evaluateInternship = async (id, status, feedbackToStudent) => {
 					await transaction.rollback();
 					return { status: 403, message: "You already gave a feedback to the student" };
 				} else if ( 
-					(studentStatus === 4 && internship.feedbackContextStudent !== "SurveyMissing") ||
-					(studentStatus === 6 && !["Report", "Both"].includes(internship.feedbackContextStudent))) {
+					(studentStatus === 4 && feedbackContextStudent !== "SurveyMissing") ||
+					(studentStatus === 6 && !["Report", "Both"].includes(feedbackContextStudent))) {
 						await transaction.rollback();
 						return { status: 403, message: "Admin gave a feedback to the student" };
 				}
 
-				await internship.update({ studentStatus: 5, feedbackToStudent, feedbackContextStudent: "Report" }, { transaction });
+				await internship.update({ studentStatus: newStudentStatus, feedbackToStudent, feedbackContextStudent: newFeedbackContextStudent }, { transaction });
 				break;
 
 			default:

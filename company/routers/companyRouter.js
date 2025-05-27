@@ -93,6 +93,8 @@ router.post("/internship/upload", uploadFile.fields([
   	]), 
 	asyncErrorHandler(internshipController.uploadFiles));
 
+router.get("/internship/download/:fileName", internshipController.downloadFileFromServer);
+
 router.use((req, res, next) => {
   if (
 	req.method === "GET" &&
@@ -102,8 +104,6 @@ router.use((req, res, next) => {
   }
   return auth(req, res, () => checkUserRole("company")(req, res, next));
 });
-
-router.get("/internship/download/:fileName", internshipController.downloadFileFromServer);
 
 router.get("/", [auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {
     const company = await db.Company.findOne({ 
@@ -424,20 +424,20 @@ router.put("/applications/:applicationId",upload.single('upload-file'),[auth,che
 router.get("/applications/download/:applicationId/:fileType",[auth,checkUserRole("company")], asyncErrorHandler(async (req, res , next) => {
 	const applicationId = req.params.applicationId;
     const fileType = req.params.fileType;
-    const takenDocument = await db.Document.findOne({where:{applicationId:applicationId, fileType:fileType}});
+    const takenDocument = await db.Document.findOne({where:{applicationId, fileType}});
     if(!takenDocument){
         return res.status(400).json({ error: "You need to fill the form before downloading the application form." });
     }
 
-    let filename = takenDocument.name;
-    let binaryData = takenDocument.data;
-	console.log(binaryData);
-	const contentType = mime.lookup(filename) || 'application/octet-stream';
+    let name = takenDocument.name;
+    let data = takenDocument.data;
 
-  	res.header('Access-Control-Expose-Headers', 'Content-Disposition');
-  	res.setHeader('Content-Disposition', 'attachment; filename=' + encodeURI(filename));
-  	res.setHeader('Content-Type', contentType);
-  	res.send(binaryData);
+	const contentType = 'image/jpeg'; // You can make this dynamic if needed
+
+	res.header('Access-Control-Expose-Headers', 'Content-Disposition'); // In order to enable obtaining it in axios request headers, otherwise it is not added into header. 
+	res.setHeader('Content-Disposition', 'attachment; filename=' + encodeURI(name));
+	res.setHeader('Content-Type', contentType);
+	res.send(data);
 }));
 
 router.get("/internships",[auth,checkUserRole("company")], asyncErrorHandler( async (req, res, next) => {

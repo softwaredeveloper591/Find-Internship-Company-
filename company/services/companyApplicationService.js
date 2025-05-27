@@ -52,7 +52,7 @@ const fillApplicationForm = async (companyId, applicationId, body) => {
 };
 
 const uploadApplicationForm = async (companyId, applicationId, file, body) => {
-	const { isApproved } = body.isApproved;
+	const { isApproved } = body;
 
 	let document = null;
 

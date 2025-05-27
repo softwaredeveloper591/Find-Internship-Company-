@@ -18,7 +18,7 @@ const getUploadPage = async (token) => {
 		return { status: 400, message: "This request is not valid anymore." };
 	}
 
-	return { status: 200 };
+	return { status: 200, message: "Available" };
 }
 
 const uploadFiles = async (token, files) => {
