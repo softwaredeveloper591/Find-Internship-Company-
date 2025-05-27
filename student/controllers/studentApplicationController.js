@@ -29,6 +29,12 @@ const getOpportunities = async (req, res) => {
 	return res.status(200).json( { opportunities });
 }
 
+const getCompanyOpportunities = async (req, res) => {
+	const opportunities = await applicationService.getCompanyOpportunities(req.user.id, req.params.companyId);
+
+	return res.status(200).json( { opportunities });
+}
+
 const getOpportunitiesSkills = async (req, res) => {
 	const opportunities = await applicationService.getOpportunitiesSkills(req.user.id);
 
@@ -58,6 +64,7 @@ const getApplications = async (req, res) => {
 }
 
 module.exports = {
+	getCompanyOpportunities,
 	createStudentInfo,
 	updateStudentInfo,
 	getOpportunities,

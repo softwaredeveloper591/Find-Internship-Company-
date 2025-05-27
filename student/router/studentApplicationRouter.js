@@ -11,6 +11,8 @@ router.get("/opportunities", asyncErrorHandler(applicationController.getOpportun
 router.get("/opportunities/matchingSkills", asyncErrorHandler(applicationController.getOpportunitiesSkills));
 router.get("/opportunities/:opportunityId", asyncErrorHandler(applicationController.getOneOpportunity));
 
+router.get("/opportunities/company/:companyId", asyncErrorHandler(applicationController.getCompanyOpportunities));
+
 router.post("/opportunities/:opportunityId", upload.single('CV'), asyncErrorHandler(applicationController.applyToAnnouncement));
 
 router.get("/applications", asyncErrorHandler(applicationController.getApplications));

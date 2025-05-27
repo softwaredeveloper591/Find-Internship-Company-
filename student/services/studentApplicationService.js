@@ -16,6 +16,10 @@ const getOpportunities = async (studentId) => {
 	return await applicationRepository.getOpportunities(studentId);
 };
 
+const getCompanyOpportunities = async (studentId, companyId) => {
+	return await applicationRepository.getCompanyOpportunities(studentId, companyId);
+};
+
 const getOpportunitiesSkills = async (studentId) => {
 	return await applicationRepository.getOpportunitiesSkills(studentId);
 };
@@ -41,6 +45,7 @@ const getApplications = async (studentId) => {
 };
 
 module.exports = {
+	getCompanyOpportunities,
 	createStudentInfo,
 	updateStudentInfo,
 	getOpportunities,

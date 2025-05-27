@@ -59,6 +59,42 @@ const getOpportunities = async (studentId) => {
 	return formattedAnnouncements;
 };
 
+const getCompanyOpportunities = async (studentId, companyId) => {
+	const now = moment.tz('Europe/Istanbul').toDate(); // Get current time in Turkey time zone
+	const announcements = await db.Announcement.findAll({
+		where: {
+			status: "approved",
+			startDate: {
+				[Sequelize.Op.lte]: now // Ensure the announcement has started
+			},
+			endDate: { [Sequelize.Op.gt]: now },
+			companyId,
+
+			//to make sure students don't see the opportunities they have already applied so far. 
+			id: {
+				[Op.notIn]: Sequelize.literal(`(
+                    SELECT announcementId
+                    FROM Application
+                    WHERE studentId = ${studentId}
+                )`)
+			}
+		},
+		attributes: ["id", "announcementName", "image", "description", "endDate"],
+		include: [
+			{
+				model: db.Company,
+				attributes: ['name']
+			}
+		]
+	});
+
+	const formattedAnnouncements = announcements.map(announcement => ({
+		...announcement.dataValues
+	}));
+	
+	return formattedAnnouncements;
+};
+
 const getOpportunitiesSkills = async (studentId) => {
 	const now = moment.tz('Europe/Istanbul').toDate();
 
@@ -270,6 +306,7 @@ const getApplications = async (studentId) => {
 }
 
 module.exports = {
+	getCompanyOpportunities,
 	createStudentInfo,
 	updateStudentInfo,
 	getOpportunities,
