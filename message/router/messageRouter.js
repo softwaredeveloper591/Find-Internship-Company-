@@ -92,9 +92,9 @@ router.post("/chatWithAI", checkUserRole(["student"]), asyncErrorHandler(async (
     });
 
     const response = await ai.models.generateContent({
-      model: 'tunedModels/internship-chatbot-akoqstzz8k5crm00pk4dr',
+      model: 'tunedModels/internship-chatbot-4-cnnu8ivrz7zj9euzfkb',
       contents: prompt,
-    });
+    }); 
 
     const aiMessage = response.text;
 
